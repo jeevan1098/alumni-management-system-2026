@@ -23,6 +23,8 @@ public partial class Alumni
     [Required]
     [Column("jag_id")]
     [StringLength(20)]
+    [RegularExpression(@"^J00\d+$", ErrorMessage = "JAG ID must start with 'J00' followed by numbers only.")]
+    [Display(Name = "JAG ID")]
     public string JagId { get; set; }
 
     [Column("prefix")]

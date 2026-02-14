@@ -15,8 +15,9 @@
             <input type="hidden" asp-for="RegistryId" />
             <div class="form-group">
                 <label asp-for="JagId" class="control-label"></label>
-                <input asp-for="JagId" class="form-control" />
+                <input asp-for="JagId" class="form-control" placeholder="J0012345" />
                 <span asp-validation-for="JagId" class="text-danger"></span>
+                <small class="form-text text-muted">Must start with 'J00' followed by numbers (e.g., J0012345)</small>
             </div>
             <div class="form-group">
                 <label asp-for="FirstName" class="control-label"></label>

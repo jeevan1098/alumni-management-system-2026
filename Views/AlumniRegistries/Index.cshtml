@@ -1,13 +1,31 @@
 ﻿@model IEnumerable<Alumni_Management_System.Models.AlumniRegistry>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "Alumni Registry";
 }
 
-<h1>Index</h1>
+<h1>Alumni Registry</h1>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @Html.Raw(TempData["SuccessMessage"])
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessages"] != null)
+{
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+        <strong>Import Errors:</strong><br/>
+        @Html.Raw(TempData["ErrorMessages"])
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
 <p>
-    <a asp-action="Create">Create New</a>
+    <a asp-action="Create" class="btn btn-primary">Create New</a>
+    <a asp-action="BulkImport" class="btn btn-success">Bulk Import</a>
 </p>
 <table class="table">
     <thead>

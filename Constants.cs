@@ -3,6 +3,7 @@
     public static class Constants
     {
         public static string AdminRole = "Admin";
-        public static string StandardUserRole = "StandardUser";
+        public static string AlumniRole = "Alumni";
+        public static string StaffRole = "Staff";
     }
 }
