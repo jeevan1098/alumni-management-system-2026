@@ -1,0 +1,89 @@
+﻿@model IEnumerable<Alumni_Management_System.Models.AlumniDegree>
+
+@{
+    ViewData["Title"] = "Index";
+}
+
+<h1>Index</h1>
+
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.DateConferred)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.YearsToCompleteDegree)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Gpa)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.EmploymentWhileStudying)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.DegreeSpecificJob)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.ParticipatedInResearch)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.JobSecuredUponGraduation)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.AttendedOrPlansGradSchool)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Alumni)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Degree)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model) {
+        <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.DateConferred)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.YearsToCompleteDegree)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Gpa)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.EmploymentWhileStudying)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.DegreeSpecificJob)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.ParticipatedInResearch)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.JobSecuredUponGraduation)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.AttendedOrPlansGradSchool)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Alumni.FirstName)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Degree.DegreeType)
+            </td>
+            <td>
+                <a asp-action="Edit" asp-route-id="@item.AlumniDegreeId">Edit</a> |
+                <a asp-action="Details" asp-route-id="@item.AlumniDegreeId">Details</a> |
+                <a asp-action="Delete" asp-route-id="@item.AlumniDegreeId">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>

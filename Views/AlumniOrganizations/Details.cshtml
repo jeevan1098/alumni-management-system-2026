@@ -1,0 +1,36 @@
+﻿@model Alumni_Management_System.Models.AlumniOrganization
+
+@{
+    ViewData["Title"] = "Details";
+}
+
+<h1>Details</h1>
+
+<div>
+    <h4>AlumniOrganization</h4>
+    <hr />
+    <dl class="row">
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.OfficerRoles)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.OfficerRoles)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.Alumni)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.Alumni.FirstName)
+        </dd>
+        <dt class = "col-sm-2">
+            @Html.DisplayNameFor(model => model.OrganizationType)
+        </dt>
+        <dd class = "col-sm-10">
+            @Html.DisplayFor(model => model.OrganizationType.OrganizationName)
+        </dd>
+    </dl>
+</div>
+<div>
+    <a asp-action="Edit" asp-route-id="@Model?.AlumniOrganizationId">Edit</a> |
+    <a asp-action="Index">Back to List</a>
+</div>
