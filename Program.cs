@@ -15,11 +15,36 @@ builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 //builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
 //    .AddEntityFrameworkStores<ApplicationDbContext>();
 
-builder.Services.AddIdentity<AppUser, IdentityRole>()
+builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
+{
+    options.SignIn.RequireConfirmedAccount = false; // Disable email confirmation for now
+    options.Password.RequireDigit = true;
+    options.Password.RequireLowercase = true;
+    options.Password.RequireUppercase = true;
+    options.Password.RequireNonAlphanumeric = true;
+    options.Password.RequiredLength = 8;
+})
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultUI()
     .AddDefaultTokenProviders();
 
+// Configure application cookie for login redirects
+builder.Services.ConfigureApplicationCookie(options =>
+{
+    options.LoginPath = "/Identity/Account/Login";
+    options.LogoutPath = "/Identity/Account/Logout";
+    options.AccessDeniedPath = "/Identity/Account/AccessDenied";
+});
+
+// Redirect default Identity registration to custom registration
+builder.Services.Configure<Microsoft.AspNetCore.Routing.RouteOptions>(options =>
+{
+    // This will be handled by middleware
+});
+
+// Register Audit Service
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<Alumni_Management_System.Services.IAuditService, Alumni_Management_System.Services.AuditService>();
 
 builder.Services.AddControllersWithViews();
 
@@ -55,8 +80,49 @@ else
 app.UseHttpsRedirection();
 app.UseRouting();
 
+// Redirect default Identity registration to custom registration
+app.Use(async (context, next) =>
+{
+    if (context.Request.Path.StartsWithSegments("/Identity/Account/Register"))
+    {
+        context.Response.Redirect("/Account/VerifyJagId");
+        return;
+    }
+    await next();
+});
+
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Middleware to redirect first-time Alumni users to complete their profile
+app.Use(async (context, next) =>
+{
+    if (context.User.Identity?.IsAuthenticated == true)
+    {
+        // Skip redirect for certain paths
+        var path = context.Request.Path.Value?.ToLower() ?? "";
+        var skipPaths = new[] { "/alumni/edit", "/identity/account/logout", "/account/logout", "/identity/account/manage" };
+
+        if (!skipPaths.Any(p => path.StartsWith(p)))
+        {
+            var userManager = context.RequestServices.GetRequiredService<UserManager<AppUser>>();
+            var user = await userManager.GetUserAsync(context.User);
+
+            if (user != null && user.IsFirstLogin && context.User.IsInRole(Constants.AlumniRole))
+            {
+                var dbContext = context.RequestServices.GetRequiredService<ApplicationDbContext>();
+                var alumni = await dbContext.Alumni.FirstOrDefaultAsync(a => a.UserId == user.Id);
+
+                if (alumni != null)
+                {
+                    context.Response.Redirect($"/Alumni/Edit/{alumni.AlumniId}");
+                    return;
+                }
+            }
+        }
+    }
+    await next();
+});
 
 app.MapStaticAssets();
 

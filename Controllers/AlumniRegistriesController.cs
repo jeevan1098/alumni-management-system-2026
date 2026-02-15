@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -13,6 +14,7 @@ using OfficeOpenXml;
 
 namespace Alumni_Management_System.Controllers
 {
+    [Authorize(Roles = "Admin,Staff")] // Alumni cannot access Alumni Registry
     public class AlumniRegistriesController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -47,6 +49,7 @@ namespace Alumni_Management_System.Controllers
         }
 
         // GET: AlumniRegistries/Create
+        [Authorize(Roles = "Admin")] // Only Admin can create
         public IActionResult Create()
         {
             return View();
@@ -57,18 +60,21 @@ namespace Alumni_Management_System.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")] // Only Admin can create
         public async Task<IActionResult> Create([Bind("RegistryId,JagId,FirstName,LastName,GraduationYear,DegreeProgram,EmailOnRecord,AccountCreated")] AlumniRegistry alumniRegistry)
         {
             if (ModelState.IsValid)
             {
                 _context.Add(alumniRegistry);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Alumni Registry entry created successfully!";
                 return RedirectToAction(nameof(Index));
             }
             return View(alumniRegistry);
         }
 
         // GET: AlumniRegistries/Edit/5
+        [Authorize(Roles = "Admin")] // Only Admin can edit
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -89,6 +95,7 @@ namespace Alumni_Management_System.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")] // Only Admin can edit
         public async Task<IActionResult> Edit(int id, [Bind("RegistryId,JagId,FirstName,LastName,GraduationYear,DegreeProgram,EmailOnRecord,AccountCreated")] AlumniRegistry alumniRegistry)
         {
             if (id != alumniRegistry.RegistryId)
@@ -102,6 +109,7 @@ namespace Alumni_Management_System.Controllers
                 {
                     _context.Update(alumniRegistry);
                     await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Alumni Registry entry updated successfully!";
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -120,6 +128,7 @@ namespace Alumni_Management_System.Controllers
         }
 
         // GET: AlumniRegistries/Delete/5
+        [Authorize(Roles = "Admin")] // Only Admin can delete
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -140,15 +149,17 @@ namespace Alumni_Management_System.Controllers
         // POST: AlumniRegistries/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")] // Only Admin can delete
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var alumniRegistry = await _context.AlumniRegistries.FindAsync(id);
             if (alumniRegistry != null)
             {
                 _context.AlumniRegistries.Remove(alumniRegistry);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Alumni Registry entry deleted successfully!";
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
@@ -158,6 +169,7 @@ namespace Alumni_Management_System.Controllers
         }
 
         // GET: AlumniRegistries/BulkImport
+        [Authorize(Roles = "Admin")] // Only Admin can bulk import
         public IActionResult BulkImport()
         {
             return View();
@@ -166,6 +178,7 @@ namespace Alumni_Management_System.Controllers
         // POST: AlumniRegistries/BulkImport
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")] // Only Admin can bulk import
         public async Task<IActionResult> BulkImport(IFormFile file)
         {
             if (file == null || file.Length == 0)

@@ -2,7 +2,256 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="text-center mb-5">
+    <h1 class="display-3 fw-bold">Welcome to the Alumni Management System</h1>
+    <p class="lead text-muted">Stay connected with your alma mater and fellow alumni</p>
 </div>
+
+@if (!User.Identity.IsAuthenticated)
+{
+    <div class="row mb-5">
+        <div class="col-md-6 mx-auto">
+            <div class="card shadow-lg">
+                <div class="card-body p-5">
+                    <h3 class="card-title text-center mb-4">
+                        <i class="bi bi-person-circle text-primary" style="font-size: 3rem;"></i>
+                    </h3>
+                    <h4 class="text-center mb-4">Alumni Registration</h4>
+                    <p class="text-center text-muted mb-4">
+                        Join our alumni network to stay connected, access exclusive resources, and engage with fellow graduates.
+                    </p>
+                    <div class="d-grid gap-2">
+                        <a asp-controller="Account" asp-action="VerifyJagId" class="btn btn-primary btn-lg">
+                            <i class="bi bi-person-plus"></i> Register as Alumni
+                        </a>
+                        <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-secondary btn-lg">
+                            <i class="bi bi-box-arrow-in-right"></i> Sign In
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-shield-check text-success" style="font-size: 3rem;"></i>
+                    <h5 class="card-title mt-3">Secure Registration</h5>
+                    <p class="card-text text-muted">
+                        Your JAG ID is verified against our Alumni Registry to ensure secure account creation.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-people text-primary" style="font-size: 3rem;"></i>
+                    <h5 class="card-title mt-3">Connect with Alumni</h5>
+                    <p class="card-text text-muted">
+                        Network with fellow graduates, share experiences, and build professional connections.
+                    </p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body text-center">
+                    <i class="bi bi-briefcase text-warning" style="font-size: 3rem;"></i>
+                    <h5 class="card-title mt-3">Career Networking</h5>
+                    <p class="card-text text-muted">
+                        Discover fellow alumni working at companies you're interested in, get referrals, and expand your professional network.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-info" role="alert">
+        <h5 class="alert-heading"><i class="bi bi-info-circle"></i> How to Register</h5>
+        <ol class="mb-0">
+            <li><strong>Verify Your JAG ID:</strong> Enter your JAG ID (format: J00xxxxx) to verify your alumni status</li>
+            <li><strong>Complete Registration:</strong> Fill in your details and create a secure password</li>
+            <li><strong>Start Connecting:</strong> Access your alumni profile and connect with the community</li>
+        </ol>
+        <hr>
+        <p class="mb-0">
+            <strong>Need help?</strong> If you don't have your JAG ID or encounter any issues, please contact the administrator.
+        </p>
+    </div>
+}
+else
+{
+    <div class="row g-4">
+        <div class="col-md-12">
+            <div class="alert alert-success" role="alert">
+                <h4 class="alert-heading"><i class="bi bi-check-circle"></i> Welcome back, @User.Identity.Name!</h4>
+                <p>You are successfully logged in to the Alumni Management System.</p>
+                <hr>
+
+                @if (User.IsInRole("Admin"))
+                {
+                    <h5 class="mt-3"><i class="bi bi-shield-check"></i> Admin Dashboard</h5>
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-3">
+                            <a asp-controller="Alumni" asp-action="Index" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-people"></i> Alumni
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-controller="AlumniRegistries" asp-action="Index" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-journal-text"></i> Alumni Registry
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-controller="Messages" asp-action="Index" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-envelope"></i> Messages
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-controller="DegreePrograms" asp-action="Index" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-mortarboard"></i> Degree Programs
+                            </a>
+                        </div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-3">
+                            <a asp-controller="Employers" asp-action="Index" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-building"></i> Employers
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-controller="AlumniDegrees" asp-action="Index" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-award"></i> Alumni Degrees
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-controller="AlumniEmployments" asp-action="Index" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-briefcase"></i> Employments
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a asp-controller="AlumniInternships" asp-action="Index" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-person-workspace"></i> Internships
+                            </a>
+                        </div>
+                    </div>
+                }
+                else if (User.IsInRole("Staff"))
+                {
+                    <h5 class="mt-3"><i class="bi bi-person-badge"></i> Staff Dashboard</h5>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <a asp-controller="Alumni" asp-action="Index" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-people"></i> Alumni Directory
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a asp-controller="AlumniRegistries" asp-action="Index" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-journal-text"></i> Alumni Registry
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a asp-controller="Messages" asp-action="Index" class="btn btn-outline-primary w-100">
+                                <i class="bi bi-envelope"></i> Messages
+                            </a>
+                        </div>
+                    </div>
+                }
+                else if (User.IsInRole("Alumni"))
+                {
+                    <h5 class="mt-3"><i class="bi bi-person-circle"></i> My Alumni Portal</h5>
+
+                    @if (ViewData["ProfileCompletion"] != null)
+                    {
+                        var completionPercentage = (int)ViewData["ProfileCompletion"];
+                        var completedFields = (int)ViewData["CompletedFields"];
+                        var totalFields = (int)ViewData["TotalFields"];
+
+                        <!-- Profile Completion Card -->
+                        <div class="card mb-3 border-primary">
+                            <div class="card-header bg-primary text-white">
+                                <h6 class="mb-0"><i class="bi bi-graph-up"></i> Profile Completion Status</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="progress mb-2" style="height: 30px;">
+                                    <div class="progress-bar @(completionPercentage == 100 ? "bg-success" : "bg-warning")"
+                                         role="progressbar"
+                                         style="width: @completionPercentage%;"
+                                         aria-valuenow="@completionPercentage"
+                                         aria-valuemin="0"
+                                         aria-valuemax="100">
+                                        <strong>@completionPercentage%</strong>
+                                    </div>
+                                </div>
+                                <p class="mb-2">
+                                    <small class="text-muted">@completedFields of @totalFields fields completed</small>
+                                </p>
+                                @if (completionPercentage < 100)
+                                {
+                                    <div class="alert alert-warning mb-0">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        <strong>Complete your profile</strong> to help other alumni connect with you!
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-success mb-0">
+                                        <i class="bi bi-check-circle"></i>
+                                        <strong>Great!</strong> Your profile is 100% complete!
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <!-- My Profile Button - Prominent -->
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-12">
+                            <a asp-controller="Alumni" asp-action="MyProfile" class="btn btn-lg btn-primary w-100">
+                                <i class="bi bi-person-badge"></i> My Profile
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-md-4">
+                            <a asp-controller="Alumni" asp-action="Index" class="btn btn-success w-100">
+                                <i class="bi bi-people"></i> Alumni Directory
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a asp-controller="Messages" asp-action="Index" class="btn btn-info w-100">
+                                <i class="bi bi-envelope"></i> Messages
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a asp-controller="AlumniDegrees" asp-action="Index" class="btn btn-warning w-100">
+                                <i class="bi bi-award"></i> My Degrees
+                            </a>
+                        </div>
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <a asp-controller="AlumniEmployments" asp-action="Index" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-briefcase"></i> My Employments
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a asp-controller="AlumniInternships" asp-action="Index" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-person-workspace"></i> My Internships
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a asp-controller="AlumniOrganizations" asp-action="Index" class="btn btn-outline-secondary w-100">
+                                <i class="bi bi-building"></i> My Organizations
+                            </a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}

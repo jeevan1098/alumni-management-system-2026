@@ -1,0 +1,133 @@
+@model Alumni_Management_System.Models.ViewModels.AlumniRegisterViewModel
+
+@{
+    ViewData["Title"] = "Complete Registration";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-success text-white">
+                    <h3 class="mb-0"><i class="bi bi-person-plus"></i> Alumni Registration - Step 2</h3>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-success" role="alert">
+                        <i class="bi bi-check-circle"></i> <strong>JAG ID Verified!</strong> Please complete your registration below.
+                    </div>
+
+                    <form asp-action="RegisterAlumni" method="post">
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+
+                        <div class="row">
+                            <div class="col-md-12 mb-3">
+                                <label asp-for="JagId" class="form-label"></label>
+                                <input asp-for="JagId" class="form-control" readonly />
+                                <span asp-validation-for="JagId" class="text-danger"></span>
+                                <div class="form-text">
+                                    <i class="bi bi-lock"></i> Your verified JAG ID (cannot be changed)
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="FirstName" class="form-label"></label>
+                                <input asp-for="FirstName" class="form-control" readonly />
+                                <span asp-validation-for="FirstName" class="text-danger"></span>
+                                <div class="form-text">
+                                    <i class="bi bi-lock"></i> From Alumni Registry
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="LastName" class="form-label"></label>
+                                <input asp-for="LastName" class="form-control" readonly />
+                                <span asp-validation-for="LastName" class="text-danger"></span>
+                                <div class="form-text">
+                                    <i class="bi bi-lock"></i> From Alumni Registry
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label"></label>
+                            <input asp-for="Email" class="form-control" type="email" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="bi bi-envelope"></i> This will be your username for login
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Password" class="form-label"></label>
+                                <input asp-for="Password" class="form-control" type="password" />
+                                <span asp-validation-for="Password" class="text-danger"></span>
+                                <div class="form-text">
+                                    <small>Minimum 8 characters, must include uppercase, lowercase, number, and special character</small>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ConfirmPassword" class="form-label"></label>
+                                <input asp-for="ConfirmPassword" class="form-control" type="password" />
+                                <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="PhoneNumber" class="form-label"></label>
+                            <input asp-for="PhoneNumber" class="form-control" type="tel" placeholder="(555) 123-4567" />
+                            <span asp-validation-for="PhoneNumber" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i> Optional - You can update this later
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="GraduationYear" class="form-label"></label>
+                                <input asp-for="GraduationYear" class="form-control" type="number" min="1900" max="2100" readonly />
+                                <span asp-validation-for="GraduationYear" class="text-danger"></span>
+                                <div class="form-text">
+                                    <i class="bi bi-lock"></i> From Alumni Registry
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="DegreeProgram" class="form-label"></label>
+                                <input asp-for="DegreeProgram" class="form-control" readonly />
+                                <span asp-validation-for="DegreeProgram" class="text-danger"></span>
+                                <div class="form-text">
+                                    <i class="bi bi-lock"></i> From Alumni Registry
+                                </div>
+                            </div>
+                        </div>
+
+                        <hr class="my-4">
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-check-circle"></i> Complete Registration
+                            </button>
+                            <a asp-action="VerifyJagId" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Verification
+                            </a>
+                        </div>
+                    </form>
+
+                    <div class="alert alert-warning mt-3" role="alert">
+                        <h6 class="alert-heading"><i class="bi bi-shield-check"></i> Privacy & Security</h6>
+                        <p class="mb-0">
+                            Your information is secure and will only be used for alumni management purposes. 
+                            You can update your privacy settings after registration.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
+

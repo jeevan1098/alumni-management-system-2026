@@ -1,143 +1,267 @@
 ﻿@model Alumni_Management_System.Models.Alumni
+@using Microsoft.AspNetCore.Identity
+@using Alumni_Management_System.Models
+@inject UserManager<AppUser> UserManager
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Edit Profile";
+    var currentUser = await UserManager.GetUserAsync(User);
+    var isFirstLogin = currentUser?.IsFirstLogin ?? false;
+
+    // Calculate profile completion
+    int totalFields = 18;
+    int completedFields = 0;
+
+    if (!string.IsNullOrEmpty(Model.FirstName)) completedFields++;
+    if (!string.IsNullOrEmpty(Model.LastName)) completedFields++;
+    if (!string.IsNullOrEmpty(Model.PermanentEmail)) completedFields++;
+    if (!string.IsNullOrEmpty(Model.Phone)) completedFields++;
+    if (!string.IsNullOrEmpty(Model.Gender)) completedFields++;
+    if (Model.DateOfBirth.HasValue) completedFields++;
+    if (!string.IsNullOrEmpty(Model.Address)) completedFields++;
+    if (!string.IsNullOrEmpty(Model.City)) completedFields++;
+    if (!string.IsNullOrEmpty(Model.State)) completedFields++;
+    if (!string.IsNullOrEmpty(Model.Postcode)) completedFields++;
+    if (!string.IsNullOrEmpty(Model.Country)) completedFields++;
+    if (Model.GraduationYear > 0) completedFields++;
+    if (!string.IsNullOrEmpty(Model.PreferredFirstName)) completedFields++;
+    if (!string.IsNullOrEmpty(Model.StudentEmail)) completedFields++;
+    if (!string.IsNullOrEmpty(Model.SocialMediaAccount)) completedFields++;
+    if (!string.IsNullOrEmpty(Model.Prefix)) completedFields++;
+    if (Model.Privacy) completedFields++;
+    if (Model.IsActive) completedFields++;
+
+    int completionPercentage = (int)((double)completedFields / totalFields * 100);
 }
 
-<h1>Edit</h1>
+@if (isFirstLogin)
+{
+    <div class="alert alert-info" role="alert">
+        <h4 class="alert-heading"><i class="bi bi-info-circle"></i> Welcome! Complete Your Profile</h4>
+        <p>Please fill in your profile information to get started. This helps other alumni connect with you.</p>
+    </div>
+}
 
-<h4>Alumni</h4>
+<div class="row mb-4">
+    <div class="col-md-12">
+        <h1><i class="bi bi-person-circle"></i> Edit Profile</h1>
+        <p class="text-muted">Update your alumni profile information</p>
+
+        <!-- Profile Completion Progress -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h6 class="card-subtitle mb-2 text-muted">Profile Completion</h6>
+                <div class="progress" style="height: 25px;">
+                    <div class="progress-bar @(completionPercentage == 100 ? "bg-success" : "bg-primary")"
+                         role="progressbar"
+                         style="width: @completionPercentage%;"
+                         aria-valuenow="@completionPercentage"
+                         aria-valuemin="0"
+                         aria-valuemax="100">
+                        @completionPercentage% Complete
+                    </div>
+                </div>
+                <small class="text-muted mt-2 d-block">
+                    @completedFields of @totalFields fields completed
+                </small>
+            </div>
+        </div>
+    </div>
+</div>
 <hr />
 <div class="row">
-    <div class="col-md-4">
+    <div class="col-md-10 mx-auto">
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="AlumniId" />
-            <div class="form-group">
-                <label asp-for="UserId" class="control-label"></label>
-                <input asp-for="UserId" class="form-control" />
-                <span asp-validation-for="UserId" class="text-danger"></span>
+            <input type="hidden" asp-for="UserId" />
+            <input type="hidden" asp-for="LastUpdated" />
+            <input type="hidden" asp-for="IsActive" />
+
+            <!-- Basic Information -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-person"></i> Basic Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="JagId" class="form-label"></label>
+                            <input asp-for="JagId" class="form-control" placeholder="J0012345" readonly />
+                            <span asp-validation-for="JagId" class="text-danger"></span>
+                            <small class="form-text text-muted"><i class="bi bi-lock"></i> JAG ID cannot be changed</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Prefix" class="form-label"></label>
+                            <select asp-for="Prefix" class="form-select">
+                                <option value="">Select...</option>
+                                <option value="Mr.">Mr.</option>
+                                <option value="Ms.">Ms.</option>
+                                <option value="Mrs.">Mrs.</option>
+                                <option value="Dr.">Dr.</option>
+                                <option value="Prof.">Prof.</option>
+                            </select>
+                            <span asp-validation-for="Prefix" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="FirstName" class="form-label"></label>
+                            <input asp-for="FirstName" class="form-control" readonly />
+                            <span asp-validation-for="FirstName" class="text-danger"></span>
+                            <small class="form-text text-muted"><i class="bi bi-lock"></i> From Registry</small>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="PreferredFirstName" class="form-label"></label>
+                            <input asp-for="PreferredFirstName" class="form-control" />
+                            <span asp-validation-for="PreferredFirstName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label asp-for="LastName" class="form-label"></label>
+                            <input asp-for="LastName" class="form-control" readonly />
+                            <span asp-validation-for="LastName" class="text-danger"></span>
+                            <small class="form-text text-muted"><i class="bi bi-lock"></i> From Registry</small>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Gender" class="form-label"></label>
+                            <select asp-for="Gender" class="form-select">
+                                <option value="">Select...</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                                <option value="Prefer not to say">Prefer not to say</option>
+                            </select>
+                            <span asp-validation-for="Gender" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="DateOfBirth" class="form-label"></label>
+                            <input asp-for="DateOfBirth" class="form-control" type="date" />
+                            <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="GraduationYear" class="form-label"></label>
+                            <input asp-for="GraduationYear" class="form-control" type="number" readonly />
+                            <span asp-validation-for="GraduationYear" class="text-danger"></span>
+                            <small class="form-text text-muted"><i class="bi bi-lock"></i> From Registry</small>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="JagId" class="control-label"></label>
-                <input asp-for="JagId" class="form-control" placeholder="J0012345" />
-                <span asp-validation-for="JagId" class="text-danger"></span>
-                <small class="form-text text-muted">Must start with 'J00' followed by numbers (e.g., J0012345)</small>
+
+            <!-- Contact Information -->
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-envelope"></i> Contact Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="StudentEmail" class="form-label"></label>
+                            <input asp-for="StudentEmail" class="form-control" type="email" />
+                            <span asp-validation-for="StudentEmail" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="PermanentEmail" class="form-label"></label>
+                            <input asp-for="PermanentEmail" class="form-control" type="email" />
+                            <span asp-validation-for="PermanentEmail" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Phone" class="form-label"></label>
+                            <input asp-for="Phone" class="form-control" type="tel" />
+                            <span asp-validation-for="Phone" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="SocialMediaAccount" class="form-label"></label>
+                            <input asp-for="SocialMediaAccount" class="form-control" placeholder="LinkedIn, Twitter, etc." />
+                            <span asp-validation-for="SocialMediaAccount" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="Prefix" class="control-label"></label>
-                <input asp-for="Prefix" class="form-control" />
-                <span asp-validation-for="Prefix" class="text-danger"></span>
+
+            <!-- Address Information -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="bi bi-geo-alt"></i> Address Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label asp-for="Address" class="form-label"></label>
+                            <input asp-for="Address" class="form-control" placeholder="Street Address" />
+                            <span asp-validation-for="Address" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="City" class="form-label"></label>
+                            <input asp-for="City" class="form-control" />
+                            <span asp-validation-for="City" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label asp-for="State" class="form-label"></label>
+                            <input asp-for="State" class="form-control" />
+                            <span asp-validation-for="State" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label asp-for="Postcode" class="form-label"></label>
+                            <input asp-for="Postcode" class="form-control" />
+                            <span asp-validation-for="Postcode" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Country" class="form-label"></label>
+                            <input asp-for="Country" class="form-control" />
+                            <span asp-validation-for="Country" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="FirstName" class="control-label"></label>
-                <input asp-for="FirstName" class="form-control" />
-                <span asp-validation-for="FirstName" class="text-danger"></span>
+
+            <!-- Privacy Settings -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0"><i class="bi bi-shield-check"></i> Privacy Settings</h5>
+                </div>
+                <div class="card-body">
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" asp-for="SolicitationCode" />
+                        <label class="form-check-label" asp-for="SolicitationCode">
+                            @Html.DisplayNameFor(model => model.SolicitationCode)
+                        </label>
+                        <div class="form-text">
+                            Allow other alumni to see your profile in the directory and receive broadcast messages from administrators.
+                        </div>
+                        <span asp-validation-for="SolicitationCode" class="text-danger"></span>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" asp-for="Privacy" />
+                        <label class="form-check-label" asp-for="Privacy">
+                            @Html.DisplayNameFor(model => model.Privacy)
+                        </label>
+                        <span asp-validation-for="Privacy" class="text-danger"></span>
+                    </div>
+                </div>
             </div>
-            <div class="form-group">
-                <label asp-for="PreferredFirstName" class="control-label"></label>
-                <input asp-for="PreferredFirstName" class="form-control" />
-                <span asp-validation-for="PreferredFirstName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="LastName" class="control-label"></label>
-                <input asp-for="LastName" class="form-control" />
-                <span asp-validation-for="LastName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Gender" class="control-label"></label>
-                <input asp-for="Gender" class="form-control" />
-                <span asp-validation-for="Gender" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="DateOfBirth" class="control-label"></label>
-                <input asp-for="DateOfBirth" class="form-control" />
-                <span asp-validation-for="DateOfBirth" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="StudentEmail" class="control-label"></label>
-                <input asp-for="StudentEmail" class="form-control" />
-                <span asp-validation-for="StudentEmail" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="PermanentEmail" class="control-label"></label>
-                <input asp-for="PermanentEmail" class="form-control" />
-                <span asp-validation-for="PermanentEmail" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Phone" class="control-label"></label>
-                <input asp-for="Phone" class="form-control" />
-                <span asp-validation-for="Phone" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Address" class="control-label"></label>
-                <input asp-for="Address" class="form-control" />
-                <span asp-validation-for="Address" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="City" class="control-label"></label>
-                <input asp-for="City" class="form-control" />
-                <span asp-validation-for="City" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="State" class="control-label"></label>
-                <input asp-for="State" class="form-control" />
-                <span asp-validation-for="State" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Postcode" class="control-label"></label>
-                <input asp-for="Postcode" class="form-control" />
-                <span asp-validation-for="Postcode" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="Country" class="control-label"></label>
-                <input asp-for="Country" class="form-control" />
-                <span asp-validation-for="Country" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="GraduationYear" class="control-label"></label>
-                <input asp-for="GraduationYear" class="form-control" />
-                <span asp-validation-for="GraduationYear" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="SolicitationCode" class="control-label"></label>
-                <input asp-for="SolicitationCode" class="form-control" />
-                <span asp-validation-for="SolicitationCode" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="SocialMediaAccount" class="control-label"></label>
-                <input asp-for="SocialMediaAccount" class="form-control" />
-                <span asp-validation-for="SocialMediaAccount" class="text-danger"></span>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="Privacy" /> @Html.DisplayNameFor(model => model.Privacy)
-                </label>
-            </div>
-            <div class="form-group form-check">
-                <label class="form-check-label">
-                    <input class="form-check-input" asp-for="IsActive" /> @Html.DisplayNameFor(model => model.IsActive)
-                </label>
-            </div>
-            <div class="form-group">
-                <label asp-for="LastUpdated" class="control-label"></label>
-                <input asp-for="LastUpdated" class="form-control" />
-                <span asp-validation-for="LastUpdated" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="UserId" class="control-label"></label>
-                <select asp-for="UserId" class="form-control" asp-items="ViewBag.UserId"></select>
-                <span asp-validation-for="UserId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
+
+            <!-- Form Actions -->
+            <div class="d-grid gap-2 d-md-flex justify-content-md-between mb-4">
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Directory
+                </a>
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="bi bi-save"></i> Save Profile
+                </button>
             </div>
         </form>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
 </div>
 
 @section Scripts {

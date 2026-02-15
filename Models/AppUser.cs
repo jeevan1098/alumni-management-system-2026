@@ -17,6 +17,9 @@ namespace Alumni_Management_System.Models
         [Column("created_at", TypeName = "datetime")]
         public DateTime CreatedAt { get; set; }
 
+        [Column("is_first_login")]
+        public bool IsFirstLogin { get; set; } = true;
+
         public virtual Alumni Alumni { get; set; }
         public virtual ICollection<Message> Messages { get; set; } = new List<Message>();
     }

@@ -89,8 +89,8 @@ public partial class Alumni
     public int GraduationYear { get; set; }
 
     [Column("solicitation_code")]
-    [StringLength(20)]
-    public string SolicitationCode { get; set; }
+    [Display(Name = "Allow Contact (Solicitation)")]
+    public bool SolicitationCode { get; set; }
 
     [Column("social_media_account")]
     [StringLength(255)]
