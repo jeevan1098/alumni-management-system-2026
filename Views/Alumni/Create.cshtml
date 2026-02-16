@@ -1,4 +1,4 @@
-﻿@model Alumni_Management_System.Models.Alumni
+﻿@* @model Alumni_Management_System.Models.Alumni
 
 @{
     ViewData["Title"] = "Create";
@@ -125,4 +125,186 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} *@
+
+@model Alumni_Management_System.Models.Alumni
+
+@{
+    ViewData["Title"] = "Create Alumni";
 }
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+
+            <div class="d-flex align-items-center mb-4">
+                <i class="bi bi-person-plus-fill fs-2 text-primary me-3"></i>
+                <div>
+                    <h3 class="fw-bold mb-0">Create Alumni Profile</h3>
+                    <small class="text-muted">Enter alumni information below</small>
+                </div>
+            </div>
+
+            <hr class="mb-4" />
+
+            <form asp-action="Create">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <!-- Personal Information -->
+                <h5 class="fw-semibold text-secondary mb-3">
+                    <i class="bi bi-person-circle me-2"></i>Personal Information
+                </h5>
+
+                <div class="row">
+                    <div class="col-md-2 mb-3">
+                        <label asp-for="Prefix" class="form-label"></label>
+                        <input asp-for="Prefix" class="form-control rounded-3" />
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="FirstName" class="form-label"></label>
+                        <input asp-for="FirstName" class="form-control rounded-3" />
+                        <span asp-validation-for="FirstName" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label asp-for="PreferredFirstName" class="form-label"></label>
+                        <input asp-for="PreferredFirstName" class="form-control rounded-3" />
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label asp-for="LastName" class="form-label"></label>
+                        <input asp-for="LastName" class="form-control rounded-3" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="Gender" class="form-label"></label>
+                        <input asp-for="Gender" class="form-control rounded-3" />
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="DateOfBirth" class="form-label"></label>
+                        <input asp-for="DateOfBirth" type="date" class="form-control rounded-3" />
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="JagId" class="form-label"></label>
+                        <input asp-for="JagId" class="form-control rounded-3" placeholder="J0012345" />
+                        <small class="text-muted">Must start with J00 followed by numbers</small>
+                    </div>
+                </div>
+
+                <hr class="my-4" />
+
+                <!-- Contact Information -->
+                <h5 class="fw-semibold text-secondary mb-3">
+                    <i class="bi bi-envelope-fill me-2"></i>Contact Information
+                </h5>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="StudentEmail" class="form-label"></label>
+                        <input asp-for="StudentEmail" class="form-control rounded-3" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="PermanentEmail" class="form-label"></label>
+                        <input asp-for="PermanentEmail" class="form-control rounded-3" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Phone" class="form-label"></label>
+                        <input asp-for="Phone" class="form-control rounded-3" />
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="SocialMediaAccount" class="form-label"></label>
+                        <input asp-for="SocialMediaAccount" class="form-control rounded-3" />
+                    </div>
+                </div>
+
+                <hr class="my-4" />
+
+                <!-- Address -->
+                <h5 class="fw-semibold text-secondary mb-3">
+                    <i class="bi bi-geo-alt-fill me-2"></i>Address
+                </h5>
+
+                <div class="mb-3">
+                    <label asp-for="Address" class="form-label"></label>
+                    <input asp-for="Address" class="form-control rounded-3" />
+                </div>
+
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label asp-for="City" class="form-label"></label>
+                        <input asp-for="City" class="form-control rounded-3" />
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label asp-for="State" class="form-label"></label>
+                        <input asp-for="State" class="form-control rounded-3" />
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label asp-for="Postcode" class="form-label"></label>
+                        <input asp-for="Postcode" class="form-control rounded-3" />
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label asp-for="Country" class="form-label"></label>
+                        <input asp-for="Country" class="form-control rounded-3" />
+                    </div>
+                </div>
+
+                <hr class="my-4" />
+
+                <!-- Academic Info -->
+                <h5 class="fw-semibold text-secondary mb-3">
+                    <i class="bi bi-mortarboard-fill me-2"></i>Academic Information
+                </h5>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="GraduationYear" class="form-label"></label>
+                        <input asp-for="GraduationYear" class="form-control rounded-3" />
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="SolicitationCode" class="form-label"></label>
+                        <input asp-for="SolicitationCode" class="form-control rounded-3" />
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="UserId" class="form-label"></label>
+                        <select asp-for="UserId" class="form-select rounded-3"
+                                asp-items="ViewBag.IdentityUserId">
+                        </select>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
+                        <i class="bi bi-arrow-left me-2"></i>Back
+                    </a>
+
+                    <button type="submit" class="btn btn-primary rounded-pill px-4">
+                        <i class="bi bi-check-circle me-2"></i>Create Alumni
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}
+

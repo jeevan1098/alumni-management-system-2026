@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -15,17 +16,42 @@ namespace Alumni_Management_System.Controllers
     public class AlumniMessagesController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<AppUser> _userManager;
 
-        public AlumniMessagesController(ApplicationDbContext context)
+        public AlumniMessagesController(ApplicationDbContext context, UserManager<AppUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: AlumniMessages
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.AlumniMessages.Include(a => a.Alumni).Include(a => a.Message);
-            return View(await applicationDbContext.ToListAsync());
+            var currentUser = await _userManager.GetUserAsync(User);
+            var roles = await _userManager.GetRolesAsync(currentUser);
+
+            IQueryable<AlumniMessage> query = _context.AlumniMessages.Include(a => a.Alumni).Include(a => a.Message);
+
+            // Alumni can only see their own messages
+            if (roles.Contains(Constants.AlumniRole))
+            {
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                if (alumni != null)
+                {
+                    query = query.Where(am => am.AlumniId == alumni.AlumniId);
+                    ViewData["UserRole"] = Constants.AlumniRole;
+                }
+                else
+                {
+                    return View(new List<AlumniMessage>());
+                }
+            }
+            else
+            {
+                ViewData["UserRole"] = "Admin";
+            }
+
+            return View(await query.ToListAsync());
         }
 
         // GET: AlumniMessages/Details/5
@@ -45,10 +71,24 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
+            // Check if Alumni user is trying to view another alumni's message
+            var currentUser = await _userManager.GetUserAsync(User);
+            var roles = await _userManager.GetRolesAsync(currentUser);
+            if (roles.Contains(Constants.AlumniRole))
+            {
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                if (alumni == null || alumniMessage.AlumniId != alumni.AlumniId)
+                {
+                    TempData["ErrorMessage"] = "You can only view your own messages.";
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+
             return View(alumniMessage);
         }
 
         // GET: AlumniMessages/Create
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName");
@@ -57,16 +97,16 @@ namespace Alumni_Management_System.Controllers
         }
 
         // POST: AlumniMessages/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([Bind("AlumniMessageId,AlumniId,MessageId,SentAt")] AlumniMessage alumniMessage)
         {
             if (ModelState.IsValid)
             {
                 _context.Add(alumniMessage);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Message sent successfully!";
                 return RedirectToAction(nameof(Index));
             }
             ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniMessage.AlumniId);
@@ -75,6 +115,7 @@ namespace Alumni_Management_System.Controllers
         }
 
         // GET: AlumniMessages/Edit/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -93,10 +134,9 @@ namespace Alumni_Management_System.Controllers
         }
 
         // POST: AlumniMessages/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int id, [Bind("AlumniMessageId,AlumniId,MessageId,SentAt")] AlumniMessage alumniMessage)
         {
             if (id != alumniMessage.AlumniMessageId)
@@ -110,6 +150,7 @@ namespace Alumni_Management_System.Controllers
                 {
                     _context.Update(alumniMessage);
                     await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Message updated successfully!";
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -130,6 +171,7 @@ namespace Alumni_Management_System.Controllers
         }
 
         // GET: AlumniMessages/Delete/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -152,15 +194,17 @@ namespace Alumni_Management_System.Controllers
         // POST: AlumniMessages/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var alumniMessage = await _context.AlumniMessages.FindAsync(id);
             if (alumniMessage != null)
             {
                 _context.AlumniMessages.Remove(alumniMessage);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Message deleted successfully!";
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 
