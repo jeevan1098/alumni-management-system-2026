@@ -119,6 +119,15 @@ namespace Alumni_Management_System.Controllers
         [Authorize(Roles = "Admin")] // Only Admin can create alumni manually
         public async Task<IActionResult> Create([Bind("AlumniId,UserId,JagId,Prefix,FirstName,PreferredFirstName,LastName,Gender,DateOfBirth,StudentEmail,PermanentEmail,Phone,Address,City,State,Postcode,Country,GraduationYear,SolicitationCode,SocialMediaAccount,Privacy,IsActive,LastUpdated,IdentityUserId")] Alumni alumni)
         {
+            // Validate: DOB cannot be after Graduation Year
+            if (alumni.DateOfBirth.HasValue && alumni.GraduationYear > 0)
+            {
+                if (alumni.DateOfBirth.Value.Year > alumni.GraduationYear)
+                {
+                    ModelState.AddModelError("DateOfBirth", "Date of Birth cannot be after Graduation Year.");
+                }
+            }
+
             if (ModelState.IsValid)
             {
                 alumni.LastUpdated = DateTime.Now;
@@ -210,6 +219,15 @@ namespace Alumni_Management_System.Controllers
                 // Staff cannot edit any profiles
                 TempData["ErrorMessage"] = "Staff members have read-only access.";
                 return RedirectToAction(nameof(Index));
+            }
+
+            // Validate: DOB cannot be after Graduation Year
+            if (alumni.DateOfBirth.HasValue && alumni.GraduationYear > 0)
+            {
+                if (alumni.DateOfBirth.Value.Year > alumni.GraduationYear)
+                {
+                    ModelState.AddModelError("DateOfBirth", "Date of Birth cannot be after Graduation Year.");
+                }
             }
 
             if (ModelState.IsValid)

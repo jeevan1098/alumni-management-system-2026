@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -11,14 +12,16 @@ using Alumni_Management_System.Models;
 
 namespace Alumni_Management_System.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public class MessagesController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<AppUser> _userManager;
 
-        public MessagesController(ApplicationDbContext context)
+        public MessagesController(ApplicationDbContext context, UserManager<AppUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: Messages
@@ -48,35 +51,33 @@ namespace Alumni_Management_System.Controllers
         }
 
         // GET: Messages/Create
-        [Authorize(Roles = "Admin")] // Only Admin can create messages
         public IActionResult Create()
         {
-            ViewData["CreatedBy"] = new SelectList(_context.Users, "Id", "Id");
+            // No dropdown needed - CreatedBy will be auto-assigned to current admin
             return View();
         }
 
         // POST: Messages/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")] // Only Admin can create messages
-        public async Task<IActionResult> Create([Bind("MessageId,Title,MessageBody,MessageType,CreatedBy,CreatedAt")] Message message)
+        public async Task<IActionResult> Create([Bind("MessageId,Title,MessageBody,MessageType")] Message message)
         {
+            // Auto-assign CreatedBy to current admin user
+            var currentUser = await _userManager.GetUserAsync(User);
+            message.CreatedBy = currentUser.Id;
+            message.CreatedAt = DateTime.Now;
+
             if (ModelState.IsValid)
             {
-                message.CreatedAt = DateTime.Now;
                 _context.Add(message);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Message created successfully!";
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CreatedBy"] = new SelectList(_context.Users, "Id", "Id", message.CreatedBy);
             return View(message);
         }
 
         // GET: Messages/Edit/5
-        [Authorize(Roles = "Admin")] // Only Admin can edit messages
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -89,22 +90,29 @@ namespace Alumni_Management_System.Controllers
             {
                 return NotFound();
             }
-            ViewData["CreatedBy"] = new SelectList(_context.Users, "Id", "Id", message.CreatedBy);
+            // No dropdown needed - CreatedBy cannot be edited
             return View(message);
         }
 
         // POST: Messages/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")] // Only Admin can edit messages
-        public async Task<IActionResult> Edit(int id, [Bind("MessageId,Title,MessageBody,MessageType,CreatedBy,CreatedAt")] Message message)
+        public async Task<IActionResult> Edit(int id, [Bind("MessageId,Title,MessageBody,MessageType")] Message message)
         {
             if (id != message.MessageId)
             {
                 return NotFound();
             }
+
+            // Preserve original CreatedBy and CreatedAt
+            var originalMessage = await _context.Messages.AsNoTracking().FirstOrDefaultAsync(m => m.MessageId == id);
+            if (originalMessage == null)
+            {
+                return NotFound();
+            }
+
+            message.CreatedBy = originalMessage.CreatedBy;
+            message.CreatedAt = originalMessage.CreatedAt;
 
             if (ModelState.IsValid)
             {
@@ -127,7 +135,6 @@ namespace Alumni_Management_System.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["CreatedBy"] = new SelectList(_context.Users, "Id", "Id", message.CreatedBy);
             return View(message);
         }
 

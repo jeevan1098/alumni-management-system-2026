@@ -1,47 +1,74 @@
 ﻿@model IEnumerable<Alumni_Management_System.Models.AlumniMessage>
 
 @{
-    ViewData["Title"] = "Index";
+    ViewData["Title"] = "My Messages";
+    var userRole = ViewData["UserRole"]?.ToString();
 }
 
-<h1>Index</h1>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="bi bi-envelope-fill"></i> My Messages</h2>
+        @if (userRole == "Admin")
+        {
+            <a asp-action="Create" class="btn btn-primary">
+                <i class="bi bi-plus-circle"></i> Send New Message
+            </a>
+        }
+    </div>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.SentAt)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Alumni)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Message)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.SentAt)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Alumni.FirstName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Message.MessageBody)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.AlumniMessageId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.AlumniMessageId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.AlumniMessageId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table>
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["SuccessMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    @if (!Model.Any())
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i> You have no messages yet.
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var item in Model)
+            {
+                <div class="col-12 mb-3">
+                    <div class="card">
+                        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                            <div>
+                                <h5 class="mb-0">
+                                    <i class="bi bi-envelope-open"></i> @item.Message.Title
+                                </h5>
+                                <small>
+                                    <i class="bi bi-person-badge"></i> From: Admin |
+                                    <i class="bi bi-calendar"></i> @item.SentAt.ToString("MMM dd, yyyy hh:mm tt")
+                                </small>
+                            </div>
+                            <span class="badge bg-light text-dark">@item.Message.MessageType</span>
+                        </div>
+                        <div class="card-body">
+                            <p class="card-text">@item.Message.MessageBody</p>
+                            @if (userRole == "Admin")
+                            {
+                                <div class="mt-3">
+                                    <a asp-action="Details" asp-route-id="@item.AlumniMessageId" class="btn btn-sm btn-info">
+                                        <i class="bi bi-eye"></i> Details
+                                    </a>
+                                    <a asp-action="Edit" asp-route-id="@item.AlumniMessageId" class="btn btn-sm btn-warning">
+                                        <i class="bi bi-pencil"></i> Edit
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.AlumniMessageId" class="btn btn-sm btn-danger">
+                                        <i class="bi bi-trash"></i> Delete
+                                    </a>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

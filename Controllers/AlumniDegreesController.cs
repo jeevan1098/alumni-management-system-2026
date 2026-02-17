@@ -161,8 +161,7 @@ namespace Alumni_Management_System.Controllers
             // Validation 4: Check for duplicate degree (same alumni + same degree)
             var duplicateExists = await _context.AlumniDegrees
                 .AnyAsync(ad => ad.AlumniId == alumniDegree.AlumniId &&
-                               ad.DegreeId == alumniDegree.DegreeId &&
-                               ad.AlumniDegreeId != alumniDegree.AlumniDegreeId);
+                               ad.DegreeId == alumniDegree.DegreeId);
             if (duplicateExists)
             {
                 ModelState.AddModelError("DegreeId", "You already have this degree recorded.");

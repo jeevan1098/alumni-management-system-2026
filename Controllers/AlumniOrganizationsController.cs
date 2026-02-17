@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -11,21 +12,41 @@ using Alumni_Management_System.Models;
 
 namespace Alumni_Management_System.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Alumni,Admin")]
     public class AlumniOrganizationsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<AppUser> _userManager;
 
-        public AlumniOrganizationsController(ApplicationDbContext context)
+        public AlumniOrganizationsController(ApplicationDbContext context, UserManager<AppUser> userManager)
         {
             _context = context;
+            _userManager = userManager;
         }
 
         // GET: AlumniOrganizations
         public async Task<IActionResult> Index()
         {
-            var applicationDbContext = _context.AlumniOrganizations.Include(a => a.Alumni).Include(a => a.OrganizationType);
-            return View(await applicationDbContext.ToListAsync());
+            var currentUser = await _userManager.GetUserAsync(User);
+            var roles = await _userManager.GetRolesAsync(currentUser);
+
+            IQueryable<AlumniOrganization> query = _context.AlumniOrganizations.Include(a => a.Alumni).Include(a => a.OrganizationType);
+
+            // Alumni can only see their own organization records
+            if (roles.Contains(Constants.AlumniRole))
+            {
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                if (alumni != null)
+                {
+                    query = query.Where(ao => ao.AlumniId == alumni.AlumniId);
+                }
+                else
+                {
+                    return View(new List<AlumniOrganization>());
+                }
+            }
+
+            return View(await query.ToListAsync());
         }
 
         // GET: AlumniOrganizations/Details/5
@@ -45,31 +66,88 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
+            // Check if Alumni user is trying to view another alumni's organization
+            var currentUser = await _userManager.GetUserAsync(User);
+            var roles = await _userManager.GetRolesAsync(currentUser);
+            if (roles.Contains(Constants.AlumniRole))
+            {
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                if (alumni == null || alumniOrganization.AlumniId != alumni.AlumniId)
+                {
+                    TempData["ErrorMessage"] = "You can only view your own organization records.";
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+
             return View(alumniOrganization);
         }
 
         // GET: AlumniOrganizations/Create
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName");
+            var currentUser = await _userManager.GetUserAsync(User);
+            var roles = await _userManager.GetRolesAsync(currentUser);
+
+            // For Alumni users, auto-select their own AlumniId
+            if (roles.Contains(Constants.AlumniRole))
+            {
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                if (alumni == null)
+                {
+                    TempData["ErrorMessage"] = "Alumni profile not found.";
+                    return RedirectToAction("Index", "Home");
+                }
+                ViewData["CurrentAlumniId"] = alumni.AlumniId;
+                ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumni.AlumniId);
+            }
+            else
+            {
+                // Admin can select any alumni
+                ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName");
+            }
+
             ViewData["OrganizationTypeId"] = new SelectList(_context.OrganizationTypes, "OrganizationTypeId", "OrganizationName");
             return View();
         }
 
         // POST: AlumniOrganizations/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("AlumniOrganizationId,AlumniId,OrganizationTypeId,OfficerRoles")] AlumniOrganization alumniOrganization)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var roles = await _userManager.GetRolesAsync(currentUser);
+
+            // Validate: Alumni can only create organizations for themselves
+            if (roles.Contains(Constants.AlumniRole))
+            {
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                if (alumni == null || alumniOrganization.AlumniId != alumni.AlumniId)
+                {
+                    TempData["ErrorMessage"] = "You can only create organization records for yourself.";
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+
             if (ModelState.IsValid)
             {
                 _context.Add(alumniOrganization);
                 await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Organization record added successfully!";
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniOrganization.AlumniId);
+
+            // Repopulate dropdowns
+            if (roles.Contains(Constants.AlumniRole))
+            {
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                ViewData["CurrentAlumniId"] = alumni?.AlumniId;
+                ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniOrganization.AlumniId);
+            }
+            else
+            {
+                ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniOrganization.AlumniId);
+            }
             ViewData["OrganizationTypeId"] = new SelectList(_context.OrganizationTypes, "OrganizationTypeId", "OrganizationName", alumniOrganization.OrganizationTypeId);
             return View(alumniOrganization);
         }
@@ -87,14 +165,31 @@ namespace Alumni_Management_System.Controllers
             {
                 return NotFound();
             }
-            ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniOrganization.AlumniId);
+
+            // Check if Alumni user is trying to edit another alumni's organization
+            var currentUser = await _userManager.GetUserAsync(User);
+            var roles = await _userManager.GetRolesAsync(currentUser);
+            if (roles.Contains(Constants.AlumniRole))
+            {
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                if (alumni == null || alumniOrganization.AlumniId != alumni.AlumniId)
+                {
+                    TempData["ErrorMessage"] = "You can only edit your own organization records.";
+                    return RedirectToAction(nameof(Index));
+                }
+                ViewData["CurrentAlumniId"] = alumni.AlumniId;
+                ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniOrganization.AlumniId);
+            }
+            else
+            {
+                ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniOrganization.AlumniId);
+            }
+
             ViewData["OrganizationTypeId"] = new SelectList(_context.OrganizationTypes, "OrganizationTypeId", "OrganizationName", alumniOrganization.OrganizationTypeId);
             return View(alumniOrganization);
         }
 
         // POST: AlumniOrganizations/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("AlumniOrganizationId,AlumniId,OrganizationTypeId,OfficerRoles")] AlumniOrganization alumniOrganization)
@@ -104,12 +199,27 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
+            var currentUser = await _userManager.GetUserAsync(User);
+            var roles = await _userManager.GetRolesAsync(currentUser);
+
+            // Validate: Alumni can only edit their own organizations
+            if (roles.Contains(Constants.AlumniRole))
+            {
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                if (alumni == null || alumniOrganization.AlumniId != alumni.AlumniId)
+                {
+                    TempData["ErrorMessage"] = "You can only edit your own organization records.";
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+
             if (ModelState.IsValid)
             {
                 try
                 {
                     _context.Update(alumniOrganization);
                     await _context.SaveChangesAsync();
+                    TempData["SuccessMessage"] = "Organization record updated successfully!";
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -124,7 +234,18 @@ namespace Alumni_Management_System.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniOrganization.AlumniId);
+
+            // Repopulate dropdowns
+            if (roles.Contains(Constants.AlumniRole))
+            {
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                ViewData["CurrentAlumniId"] = alumni?.AlumniId;
+                ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniOrganization.AlumniId);
+            }
+            else
+            {
+                ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniOrganization.AlumniId);
+            }
             ViewData["OrganizationTypeId"] = new SelectList(_context.OrganizationTypes, "OrganizationTypeId", "OrganizationName", alumniOrganization.OrganizationTypeId);
             return View(alumniOrganization);
         }
@@ -146,6 +267,19 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
+            // Check if Alumni user is trying to delete another alumni's organization
+            var currentUser = await _userManager.GetUserAsync(User);
+            var roles = await _userManager.GetRolesAsync(currentUser);
+            if (roles.Contains(Constants.AlumniRole))
+            {
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                if (alumni == null || alumniOrganization.AlumniId != alumni.AlumniId)
+                {
+                    TempData["ErrorMessage"] = "You can only delete your own organization records.";
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+
             return View(alumniOrganization);
         }
 
@@ -157,10 +291,24 @@ namespace Alumni_Management_System.Controllers
             var alumniOrganization = await _context.AlumniOrganizations.FindAsync(id);
             if (alumniOrganization != null)
             {
+                // Check if Alumni user is trying to delete another alumni's organization
+                var currentUser = await _userManager.GetUserAsync(User);
+                var roles = await _userManager.GetRolesAsync(currentUser);
+                if (roles.Contains(Constants.AlumniRole))
+                {
+                    var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                    if (alumni == null || alumniOrganization.AlumniId != alumni.AlumniId)
+                    {
+                        TempData["ErrorMessage"] = "You can only delete your own organization records.";
+                        return RedirectToAction(nameof(Index));
+                    }
+                }
+
                 _context.AlumniOrganizations.Remove(alumniOrganization);
+                await _context.SaveChangesAsync();
+                TempData["SuccessMessage"] = "Organization record deleted successfully!";
             }
 
-            await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
         }
 

@@ -1,52 +1,59 @@
 ﻿@model Alumni_Management_System.Models.Message
 
 @{
-    ViewData["Title"] = "Edit";
+    ViewData["Title"] = "Edit Message";
 }
 
-<h1>Edit</h1>
+<div class="container mt-4">
+    <h2><i class="bi bi-pencil-square"></i> Edit Message</h2>
+    <hr />
 
-<h4>Message</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="MessageId" />
-            <div class="form-group">
-                <label asp-for="Title" class="control-label"></label>
-                <input asp-for="Title" class="form-control" />
-                <span asp-validation-for="Title" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="MessageBody" class="control-label"></label>
-                <input asp-for="MessageBody" class="form-control" />
-                <span asp-validation-for="MessageBody" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="MessageType" class="control-label"></label>
-                <input asp-for="MessageType" class="form-control" />
-                <span asp-validation-for="MessageType" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CreatedBy" class="control-label"></label>
-                <select asp-for="CreatedBy" class="form-control" asp-items="ViewBag.CreatedBy"></select>
-                <span asp-validation-for="CreatedBy" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="CreatedAt" class="control-label"></label>
-                <input asp-for="CreatedAt" class="form-control" />
-                <span asp-validation-for="CreatedAt" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
+    <div class="row">
+        <div class="col-md-8">
+            <form asp-action="Edit">
+                <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                <input type="hidden" asp-for="MessageId" />
+
+                <div class="form-group mb-3">
+                    <label asp-for="Title" class="control-label"></label>
+                    <input asp-for="Title" class="form-control" />
+                    <span asp-validation-for="Title" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="MessageBody" class="control-label"></label>
+                    <textarea asp-for="MessageBody" class="form-control" rows="6"></textarea>
+                    <span asp-validation-for="MessageBody" class="text-danger"></span>
+                </div>
+
+                <div class="form-group mb-3">
+                    <label asp-for="MessageType" class="control-label"></label>
+                    <select asp-for="MessageType" class="form-control">
+                        <option value="">-- Select Message Type --</option>
+                        <option value="General">General</option>
+                        <option value="Event">Event</option>
+                        <option value="Announcement">Announcement</option>
+                        <option value="Newsletter">Newsletter</option>
+                    </select>
+                    <span asp-validation-for="MessageType" class="text-danger"></span>
+                </div>
+
+                <div class="alert alert-secondary">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>Created:</strong> @Model.CreatedAt.ToString("MMM dd, yyyy hh:mm tt")
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-save"></i> Save Changes
+                    </button>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-x-circle"></i> Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
 </div>
 
 @section Scripts {

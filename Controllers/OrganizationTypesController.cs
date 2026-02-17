@@ -11,7 +11,7 @@ using Alumni_Management_System.Models;
 
 namespace Alumni_Management_System.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin,Staff")]
     public class OrganizationTypesController : Controller
     {
         private readonly ApplicationDbContext _context;
