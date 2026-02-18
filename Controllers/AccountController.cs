@@ -180,6 +180,17 @@ namespace Alumni_Management_System.Controllers
 
             return View(model);
         }
+
+        // ================= LOGOUT =================
+        [Authorize]
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Logout()
+        {
+            await _signInManager.SignOutAsync();
+            _logger.LogInformation("User logged out.");
+
+            return RedirectToAction("VerifyJagId", "Account");
+        }
     }
 }
-

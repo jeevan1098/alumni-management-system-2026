@@ -2,13 +2,82 @@
     ViewData["Title"] = "Dashboard";
 }
 
-<!-- HEADER -->
+<!-- ===== PAGE STYLE (RESTORE COLORS) ===== -->
+<style>
+    .banner {
+        background: linear-gradient(135deg,#4facfe,#00f2fe);
+        color: white;
+        padding: 22px;
+        border-radius: 12px;
+        margin-bottom: 18px;
+    }
+
+    .card-soft {
+        border: none;
+        border-radius: 12px;
+        padding: 18px;
+        background: white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        transition: .2s;
+    }
+
+    body.dark .card-soft {
+        background: #1e1e1e;
+        color: #ddd;
+    }
+
+    .card-soft:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+    }
+
+    .stat-number {
+        font-size: 22px;
+        font-weight: 700;
+    }
+
+    /* STAT COLORS (RESTORED) */
+    .stat1 {
+        background: #dbeafe;
+    }
+
+    .stat2 {
+        background: #d1fae5;
+    }
+
+    .stat3 {
+        background: #fef3c7;
+    }
+
+    .stat4 {
+        background: #e0e7ff;
+    }
+
+    .stat5 {
+        background: #e5e7eb;
+    }
+
+    .stat6 {
+        background: #fee2e2;
+    }
+
+    body.dark .stat1,
+    body.dark .stat2,
+    body.dark .stat3,
+    body.dark .stat4,
+    body.dark .stat5,
+    body.dark .stat6 {
+        background: #2a2a2a;
+    }
+</style>
+
+<!-- ===== HEADER ===== -->
 <div class="banner">
     <h3>Welcome to Alumni Management System</h3>
     <p class="mb-0">Manage alumni, programs, employment and system activity</p>
 </div>
 
-<!-- STATS -->
+<!-- ===== STATS ===== -->
 <div class="row g-3 mb-4">
 
     <div class="col-md-2">
@@ -55,7 +124,7 @@
 
 </div>
 
-<!-- CHART + ACTIVITY -->
+<!-- ===== CHART + ACTIVITY ===== -->
 <div class="row g-3 mb-4">
 
     <!-- Chart -->
@@ -71,8 +140,7 @@
         <div class="card-soft p-3">
             <h6>Recent Activity</h6>
             <ul class="small mb-0">
-
-                @if (ViewBag.RecentActivity != null)
+                @if (ViewBag.RecentActivity != null && ViewBag.RecentActivity.Count > 0)
                 {
                     foreach (var item in ViewBag.RecentActivity)
                     {
@@ -83,14 +151,13 @@
                 {
                     <li>No recent activity</li>
                 }
-
             </ul>
         </div>
     </div>
 
 </div>
 
-<!-- MODULE BOXES -->
+<!-- ===== MODULE GRID ===== -->
 <div class="row g-3">
 
     <div class="col-md-3">
@@ -167,35 +234,38 @@
 
 </div>
 
-<!-- CHART SCRIPT -->
+<!-- ===== CHART SCRIPT ===== -->
 <script>
-    var labels = [];
-    var data = [];
+    var labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ChartLabels ?? new List<int>()));
+    var alumniData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.AlumniData ?? new List<int>()));
+    var registryData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.RegistryData ?? new List<int>()));
 
-    @if (ViewBag.ChartLabels != null && ViewBag.ChartData != null)
-    {
-        <text>
-            labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ChartLabels));
-            data = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ChartData));
-        </text>
-    }
-
-    var ctx = document.getElementById('chart');
-
-    if (ctx && labels.length > 0) {
-        new Chart(ctx, {
+    if (labels.length > 0) {
+        new Chart(document.getElementById('chart'), {
             type: 'line',
             data: {
                 labels: labels,
-                datasets: [{
-                    data: data,
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.3
-                }]
+                datasets: [
+                    {
+                        label: "Alumni",
+                        data: alumniData,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: "Registry",
+                        data: registryData,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3
+                    }
+                ]
             },
             options: {
-                plugins: { legend: { display: false } }
+                plugins: {
+                    legend: { display: true }
+                }
             }
         });
     }

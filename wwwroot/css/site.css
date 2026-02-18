@@ -29,3 +29,98 @@ body {
 .form-floating > .form-control-plaintext:focus::placeholder, .form-floating > .form-control:focus::placeholder {
   text-align: start;
 }
+
+/* ---------- PREMIUM DASHBOARD ---------- */
+
+.dashboard-container {
+    display: flex;
+}
+
+/* Sidebar */
+.dashboard-sidebar {
+    width: 240px;
+    min-height: 100vh;
+    background: linear-gradient(180deg, #0d6efd, #0b5ed7);
+    color: white;
+    padding: 20px;
+}
+
+    .dashboard-sidebar a {
+        color: rgba(255,255,255,0.85);
+        text-decoration: none;
+        display: block;
+        padding: 10px 12px;
+        border-radius: 8px;
+        margin-bottom: 5px;
+        transition: 0.2s;
+    }
+
+        .dashboard-sidebar a:hover {
+            background: rgba(255,255,255,0.15);
+            color: #fff;
+        }
+
+/* Content */
+.dashboard-content {
+    flex: 1;
+    padding: 25px;
+    background: #f4f6f9;
+}
+
+/* Stat cards */
+.stat-card {
+    border-radius: 14px;
+    color: white;
+    padding: 18px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+    transition: 0.25s;
+}
+
+    .stat-card:hover {
+        transform: translateY(-4px);
+    }
+
+/* Gradient colors */
+.bg-grad-primary {
+    background: linear-gradient(135deg,#4e73df,#224abe);
+}
+
+.bg-grad-success {
+    background: linear-gradient(135deg,#1cc88a,#13855c);
+}
+
+.bg-grad-warning {
+    background: linear-gradient(135deg,#f6c23e,#dda20a);
+}
+
+.bg-grad-info {
+    background: linear-gradient(135deg,#36b9cc,#258391);
+}
+
+.bg-grad-dark {
+    background: linear-gradient(135deg,#5a5c69,#373840);
+}
+
+.bg-grad-danger {
+    background: linear-gradient(135deg,#e74a3b,#be2617);
+}
+
+/* Tiles */
+.dashboard-tile {
+    border-radius: 14px;
+    background: white;
+    transition: 0.25s;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.05);
+}
+
+    .dashboard-tile:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 14px 30px rgba(0,0,0,0.08);
+    }
+
+/* Counter */
+.counter {
+    font-size: 1.6rem;
+    font-weight: 700;
+}

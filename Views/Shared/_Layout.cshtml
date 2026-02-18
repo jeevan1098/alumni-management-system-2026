@@ -1,73 +1,420 @@
 ﻿<!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Alumni Management System</title>
-    <script type="importmap"></script>
-    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
-    <link rel="stylesheet" href="~/Alumni_Management_System.styles.css" asp-append-version="true" />
+    <title>Alumni Management</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            background: #f4f6f9;
+            font-family: system-ui;
+            transition: .3s;
+        }
+
+            body.dark {
+                background: #121212;
+                color: #e4e4e4;
+            }
+
+        .layout {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .footer {
+            background: white;
+            border-top: 1px solid #e5e7eb;
+            padding: 14px 20px;
+            font-size: 13px;
+            margin-top: auto;
+        }
+
+        body.dark .footer {
+            background: #1f1f1f;
+            border-top: 1px solid #333;
+            color: #bbb;
+        }
+
+        .footer-link {
+            text-decoration: none;
+            color: #2563eb;
+            font-weight: 500;
+            transition: 0.2s;
+        }
+
+            .footer-link:hover {
+                color: #1e40af;
+                text-decoration: underline;
+            }
+
+        body.dark .footer-link {
+            color: #60a5fa;
+        }
+
+        /* ================= PRO FOOTER ================= */
+
+        .footer-pro {
+            background: linear-gradient(180deg, #ffffff, #f8fafc);
+            border-top: 1px solid #e5e7eb;
+            padding: 16px 20px;
+            font-size: 13px;
+            margin-top: auto;
+            transition: 0.3s;
+        }
+
+        .footer-brand {
+            font-weight: 700;
+            color: #1f3c88;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+            .footer-brand i {
+                font-size: 18px;
+            }
+
+        .footer-tagline {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .footer-links a {
+            text-decoration: none;
+            color: #2563eb;
+            font-weight: 500;
+            margin: 0 6px;
+            transition: 0.2s;
+        }
+
+            .footer-links a:hover {
+                color: #1e40af;
+                text-decoration: underline;
+            }
+
+        .footer-links span {
+            color: #9ca3af;
+        }
+
+        .footer-meta {
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .footer-version {
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        /* DARK MODE */
+        body.dark .footer-pro {
+            background: linear-gradient(180deg, #1f1f1f, #121212);
+            border-top: 1px solid #333;
+        }
+
+        body.dark .footer-brand {
+            color: #60a5fa;
+        }
+
+        body.dark .footer-tagline,
+        body.dark .footer-version {
+            color: #9ca3af;
+        }
+
+        body.dark .footer-links a {
+            color: #93c5fd;
+        }
+
+            body.dark .footer-links a:hover {
+                color: #bfdbfe;
+            }
+
+        body.dark .footer-meta {
+            color: #e5e7eb;
+        }
+
+
+        /* ================= SIDEBAR ================= */
+        .sidebar {
+            width: 240px;
+            background: linear-gradient(180deg,#1f3c88,#3f7cac);
+            color: white;
+            padding: 20px;
+        }
+
+            .sidebar a {
+                display: block;
+                color: white;
+                text-decoration: none;
+                padding: 10px 12px;
+                border-radius: 8px;
+                margin-bottom: 6px;
+                transition: .2s;
+            }
+
+                /* RESTORED HOVER COLOR */
+                .sidebar a:hover {
+                    background: rgba(255,255,255,0.18);
+                    transform: translateX(3px);
+                }
+
+        /* ================= MAIN ================= */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .navbar-custom {
+            background: white;
+            border-bottom: 1px solid #ddd;
+            padding: 12px 20px;
+        }
+
+        body.dark .navbar-custom {
+            background: #1f1f1f;
+            border-bottom: 1px solid #333;
+        }
+
+        /* LOGOUT BUTTON STYLE (RESTORED COLOR) */
+        .logout-btn {
+            background: #dc3545;
+            color: white !important;
+            border: none;
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-weight: 500;
+        }
+
+            .logout-btn:hover {
+                background: #bb2d3b;
+            }
+
+        .footer {
+            text-align: center;
+            padding: 10px;
+            font-size: 13px;
+            border-top: 1px solid #ddd;
+            background: white;
+        }
+
+        body.dark .footer {
+            background: #1f1f1f;
+            border-top: 1px solid #333;
+        }
+    </style>
 </head>
+
 <body>
-    <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Alumni_Management_System</a>
-                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
-                        aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="navbar-toggler-icon"></span>
-                </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
-                        </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
-                    </ul>
-                    <partial name="_LoginPartial" />
+
+    @if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+    {
+        <!-- ================= ADMIN ================= -->
+        <div class="layout">
+
+            <!-- SIDEBAR -->
+            <div class="sidebar">
+                <h5 class="mb-4">Admin</h5>
+
+                <a asp-controller="Home" asp-action="Dashboard"><i class="bi bi-speedometer2"></i> Dashboard</a>
+                <a asp-controller="Alumni" asp-action="Index"><i class="bi bi-people"></i> Alumni</a>
+                <a asp-controller="AlumniRegistries" asp-action="Index"><i class="bi bi-journal-text"></i> Registry</a>
+                <a asp-controller="Messages" asp-action="Index"><i class="bi bi-envelope"></i> Messages</a>
+                <a asp-controller="DegreePrograms" asp-action="Index"><i class="bi bi-mortarboard"></i> Programs</a>
+                <a asp-controller="Employers" asp-action="Index"><i class="bi bi-building"></i> Employers</a>
+                <a asp-controller="AlumniDegrees" asp-action="Index"><i class="bi bi-award"></i> Degrees</a>
+                <a asp-controller="AlumniEmployments" asp-action="Index"><i class="bi bi-briefcase"></i> Employments</a>
+                <a asp-controller="AlumniInternships" asp-action="Index"><i class="bi bi-person-workspace"></i> Internships</a>
+                <a asp-controller="AlumniOrganizations" asp-action="Index"><i class="bi bi-diagram-3"></i> Organizations</a>
+                <a asp-controller="Home" asp-action="Privacy"><i class="bi bi-shield-lock"></i> Privacy</a>
+            </div>
+
+            <!-- MAIN -->
+            <div class="main">
+
+                <!-- TOP BAR -->
+                <div class="navbar-custom d-flex justify-content-between align-items-center">
+
+                    <strong>Alumni Management System</strong>
+
+                    <div class="d-flex align-items-center gap-3">
+
+                        <!-- Dark Mode -->
+                        <button class="btn btn-sm btn-outline-secondary" onclick="toggleDark()">
+                            <i class="bi bi-moon-stars"></i>
+                        </button>
+
+                        <span>Hello @User.Identity?.Name</span>
+
+                        <!-- LOGOUT -->
+                        <form asp-area="Identity" asp-page="/Account/Logout" method="post">
+                            <button type="submit" class="logout-btn">
+                                <i class="bi bi-box-arrow-right"></i> Logout
+                            </button>
+                        </form>
+
+                    </div>
+                </div>
+
+                <div class="p-4">
+                    @RenderBody()
+                </div>
+
+                <footer class="footer-pro">
+                    <div class="container-fluid">
+
+                        <div class="row align-items-center gy-2">
+
+                            <!-- LEFT : BRAND -->
+                            <div class="col-md-4 text-md-start text-center">
+                                <div class="footer-brand">
+                                    <i class="bi bi-mortarboard-fill"></i>
+                                    Alumni Management System
+                                </div>
+                                <div class="footer-tagline">
+                                    Connecting Alumni • Building Futures
+                                </div>
+                            </div>
+
+                            <!-- CENTER : QUICK LINKS -->
+                            <div class="col-md-4 text-center footer-links">
+                                <a asp-controller="Home" asp-action="Dashboard">
+                                    <i class="bi bi-speedometer2"></i> Dashboard
+                                </a>
+                                <span>•</span>
+                                <a asp-controller="Home" asp-action="Privacy">
+                                    <i class="bi bi-shield-lock"></i> Privacy
+                                </a>
+                                <span>•</span>
+                                <a href="#">
+                                    <i class="bi bi-question-circle"></i> Help
+                                </a>
+                            </div>
+
+                            <!-- RIGHT : META -->
+                            <div class="col-md-4 text-md-end text-center">
+                                <div class="footer-meta">
+                                    © @DateTime.Now.Year AMS
+                                </div>
+                                <div class="footer-version">
+                                    Version 1.0 • Secure Portal
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </footer>
+
+
+            </div>
+        </div>
+    }
+    else if (User.Identity.IsAuthenticated && User.IsInRole("Alumni"))
+    {
+        <!-- ================= ALUMNI (NO SIDEBAR) ================= -->
+        <div class="main">
+
+            <div class="navbar-custom d-flex justify-content-between align-items-center">
+
+                <strong>Alumni Portal</strong>
+
+                <div class="d-flex align-items-center gap-3">
+
+                    <button class="btn btn-sm btn-outline-secondary" onclick="toggleDark()">
+                        <i class="bi bi-moon-stars"></i>
+                    </button>
+
+                    <span>Hello @User.Identity?.Name</span>
+
+                    <!-- LOGOUT -->
+                    <form asp-area="Identity" asp-page="/Account/Logout" method="post">
+                        <button type="submit" class="logout-btn">
+                            <i class="bi bi-box-arrow-right"></i> Logout
+                        </button>
+                    </form>
+
                 </div>
             </div>
-        </nav>
-    </header>
-    <div class="container">
-        <main role="main" class="pb-3">
-            @if (TempData["SuccessMessage"] != null)
-            {
-                <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    <i class="bi bi-check-circle-fill"></i> @TempData["SuccessMessage"]
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            }
-            @if (TempData["ErrorMessage"] != null)
-            {
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    <i class="bi bi-exclamation-triangle-fill"></i> @TempData["ErrorMessage"]
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            }
-            @if (TempData["InfoMessage"] != null)
-            {
-                <div class="alert alert-info alert-dismissible fade show" role="alert">
-                    <i class="bi bi-info-circle-fill"></i> @TempData["InfoMessage"]
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            }
-            @RenderBody()
-        </main>
-    </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2026 - Alumni_Management_System - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            <div class="p-4">
+                @RenderBody()
+            </div>
+
+            <footer class="footer-pro">
+                <div class="container-fluid">
+
+                    <div class="row align-items-center gy-2">
+
+                        <!-- LEFT : BRAND -->
+                        <div class="col-md-4 text-md-start text-center">
+                            <div class="footer-brand">
+                                <i class="bi bi-mortarboard-fill"></i>
+                                Alumni Management System
+                            </div>
+                            <div class="footer-tagline">
+                                Connecting Alumni • Building Futures
+                            </div>
+                        </div>
+
+                        <!-- CENTER : QUICK LINKS -->
+                        <div class="col-md-4 text-center footer-links">
+                            <a asp-controller="Home" asp-action="Dashboard">
+                                <i class="bi bi-speedometer2"></i> Dashboard
+                            </a>
+                            <span>•</span>
+                            <a asp-controller="Home" asp-action="Privacy">
+                                <i class="bi bi-shield-lock"></i> Privacy
+                            </a>
+                            <span>•</span>
+                            <a href="#">
+                                <i class="bi bi-question-circle"></i> Help
+                            </a>
+                        </div>
+
+                        <!-- RIGHT : META -->
+                        <div class="col-md-4 text-md-end text-center">
+                            <div class="footer-meta">
+                                © @DateTime.Now.Year AMS
+                            </div>
+                            <div class="footer-version">
+                                Version 1.0 • Secure Portal
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+            </footer>
+
+
         </div>
-    </footer>
-    <script src="~/lib/jquery/dist/jquery.min.js"></script>
-    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="~/js/site.js" asp-append-version="true"></script>
-    @await RenderSectionAsync("Scripts", required: false)
+    }
+    else
+    {
+        <!-- BEFORE LOGIN -->
+        <div class="p-4">
+            @RenderBody()
+        </div>
+    }
+
+    <script>
+        function toggleDark() {
+            document.body.classList.toggle("dark");
+            localStorage.setItem("darkMode", document.body.classList.contains("dark"));
+        }
+
+        if (localStorage.getItem("darkMode") === "true") {
+            document.body.classList.add("dark");
+        }
+    </script>
+
+    @RenderSection("Scripts", required: false)
+
 </body>
 </html>

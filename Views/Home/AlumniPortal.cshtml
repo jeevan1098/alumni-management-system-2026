@@ -1,0 +1,38 @@
+﻿@{
+    ViewData["Title"] = "Alumni Portal";
+}
+
+<div class="banner">
+    <h3>My Alumni Portal</h3>
+    <p>Welcome back, @User.Identity.Name</p>
+</div>
+
+@if (ViewData["ProfileCompletion"] != null)
+{
+    <div class="card-soft mb-3">
+        <h6>Profile Completion</h6>
+
+        <div class="progress">
+            <div class="progress-bar bg-success"
+                 style="width:@ViewData["ProfileCompletion"]%">
+                @ViewData["ProfileCompletion"]%
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row g-3">
+
+    <div class="col-md-4">
+        <a asp-controller="Alumni" asp-action="MyProfile" class="btn btn-primary w-100">My Profile</a>
+    </div>
+
+    <div class="col-md-4">
+        <a asp-controller="Messages" asp-action="Index" class="btn btn-info w-100">Messages</a>
+    </div>
+
+    <div class="col-md-4">
+        <a asp-controller="AlumniDegrees" asp-action="Index" class="btn btn-warning w-100">My Degrees</a>
+    </div>
+
+</div>
