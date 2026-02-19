@@ -11,17 +11,21 @@ public partial class AlumniInternship
 {
     [Key]
     [Column("alumni_internship_id")]
+    [Display(Name = "Alumni Internship ID")]
     public int AlumniInternshipId { get; set; }
 
     [Column("alumni_id")]
+    [Display(Name = "Alumni ID")]
     public int AlumniId { get; set; }
 
     [Column("employer_id")]
+    [Display(Name = "Employer ID")]
     public int EmployerId { get; set; }
 
     [Required]
     [Column("internship_type")]
     [StringLength(50)]
+    [Display(Name = "Internship Type")]
     public string InternshipType { get; set; }
 
     [Required]
@@ -30,9 +34,11 @@ public partial class AlumniInternship
     public string Title { get; set; }
 
     [Column("start_date")]
+    [Display(Name = "Start Date")]
     public DateOnly StartDate { get; set; }
 
     [Column("end_date")]
+    [Display(Name = "End Date")]
     public DateOnly EndDate { get; set; }
 
     [ForeignKey("AlumniId")]

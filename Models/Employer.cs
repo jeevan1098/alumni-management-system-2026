@@ -10,11 +10,13 @@ public partial class Employer
 {
     [Key]
     [Column("employer_id")]
+    [Display(Name = "Employer ID")]
     public int EmployerId { get; set; }
 
     [Required]
     [Column("employer_name")]
     [StringLength(150)]
+    [Display(Name = "Employer Name")]
     public string EmployerName { get; set; }
 
     [Column("location")]

@@ -12,9 +12,11 @@ public partial class Alumni
 {
     [Key]
     [Column("alumni_id")]
+    [Display(Name = "Alumni")]
     public int AlumniId { get; set; }
 
     [Column("user_id")]
+    [Display(Name = "Iser ID")]
     public string UserId { get; set; }
 
     [ForeignKey(nameof(UserId))]
@@ -34,15 +36,18 @@ public partial class Alumni
     [Required]
     [Column("first_name")]
     [StringLength(50)]
+    [Display(Name = "First Name")]
     public string FirstName { get; set; }
 
     [Column("preferred_first_name")]
     [StringLength(50)]
+    [Display(Name = "Preferred First Name")]
     public string PreferredFirstName { get; set; }
 
     [Required]
     [Column("last_name")]
     [StringLength(50)]
+    [Display(Name = "Last Name")]
     public string LastName { get; set; }
 
     [Column("gender")]
@@ -50,15 +55,18 @@ public partial class Alumni
     public string Gender { get; set; }
 
     [Column("date_of_birth")]
+    [Display(Name = "Date of Birth")]
     public DateOnly? DateOfBirth { get; set; }
 
     [Column("student_email")]
     [StringLength(150)]
+    [Display(Name = "Student Email")]
     public string StudentEmail { get; set; }
 
     [Required]
     [Column("permanent_email")]
     [StringLength(150)]
+    [Display(Name = "Permanent Email")]
     public string PermanentEmail { get; set; }
 
     [Column("phone")]
@@ -86,6 +94,7 @@ public partial class Alumni
     public string Country { get; set; }
 
     [Column("graduation_year")]
+    [Display(Name = "Graduation Year")]
     public int GraduationYear { get; set; }
 
     [Column("solicitation_code")]
@@ -94,15 +103,18 @@ public partial class Alumni
 
     [Column("social_media_account")]
     [StringLength(255)]
+    [Display(Name = "Social Media Account")]
     public string SocialMediaAccount { get; set; }
 
     [Column("privacy")]
     public bool Privacy { get; set; }
 
     [Column("is_active")]
+    [Display(Name = "Is Active?")]
     public bool IsActive { get; set; }
 
     [Column("last_updated", TypeName = "datetime")]
+    [Display(Name = "Last Updated")]
     public DateTime LastUpdated { get; set; }
 
     [InverseProperty("Alumni")]

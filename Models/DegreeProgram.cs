@@ -11,6 +11,7 @@ public partial class DegreeProgram
 {
     [Key]
     [Column("degree_id")]
+    [Display(Name = "Degree ID")]
     public int DegreeId { get; set; }
 
     [Required]
@@ -21,16 +22,19 @@ public partial class DegreeProgram
     [Required]
     [Column("degree_type")]
     [StringLength(20)]
+    [Display(Name = "Degree Type")]
     public string DegreeType { get; set; }
 
     [Required]
     [Column("major_field_of_study")]
     [StringLength(100)]
+    [Display(Name = "Major Field of Study")]
     public string MajorFieldOfStudy { get; set; }
 
     [Required]
     [Column("department")]
     [StringLength(100)]
+    [Display(Name = "Department")]
     public string Department { get; set; }
 
     [InverseProperty("Degree")]

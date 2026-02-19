@@ -1,4 +1,4 @@
-﻿@model Alumni_Management_System.Models.DegreeProgram
+﻿@* @model Alumni_Management_System.Models.DegreeProgram
 
 @{
     ViewData["Title"] = "Details";
@@ -39,4 +39,148 @@
 <div>
     <a asp-action="Edit" asp-route-id="@Model?.DegreeId">Edit</a> |
     <a asp-action="Index">Back to List</a>
+</div> *@
+
+
+
+
+@* @model Alumni_Management_System.Models.DegreeProgram
+
+@{
+    ViewData["Title"] = "Degree Program Details";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                    <i class="bi bi-eye-fill text-primary fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0">Degree Program Details</h3>
+                    <small class="text-muted">View information for this degree program</small>
+                </div>
+            </div>
+
+            <hr class="mb-4" />
+
+            <dl class="row mb-4">
+                <dt class="col-md-3 fw-semibold">
+                    <i class="bi bi-building me-2 text-primary"></i>Institution
+                </dt>
+                <dd class="col-md-9">
+                    @Html.DisplayFor(model => model.Institution)
+                </dd>
+
+                <dt class="col-md-3 fw-semibold">
+                    <i class="bi bi-mortarboard-fill me-2 text-primary"></i>Degree Type
+                </dt>
+                <dd class="col-md-9">
+                    @Html.DisplayFor(model => model.DegreeType)
+                </dd>
+
+                <dt class="col-md-3 fw-semibold">
+                    <i class="bi bi-journal-text me-2 text-primary"></i>Major Field of Study
+                </dt>
+                <dd class="col-md-9">
+                    @Html.DisplayFor(model => model.MajorFieldOfStudy)
+                </dd>
+
+                <dt class="col-md-3 fw-semibold">
+                    <i class="bi bi-building-fill-check me-2 text-primary"></i>Department
+                </dt>
+                <dd class="col-md-9">
+                    @Html.DisplayFor(model => model.Department)
+                </dd>
+            </dl>
+
+            <!-- Buttons -->
+            <div class="d-flex justify-content-between mt-5">
+                <a asp-action="Index"
+                   class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="bi bi-arrow-left me-2"></i>Back
+                </a>
+
+                <a asp-action="Edit" asp-route-id="@Model.DegreeId"
+                   class="btn btn-primary rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-pencil-square me-2"></i>Edit
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div> *@
+
+@model Alumni_Management_System.Models.DegreeProgram
+
+@{
+    ViewData["Title"] = "Degree Program Details";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                    <i class="bi bi-eye-fill text-warning fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0">Degree Program Details</h3>
+                    <small class="text-muted">View information for this degree program</small>
+                </div>
+            </div>
+
+            <hr class="mb-4" />
+
+            <dl class="row mb-4">
+                <dt class="col-md-3 fw-semibold">
+                    <i class="bi bi-building me-2 text-warning"></i>Institution
+                </dt>
+                <dd class="col-md-9">
+                    @Html.DisplayFor(model => model.Institution)
+                </dd>
+
+                <dt class="col-md-3 fw-semibold">
+                    <i class="bi bi-mortarboard-fill me-2 text-warning"></i>Degree Type
+                </dt>
+                <dd class="col-md-9">
+                    @Html.DisplayFor(model => model.DegreeType)
+                </dd>
+
+                <dt class="col-md-3 fw-semibold">
+                    <i class="bi bi-journal-text me-2 text-warning"></i>Major Field of Study
+                </dt>
+                <dd class="col-md-9">
+                    @Html.DisplayFor(model => model.MajorFieldOfStudy)
+                </dd>
+
+                <dt class="col-md-3 fw-semibold">
+                    <i class="bi bi-building-fill-check me-2 text-warning"></i>Department
+                </dt>
+                <dd class="col-md-9">
+                    @Html.DisplayFor(model => model.Department)
+                </dd>
+            </dl>
+
+            <!-- Buttons -->
+            <div class="d-flex justify-content-between mt-5">
+                <a asp-action="Index"
+                   class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="bi bi-arrow-left me-2 text-warning"></i>Back
+                </a>
+
+                <a asp-action="Edit" asp-route-id="@Model.DegreeId"
+                   class="btn btn-warning rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-pencil-square me-2 "></i>Edit
+                </a>
+            </div>
+
+        </div>
+    </div>
 </div>
+

@@ -15,9 +15,11 @@ namespace Alumni_Management_System.Models
         public string JagId { get; set; }
 
         [Column("created_at", TypeName = "datetime")]
+        [Display(Name = "Created At?")]
         public DateTime CreatedAt { get; set; }
 
         [Column("is_first_login")]
+        [Display(Name = "Is First Login?")]
         public bool IsFirstLogin { get; set; } = true;
 
         public virtual Alumni Alumni { get; set; }

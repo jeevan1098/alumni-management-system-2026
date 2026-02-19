@@ -11,16 +11,20 @@ public partial class AlumniOrganization
 {
     [Key]
     [Column("alumni_organization_id")]
+    [Display(Name = "Alumni Organization ID")]
     public int AlumniOrganizationId { get; set; }
 
     [Column("alumni_id")]
+    [Display(Name = "Alumni ID")]
     public int AlumniId { get; set; }
 
     [Column("organization_type_id")]
+    [Display(Name = "Organization Type ID")]
     public int OrganizationTypeId { get; set; }
 
     [Column("officer_roles")]
     [StringLength(150)]
+    [Display(Name = "Officer Roles")]
     public string OfficerRoles { get; set; }
 
     [ForeignKey("AlumniId")]

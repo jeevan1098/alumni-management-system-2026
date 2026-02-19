@@ -1,4 +1,4 @@
-﻿@model Alumni_Management_System.Models.DegreeProgram
+﻿@* @model Alumni_Management_System.Models.DegreeProgram
 
 @{
     ViewData["Title"] = "Edit";
@@ -46,4 +46,110 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} *@
+@model Alumni_Management_System.Models.DegreeProgram
+
+@{
+    ViewData["Title"] = "Edit Degree Program";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                    <i class="bi bi-pencil-square text-primary fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0">Edit Degree Program</h3>
+                    <small class="text-muted">Update degree program details</small>
+                </div>
+            </div>
+
+            <hr class="mb-4" />
+
+            <form asp-action="Edit" novalidate>
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                <input type="hidden" asp-for="DegreeId" />
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Institution" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-building"></i>
+                            </span>
+                            <input asp-for="Institution"
+                                   placeholder="Enter institution name"
+                                   class="form-control rounded-end-3" />
+                        </div>
+                        <span asp-validation-for="Institution" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="DegreeType" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-mortarboard-fill"></i>
+                            </span>
+                            <input asp-for="DegreeType"
+                                   placeholder="e.g. Bachelor, Master, PhD"
+                                   class="form-control rounded-end-3" />
+                        </div>
+                        <span asp-validation-for="DegreeType" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="MajorFieldOfStudy" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-journal-text"></i>
+                            </span>
+                            <input asp-for="MajorFieldOfStudy"
+                                   placeholder="Enter major or field of study"
+                                   class="form-control rounded-end-3" />
+                        </div>
+                        <span asp-validation-for="MajorFieldOfStudy" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Department" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-building-fill-check"></i>
+                            </span>
+                            <input asp-for="Department"
+                                   placeholder="Enter department name"
+                                   class="form-control rounded-end-3" />
+                        </div>
+                        <span asp-validation-for="Department" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex justify-content-between mt-5">
+                    <a asp-action="Index"
+                       class="btn btn-outline-secondary rounded-pill px-4">
+                        <i class="bi bi-arrow-left me-2"></i>Back
+                    </a>
+
+                    <button type="submit"
+                            class="btn btn-primary rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-check-circle-fill me-2"></i>Save Changes
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

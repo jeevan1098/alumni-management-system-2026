@@ -1,4 +1,4 @@
-﻿@model Alumni_Management_System.Models.AlumniDegree
+﻿@* @model Alumni_Management_System.Models.AlumniDegree
 
 @{
     ViewData["Title"] = "Details";
@@ -75,4 +75,121 @@
 <div>
     <a asp-action="Edit" asp-route-id="@Model?.AlumniDegreeId">Edit</a> |
     <a asp-action="Index">Back to List</a>
+</div> *@
+@model Alumni_Management_System.Models.AlumniDegree
+
+@{
+    ViewData["Title"] = "Degree Details";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                    <i class="bi bi-info-circle-fill text-primary fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0">Degree Details</h3>
+                    <small class="text-muted">View academic information for alumni</small>
+                </div>
+            </div>
+
+            <hr class="mb-4" />
+
+            <!-- Alumni & Degree Info -->
+            <h5 class="fw-bold text-primary mb-3">
+                <i class="bi bi-person-badge-fill me-2"></i>Alumni & Degree Information
+            </h5>
+            <dl class="row mb-4">
+                <dt class="col-sm-3">
+                    <i class="bi bi-person-fill me-1"></i> Alumni
+                </dt>
+                <dd class="col-sm-9">
+                    @Html.DisplayFor(model => model.Alumni.FirstName)
+                </dd>
+
+                <dt class="col-sm-3">
+                    <i class="bi bi-book-fill me-1"></i> Degree Program
+                </dt>
+                <dd class="col-sm-9">
+                    @Html.DisplayFor(model => model.Degree.DegreeType)
+                </dd>
+            </dl>
+
+            <!-- Academic Details -->
+            <h5 class="fw-bold text-primary mb-3">
+                <i class="bi bi-journal-check me-2"></i>Academic Details
+            </h5>
+            <dl class="row mb-4">
+                <dt class="col-sm-3">
+                    <i class="bi bi-bar-chart-fill me-1"></i> GPA
+                </dt>
+                <dd class="col-sm-9">
+                    @Html.DisplayFor(model => model.Gpa)
+                </dd>
+
+                <dt class="col-sm-3">
+                    <i class="bi bi-calendar-event-fill me-1"></i> Date Conferred
+                </dt>
+                <dd class="col-sm-9">
+                    @Html.DisplayFor(model => model.DateConferred)
+                </dd>
+
+                <dt class="col-sm-3">
+                    <i class="bi bi-award-fill me-1"></i> Job Secured Upon Graduation
+                </dt>
+                <dd class="col-sm-9">
+                    @Html.DisplayFor(model => model.JobSecuredUponGraduation)
+                </dd>
+            </dl>
+
+            <!-- Career & Experience -->
+            <h5 class="fw-bold text-primary mb-3">
+                <i class="bi bi-briefcase-fill me-2"></i>Career & Experience
+            </h5>
+            <dl class="row mb-4">
+                <dt class="col-sm-3">
+                    <i class="bi bi-building me-1"></i> Employment While Studying
+                </dt>
+                <dd class="col-sm-9">
+                    @Html.DisplayFor(model => model.EmploymentWhileStudying)
+                </dd>
+
+                <dt class="col-sm-3">
+                    <i class="bi bi-briefcase me-1"></i> Degree Specific Job
+                </dt>
+                <dd class="col-sm-9">
+                    @Html.DisplayFor(model => model.DegreeSpecificJob)
+                </dd>
+
+                <dt class="col-sm-3">
+                    <i class="bi bi-search me-1"></i> Participated in Research
+                </dt>
+                <dd class="col-sm-9">
+                    @Html.DisplayFor(model => model.ParticipatedInResearch)
+                </dd>
+
+                <dt class="col-sm-3">
+                    <i class="bi bi-mortarboard me-1"></i> Attended / Plans Grad School
+                </dt>
+                <dd class="col-sm-9">
+                    @Html.DisplayFor(model => model.AttendedOrPlansGradSchool)
+                </dd>
+            </dl>
+
+            <!-- Action Buttons -->
+            <div class="d-flex justify-content-between mt-5">
+                <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="bi bi-arrow-left me-2"></i>Back to List
+                </a>
+                <a asp-action="Edit" asp-route-id="@Model?.AlumniDegreeId" class="btn btn-primary rounded-pill px-4">
+                    <i class="bi bi-pencil-square me-2"></i>Edit
+                </a>
+            </div>
+
+        </div>
+    </div>
 </div>

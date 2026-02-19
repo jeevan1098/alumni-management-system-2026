@@ -11,11 +11,13 @@ public partial class OrganizationType
 {
     [Key]
     [Column("organization_type_id")]
+    [Display(Name = "Organization Type ID")]
     public int OrganizationTypeId { get; set; }
 
     [Required]
     [Column("organization_name")]
     [StringLength(150)]
+    [Display(Name = "Organization Name")]
     public string OrganizationName { get; set; }
 
     [InverseProperty("OrganizationType")]

@@ -1,4 +1,4 @@
-﻿@model Alumni_Management_System.Models.AlumniDegree
+﻿@* @model Alumni_Management_System.Models.AlumniDegree
 
 @{
     ViewData["Title"] = "Create";
@@ -73,4 +73,212 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} *@
+
+
+@model Alumni_Management_System.Models.AlumniDegree
+
+@{
+    ViewData["Title"] = "Add Degree";
+}
+@{
+    ViewData["Title"] = "Alumni Directory";
+    var userRole = ViewData["UserRole"]?.ToString();
+    var currentAlumniId = ViewData["CurrentAlumniId"] as int?;
+    var isAlumni = userRole == "Alumni";
+    var isAdmin = userRole == "Admin";
+    var isStaff = userRole == "Staff";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                    <i class="bi bi-mortarboard-fill text-primary fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0">Add Degree Record</h3>
+                    <small class="text-muted">Enter academic information for alumni</small>
+                </div>
+            </div>
+
+            <hr class="mb-4" />
+
+            <form asp-action="Create" novalidate>
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <!-- Alumni & Degree Section -->
+                <h5 class="fw-bold text-primary mb-3">
+                    <i class="bi bi-person-badge-fill me-2"></i>Alumni & Degree Information
+                </h5>
+
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Alumni</label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-person-fill"></i>
+                            </span>
+                           <select asp-for="AlumniId" class="form-select rounded-end-3" asp-items="ViewBag.AlumniId">
+                                @if (isAdmin)
+                                {
+                                    <option value="">Select an alumni</option>
+                                }
+                           </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Degree Program</label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-book-fill"></i>
+                            </span>
+                            <select asp-for="DegreeId"
+                                    class="form-select rounded-end-3"
+                                    asp-items="ViewBag.DegreeId">
+                                <option value="">Select a degree program</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4" />
+
+                <!-- Academic Details -->
+                <h5 class="fw-bold text-primary mb-3">
+                    <i class="bi bi-journal-check me-2"></i>Academic Details
+                </h5>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="DateConferred" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-calendar-event-fill"></i>
+                            </span>
+                            <input asp-for="DateConferred" type="date" class="form-control rounded-end-3" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="YearsToCompleteDegree" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-clock-fill"></i>
+                            </span>
+                            <input asp-for="YearsToCompleteDegree" placeholder="e.g. 4 years" class="form-control rounded-end-3" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="Gpa" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-bar-chart-fill"></i>
+                            </span>
+                            <input asp-for="Gpa" placeholder="e.g. 3.75" class="form-control rounded-end-3" />
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-4" />
+
+                <!-- Career & Experience -->
+                <h5 class="fw-bold text-primary mb-3">
+                    <i class="bi bi-briefcase-fill me-2"></i>Career & Experience
+                </h5>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="EmploymentWhileStudying" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-building"></i>
+                            </span>
+                            <input asp-for="EmploymentWhileStudying" placeholder="Example: Part-time software developer at XYZ Corp" class="form-control rounded-end-3" />
+                        </div>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="DegreeSpecificJob" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-briefcase"></i>
+                            </span>
+                            <select asp-for="DegreeSpecificJob" class="form-select rounded-end-3">
+                                <option value="">Select an option</option>
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="ParticipatedInResearch" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <select asp-for="ParticipatedInResearch" class="form-select rounded-end-3">
+                                <option value="">Select an option</option>
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="JobSecuredUponGraduation" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-award-fill"></i>
+                            </span>
+                            <select asp-for="JobSecuredUponGraduation" class="form-select rounded-end-3">
+                                <option value="">Select an option</option>
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="col-md-4 mb-3">
+                        <label asp-for="AttendedOrPlansGradSchool" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-mortarboard"></i>
+                            </span>
+                            <select asp-for="AttendedOrPlansGradSchool" class="form-select rounded-end-3">
+                                <option value="">Select an option</option>
+                                <option value="true">Yes</option>
+                                <option value="false">No</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex justify-content-between mt-5">
+                    <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
+                        <i class="bi bi-arrow-left me-2"></i>Back
+                    </a>
+
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-check-circle-fill me-2"></i>Save Degree
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }
