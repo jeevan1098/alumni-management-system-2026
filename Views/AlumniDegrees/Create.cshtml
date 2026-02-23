@@ -107,7 +107,7 @@
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
                 <!-- Alumni & Degree Section -->
-                <h5 class="fw-bold text-primary mb-3">
+                <h5 class="fw-bold text-dark mb-3">
                     <i class="bi bi-person-badge-fill me-2"></i>Alumni & Degree Information
                 </h5>
 
@@ -120,17 +120,12 @@
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-person-fill"></i>
                             </span>
+                                <select asp-for="AlumniId" class="form-select rounded-end-3" asp-items="ViewBag.AlumniId">
                             @if (isAdmin)
                             {
-                                <select asp-for="AlumniId" class="form-select rounded-end-3" asp-items="ViewBag.AlumniId">
                                     <option value="">-- Select an Alumni --</option>
+                            }
                                 </select>
-                            }
-                            else
-                            {
-                                <select asp-for="AlumniId" class="form-select rounded-end-3" asp-items="ViewBag.AlumniId" disabled></select>
-                                <input type="hidden" asp-for="AlumniId" value="@currentAlumniId" />
-                            }
                         </div>
                         <span asp-validation-for="AlumniId" class="text-danger"></span>
                     </div>       
@@ -156,7 +151,7 @@
                 <hr class="my-4" />
 
                 <!-- Academic Details -->
-                <h5 class="fw-bold text-primary mb-3">
+                <h5 class="fw-bold text-dark mb-3">
                     <i class="bi bi-journal-check me-2"></i>Academic Details
                 </h5>
 
@@ -200,7 +195,7 @@
                 <hr class="my-4" />
 
                 <!-- Career & Experience -->
-                <h5 class="fw-bold text-primary mb-3">
+                <h5 class="fw-bold text-dark mb-3">
                     <i class="bi bi-briefcase-fill me-2"></i>Career & Experience
                 </h5>
 
@@ -211,7 +206,7 @@
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-building"></i>
                             </span>
-                            <input asp-for="EmploymentWhileStudying" placeholder="Example: Part-time software developer at XYZ Corp" class="form-control rounded-end-3" />
+                            <input asp-for="EmploymentWhileStudying" placeholder="Eg: Part-time software developer at XYZ Corp" class="form-control rounded-end-3" />
                         </div>
                         <span asp-validation-for="EmploymentWhileStudying" class="text-danger"></span>
                     </div>
@@ -226,6 +221,7 @@
                                 <option value="">-- Select an Option --</option>
                                 <option value="true">Yes</option>
                                 <option value="false">No</option>
+                                
                             </select>
                         </div>
                         <span asp-validation-for="DegreeSpecificJob" class="text-danger"></span>
@@ -243,6 +239,7 @@
                                 <option value="">-- Select an Option --</option>
                                 <option value="true">Yes</option>
                                 <option value="false">No</option>
+                                
                             </select>
                         </div>
                         <span asp-validation-for="ParticipatedInResearch" class="text-danger"></span>
@@ -258,6 +255,7 @@
                                 <option value="">-- Select an Option --</option>
                                 <option value="true">Yes</option>
                                 <option value="false">No</option>
+                               
                             </select>
                         </div>
                         <span asp-validation-for="JobSecuredUponGraduation" class="text-danger"></span>
@@ -273,6 +271,7 @@
                                 <option value="">-- Select an Option --</option>
                                 <option value="true">Yes</option>
                                 <option value="false">No</option>
+                                
                             </select>
                         </div>
                         <span asp-validation-for="AttendedOrPlansGradSchool" class="text-danger"></span>

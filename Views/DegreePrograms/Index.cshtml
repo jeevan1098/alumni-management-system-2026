@@ -50,7 +50,7 @@
         </tr>
 }
     </tbody>
-</table> *@
+</table>
 @model IEnumerable<Alumni_Management_System.Models.DegreeProgram>
 
 @{
@@ -126,4 +126,88 @@
         </div>
     </div>
 </div>
+ *@
+@model IEnumerable<Alumni_Management_System.Models.DegreeProgram>
 
+@{
+    ViewData["Title"] = "Degree Programs";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                    <i class="bi bi-mortarboard-fill text-primary fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0">Degree Programs</h3>
+                    <small class="text-muted">Manage all degree programs</small>
+                </div>
+            </div>
+
+            <hr class="mb-4" />
+
+            <!-- Create Button -->
+            <div class="d-flex justify-content-end mb-3">
+                <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-plus-circle-fill me-2"></i>Create New
+                </a>
+            </div>
+
+            <!-- Table -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-dark text-center">
+                        <tr>
+                            <th><i class="bi bi-building me-1 text-primary"></i>Institution</th>
+                            <th><i class="bi bi-mortarboard-fill me-1 text-primary"></i>Degree Type</th>
+                            <th><i class="bi bi-journal-text me-1 text-primary"></i>Major Field</th>
+                            <th><i class="bi bi-columns-gap me-1 text-primary"></i>Department</th>
+                            <th><i class="bi bi-list-task me-1 text-primary"></i>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-center">
+                        @foreach (var item in Model.OrderBy(d => d.DegreeType))
+                        {
+                            <tr>
+                                <td>@item.Institution</td>
+                                <td>@item.DegreeType</td>
+                                <td>@item.MajorFieldOfStudy</td>
+                                <td>@item.Department</td>
+                                <td>
+                                    <a asp-action="Details"
+                                       asp-route-id="@item.DegreeId"
+                                       class="btn btn-sm btn-outline-primary rounded-pill me-2">
+                                        <i class="bi bi-eye-fill"></i>
+                                    </a>
+                                    <a asp-action="Edit"
+                                       asp-route-id="@item.DegreeId"
+                                       class="btn btn-sm btn-outline-warning rounded-pill me-2">
+                                        <i class="bi bi-pencil-fill"></i>
+                                    </a>
+                                    <a asp-action="Delete"
+                                       asp-route-id="@item.DegreeId"
+                                       class="btn btn-sm btn-outline-danger rounded-pill">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Footer -->
+            <div class="d-flex justify-content-between mt-5">
+                <a asp-action="Index" asp-controller="Home"
+                   class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="bi bi-house-fill me-2"></i>Home
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>

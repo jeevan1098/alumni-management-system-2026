@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Alumni_Management_System.Models.Employer>
+﻿@* @model IEnumerable<Alumni_Management_System.Models.Employer>
 
 @{
     ViewData["Title"] = "Index";
@@ -44,4 +44,86 @@
         </tr>
 }
     </tbody>
-</table>
+</table> *@
+@model IEnumerable<Alumni_Management_System.Models.Employer>
+
+@{
+    ViewData["Title"] = "Employers";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                    <i class="bi bi-building text-primary fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0">Employers</h3>
+                    <small class="text-muted">Manage all employers</small>
+                </div>
+            </div>
+
+            <hr class="mb-4" />
+
+            <!-- Create Button -->
+            <div class="d-flex justify-content-end mb-3">
+                <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-plus-circle-fill me-2"></i>Create New
+                </a>
+            </div>
+
+            <!-- Table -->
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-dark text-center">
+                        <tr>
+                            <th><i class="bi bi-building me-1 text-primary"></i>Employer Name</th>
+                            <th><i class="bi bi-geo-alt-fill me-1 text-primary"></i>Location</th>
+                            <th><i class="bi bi-briefcase-fill me-1 text-primary"></i>Industry</th>
+                            <th><i class="bi bi-list-task me-1 text-primary"></i>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-center">
+                        @foreach (var item in Model.OrderBy(e => e.EmployerName))
+                        {
+                            <tr>
+                                <td>@item.EmployerName</td>
+                                <td>@item.Location</td>
+                                <td>@item.Industry</td>
+                                <td>
+                                    <a asp-action="Details"
+                                       asp-route-id="@item.EmployerId"
+                                       class="btn btn-sm btn-outline-primary rounded-pill me-2">
+                                        <i class="bi bi-eye-fill"></i>
+                                    </a>
+                                    <a asp-action="Edit"
+                                       asp-route-id="@item.EmployerId"
+                                       class="btn btn-sm btn-outline-warning rounded-pill me-2">
+                                        <i class="bi bi-pencil-fill"></i>
+                                    </a>
+                                    <a asp-action="Delete"
+                                       asp-route-id="@item.EmployerId"
+                                       class="btn btn-sm btn-outline-danger rounded-pill">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Footer -->
+            <div class="d-flex justify-content-between mt-5">
+                <a asp-action="Index" asp-controller="Home"
+                   class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="bi bi-house-fill me-2"></i>Home
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>

@@ -1,4 +1,4 @@
-﻿@model Alumni_Management_System.Models.AlumniMessage
+﻿@* @model Alumni_Management_System.Models.AlumniMessage
 
 @{
     ViewData["Title"] = "Create";
@@ -33,4 +33,88 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} *@
+
+
+@model Alumni_Management_System.Models.AlumniMessage
+
+@{
+    ViewData["Title"] = "Add Alumni Message";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4 mx-auto" style="max-width:700px;">
+        <div class="card-body p-5">
+
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                    <i class="bi bi-chat-dots text-primary fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0">Add Alumni Message</h3>
+                    <small class="text-muted">Assign a message to an alumni</small>
+                </div>
+            </div>
+
+            <hr class="mb-4" />
+
+            <form asp-action="Create" novalidate>
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <!-- Alumni -->
+                <div class="mb-3">
+                    <label asp-for="AlumniId" class="form-label fw-semibold">
+                        <span class="text-danger">*</span> Alumni
+                    </label>
+                    <div class="input-group shadow-sm">
+                        <span class="input-group-text bg-light">
+                            <i class="bi bi-person-fill"></i>
+                        </span>
+                        <select asp-for="AlumniId"
+                                class="form-select rounded-end-3"
+                                asp-items="ViewBag.AlumniId">
+                            <option value="">-- Select Alumni --</option>
+                        </select>
+                    </div>
+                    <span asp-validation-for="AlumniId" class="text-danger"></span>
+                </div>
+
+                <!-- Message -->
+                <div class="mb-3">
+                    <label asp-for="MessageId" class="form-label fw-semibold">
+                        <span class="text-danger">*</span> Message
+                    </label>
+                    <div class="input-group shadow-sm">
+                        <span class="input-group-text bg-light">
+                            <i class="bi bi-envelope-fill"></i>
+                        </span>
+                        <select asp-for="MessageId"
+                                class="form-select rounded-end-3"
+                                asp-items="ViewBag.MessageId">
+                            <option value="">-- Select Message --</option>
+                        </select>
+                    </div>
+                    <span asp-validation-for="MessageId" class="text-danger"></span>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
+                        <i class="bi bi-arrow-left me-2"></i>Back
+                    </a>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-check-circle-fill me-2"></i>Save
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

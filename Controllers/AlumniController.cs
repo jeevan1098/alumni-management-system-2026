@@ -107,7 +107,8 @@ namespace Alumni_Management_System.Controllers
         [Authorize(Roles = "Admin")] // Only Admin can create alumni manually
         public IActionResult Create()
         {
-            ViewData["IdentityUserId"] = new SelectList(_context.Users, "Id", "Id");
+            //ViewData["IdentityUserId"] = new SelectList(_context.Users, "Id", "Id");
+            ViewData["IdentityUserId"] = new SelectList(_context.Users.OrderBy(u => u.Email), "Id", "Email");
             return View();
         }
 

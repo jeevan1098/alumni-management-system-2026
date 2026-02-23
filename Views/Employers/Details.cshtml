@@ -1,4 +1,4 @@
-﻿@model Alumni_Management_System.Models.Employer
+﻿@* @model Alumni_Management_System.Models.Employer
 
 @{
     ViewData["Title"] = "Details";
@@ -33,4 +33,79 @@
 <div>
     <a asp-action="Edit" asp-route-id="@Model?.EmployerId">Edit</a> |
     <a asp-action="Index">Back to List</a>
+</div> *@
+@model Alumni_Management_System.Models.Employer
+
+@{
+    ViewData["Title"] = "Employer Details";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                    <i class="bi bi-building text-primary fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0">
+                        Employer Details of <span class="text-primary">@Model.EmployerName</span>
+                    </h3>
+                    <small class="text-muted">View information about this employer</small>
+                </div>
+            </div>
+
+            <hr class="mb-4" />
+
+            <div class="row g-4">
+                <!-- Basic Employer Info -->
+                <div class="col-md-6">
+                    <h5 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-info-circle-fill me-2"></i>Employer Information
+                    </h5>
+                    <dl class="row mb-4">
+                        <dt class="col-sm-5">Employer Name</dt>
+                        <dd class="col-sm-7">@Model.EmployerName</dd>
+
+                        <dt class="col-sm-5">Location</dt>
+                        <dd class="col-sm-7">
+                            @if (!string.IsNullOrEmpty(Model.Location))
+                            {
+                                @Model.Location
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Not Answered</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-5">Industry</dt>
+                        <dd class="col-sm-7">
+                            @if (!string.IsNullOrEmpty(Model.Industry))
+                            {
+                                @Model.Industry
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Not Answered</span>
+                            }
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="d-flex justify-content-between mt-4">
+                <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="bi bi-arrow-left me-2"></i>Back to List
+                </a>
+                <a asp-action="Edit" asp-route-id="@Model?.EmployerId" class="btn btn-primary rounded-pill px-4">
+                    <i class="bi bi-pencil-square me-2"></i>Edit
+                </a>
+            </div>
+
+        </div>
+    </div>
 </div>

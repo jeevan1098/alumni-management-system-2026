@@ -1,4 +1,4 @@
-﻿@model Alumni_Management_System.Models.AlumniRegistry
+﻿@* @model Alumni_Management_System.Models.AlumniRegistry
 
 @{
     ViewData["Title"] = "Details";
@@ -57,4 +57,100 @@
 <div>
     <a asp-action="Edit" asp-route-id="@Model?.RegistryId">Edit</a> |
     <a asp-action="Index">Back to List</a>
+</div> *@
+@model Alumni_Management_System.Models.AlumniRegistry
+
+@{
+    ViewData["Title"] = "Registry Details";
+    var alumniName = $"{Model.FirstName} {Model.LastName}";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                    <i class="bi bi-person-badge-fill text-primary fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0">
+                        Registry Details of <span class="text-primary">@alumniName</span>
+                    </h3>
+                    <small class="text-muted">View registry information for this alumni</small>
+                </div>
+            </div>
+
+            <hr class="mb-4" />
+
+            <div class="row g-4">
+                <!-- Personal Information -->
+                <div class="col-md-6">
+                    <h5 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-person-fill me-2"></i>Personal Information
+                    </h5>
+                    <dl class="row mb-4">
+                        <dt class="col-sm-5">JAG ID</dt>
+                        <dd class="col-sm-7">@Model.JagId</dd>
+
+                        <dt class="col-sm-5">First Name</dt>
+                        <dd class="col-sm-7">@Model.FirstName</dd>
+
+                        <dt class="col-sm-5">Last Name</dt>
+                        <dd class="col-sm-7">@Model.LastName</dd>
+
+                        <dt class="col-sm-5">Graduation Year</dt>
+                        <dd class="col-sm-7">@Model.GraduationYear</dd>
+                    </dl>
+                </div>
+
+                <!-- Academic & Account Info -->
+                <div class="col-md-6">
+                    <h5 class="fw-bold text-primary mb-3">
+                        <i class="bi bi-journal-check me-2"></i>Academic & Account
+                    </h5>
+                    <dl class="row mb-4">
+                        <dt class="col-sm-5">Degree Program</dt>
+                        <dd class="col-sm-7">
+                            @if (!string.IsNullOrEmpty(Model.DegreeProgram))
+                            {
+                                @Model.DegreeProgram
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Not Answered</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-5">Email on Record</dt>
+                        <dd class="col-sm-7">
+                            @if (!string.IsNullOrEmpty(Model.EmailOnRecord))
+                            {
+                                <a href="mailto:@Model.EmailOnRecord">@Model.EmailOnRecord</a>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Not Answered</span>
+                            }
+                        </dd>
+
+                        <dt class="col-sm-5">Account Created</dt>
+                        <dd class="col-sm-7">@Model.AccountCreated</dd>
+                    </dl>
+                </div>
+            </div>
+
+            <!-- Footer Buttons -->
+            <div class="d-flex justify-content-between mt-4">
+                <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="bi bi-arrow-left me-2"></i>Back to List
+                </a>
+                <a asp-action="Edit" asp-route-id="@Model?.RegistryId" class="btn btn-primary rounded-pill px-4">
+                    <i class="bi bi-pencil-square me-2"></i>Edit
+                </a>
+            </div>
+
+        </div>
+    </div>
 </div>

@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Alumni_Management_System.Models.Alumni>
+﻿@* @model IEnumerable<Alumni_Management_System.Models.Alumni>
 
 @{
     ViewData["Title"] = "Alumni Directory";
@@ -242,4 +242,253 @@ else
             </tbody>
         </table>
     </div>
+} *@
+
+@model IEnumerable<Alumni_Management_System.Models.Alumni>
+
+@{
+    ViewData["Title"] = "Alumni Directory";
+    var userRole = ViewData["UserRole"]?.ToString();
+    var currentAlumniId = ViewData["CurrentAlumniId"] as int?;
+    var isAlumni = userRole == "Alumni";
+    var isAdmin = userRole == "Admin";
+    var isStaff = userRole == "Staff";
 }
+
+<div class="container mt-5 mb-5">
+    <div class="d-flex align-items-center mb-4">
+        <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+            <i class="bi bi-people-fill text-primary fs-3"></i>
+        </div>
+        <div>
+            <h3 class="fw-bold mb-0">Alumni Directory</h3>
+            <small class="text-muted">
+                @if (isAlumni)
+                {
+                    <text>Connect with fellow alumni who are visible in the directory</text>
+                }
+                else if (isAdmin)
+                {
+                    <text>Manage and view all alumni profiles</text>
+                }
+                else
+                {
+                    <text>View all alumni profiles</text>
+                }
+            </small>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="mb-4 d-flex flex-wrap gap-2">
+        @if (isAlumni && currentAlumniId.HasValue)
+        {
+            <a asp-action="MyProfile" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                <i class="bi bi-person-badge me-2"></i> My Profile
+            </a>
+        }
+        @if (isAdmin)
+        {
+            <a asp-action="Create" class="btn btn-success rounded-pill px-4 shadow-sm">
+                <i class="bi bi-plus-circle me-2"></i> Create New Alumni
+            </a>
+        }
+    </div>
+
+    <!-- Search -->
+    <form asp-action="Index" method="get" class="mb-4 row g-3">
+        <div class="col-md-10">
+            <div class="input-group input-group-lg">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" name="searchString" value="@ViewData["CurrentFilter"]" class="form-control" placeholder="Search by name, JAG ID, or email..." />
+            </div>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary btn-lg w-100">Search</button>
+        </div>
+        @if (!string.IsNullOrEmpty(ViewData["CurrentFilter"]?.ToString()))
+        {
+            <div class="col-md-12 mt-2">
+                <a asp-action="Index" class="btn btn-sm btn-outline-secondary">
+                    <i class="bi bi-x-circle me-1"></i> Clear Search
+                </a>
+            </div>
+        }
+    </form>
+
+    @if (isAlumni)
+    {
+        <!-- Card layout for Alumni -->
+        <div class="row">
+            @if (!Model.Any())
+            {
+                <div class="col-md-12">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i> No alumni found.
+                    </div>
+                </div>
+            }
+            @foreach (var item in Model)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px; font-size: 24px;">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                <div class="ms-3">
+                                    <h5 class="card-title mb-0">
+                                        @(!string.IsNullOrEmpty(item.PreferredFirstName) ? item.PreferredFirstName : item.FirstName) @item.LastName
+                                    </h5>
+                                    <small class="text-muted">@item.JagId</small>
+                                </div>
+                            </div>
+
+                            <hr />
+
+                            <div class="mb-2">
+                                <i class="bi bi-mortarboard-fill text-primary"></i>
+                                <strong>Class of:</strong> @item.GraduationYear
+                            </div>
+
+                            @if (!string.IsNullOrEmpty(item.PermanentEmail))
+                            {
+                                <div class="mb-2">
+                                    <i class="bi bi-envelope-fill text-success"></i>
+                                    <a href="mailto:@item.PermanentEmail">@item.PermanentEmail</a>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(item.Phone))
+                            {
+                                <div class="mb-2">
+                                    <i class="bi bi-telephone-fill text-info"></i> @item.Phone
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(item.City) || !string.IsNullOrEmpty(item.State))
+                            {
+                                <div class="mb-2">
+                                    <i class="bi bi-geo-alt-fill text-danger"></i>
+                                    @item.City@(!string.IsNullOrEmpty(item.City) && !string.IsNullOrEmpty(item.State) ? ", " : "")@item.State
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(item.SocialMediaAccount))
+                            {
+                                <div class="mb-2">
+                                    <i class="bi bi-share-fill text-warning"></i> @item.SocialMediaAccount
+                                </div>
+                            }
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <a asp-action="Details" asp-route-id="@item.AlumniId" class="btn btn-sm btn-outline-primary w-100">
+                                <i class="bi bi-eye-fill me-1"></i> View Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <!-- Table layout for Admin/Staff -->
+        <div class="table-responsive">
+            <table class="table table-hover align-middle text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th>@Html.DisplayNameFor(m => m.JagId)</th>
+                        <th>Name</th>
+                        <th>@Html.DisplayNameFor(m => m.PermanentEmail)</th>
+                        <th>@Html.DisplayNameFor(m => m.Phone)</th>
+                        <th>@Html.DisplayNameFor(m => m.GraduationYear)</th>
+                        <th>@Html.DisplayNameFor(m => m.City)</th>
+                        <th>@Html.DisplayNameFor(m => m.State)</th>
+                        <th>Solicitation</th>
+                        <th>@Html.DisplayNameFor(m => m.IsActive)</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="10" class="text-center">
+                                <div class="alert alert-info mb-0">
+                                    <i class="bi bi-info-circle"></i> No alumni found.
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.JagId</td>
+                            <td>
+                                @if (!string.IsNullOrEmpty(item.Prefix))
+                                {
+                                    <text>@item.Prefix </text>
+                                }
+                                @item.FirstName @item.LastName
+                                @if (!string.IsNullOrEmpty(item.PreferredFirstName))
+                                {
+                                    <br />
+                                    <small class="text-muted">(@item.PreferredFirstName)</small>
+         }
+                            </td>
+                            <td>@item.PermanentEmail</td>
+                            <td>@item.Phone</td>
+                            <td>@item.GraduationYear</td>
+                            <td>@item.City</td>
+                            <td>@item.State</td>
+                            <td>
+                                @if (item.SolicitationCode)
+                                {
+                                    <span class="badge bg-success"><i class="bi bi-check-circle"></i> Yes</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary"><i class="bi bi-x-circle"></i> No</span>
+                                }
+                            </td>
+                            <td>
+                                @if (item.IsActive)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Inactive</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a asp-action="Details" asp-route-id="@item.AlumniId"
+                                       class="btn btn-sm btn-outline-primary rounded-circle me-1"
+                                       title="Details">
+                                        <i class="bi bi-eye-fill"></i>
+                                    </a>
+                                    @if (isAdmin)
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@item.AlumniId"
+                                           class="btn btn-sm btn-outline-warning rounded-circle me-1"
+                                           title="Edit">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@item.AlumniId"
+                                           class="btn btn-sm btn-outline-danger rounded-circle"
+                                           title="Delete">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </a>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>

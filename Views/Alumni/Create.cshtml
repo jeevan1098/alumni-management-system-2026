@@ -154,7 +154,7 @@
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
                 <!-- Personal Information -->
-                <h5 class="fw-bold text-primary mb-3">
+                <h5 class="fw-bold text-dark mb-3">
                     <i class="bi bi-person-circle me-2"></i>Personal Information
                 </h5>
 
@@ -185,7 +185,7 @@
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-person-fill"></i>
                             </span>
-                            <input asp-for="FirstName" class="form-control rounded-end-3" placeholder="Enter first name" />
+                            <input asp-for="FirstName" class="form-control rounded-end-3" placeholder="Eg: John" />
                         </div>
                         <span asp-validation-for="FirstName" class="text-danger"></span>
                     </div>
@@ -209,7 +209,7 @@
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-person-fill"></i>
                             </span>
-                            <input asp-for="LastName" class="form-control rounded-end-3" placeholder="Enter last name" />
+                            <input asp-for="LastName" class="form-control rounded-end-3" placeholder="Eg: Smith" />
                         </div>
                         <span asp-validation-for="LastName" class="text-danger"></span>
                     </div>
@@ -262,7 +262,7 @@
                 <hr class="my-4" />
 
                 <!-- Contact Information -->
-                <h5 class="fw-bold text-primary mb-3">
+                <h5 class="fw-bold text-dark mb-3">
                     <i class="bi bi-envelope-fill me-2"></i>Contact Information
                 </h5>
 
@@ -319,7 +319,7 @@
                 <hr class="my-4" />
 
                 <!-- Address -->
-                <h5 class="fw-bold text-primary mb-3">
+                <h5 class="fw-bold text-dark mb-3">
                     <i class="bi bi-geo-alt-fill me-2"></i>Address
                 </h5>
 
@@ -383,45 +383,51 @@
                 <hr class="my-4" />
 
                 <!-- Academic Info -->
-                <h5 class="fw-bold text-primary mb-3">
+                <h5 class="fw-bold text-dark mb-3">
                     <i class="bi bi-mortarboard-fill me-2"></i>Academic Information
                 </h5>
 
                 <div class="row">
+
+                    <!-- Graduation Year -->
                     <div class="col-md-4 mb-3">
                         <label asp-for="GraduationYear" class="form-label fw-semibold"></label>
                         <div class="input-group shadow-sm">
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-calendar-check"></i>
                             </span>
-                            <input asp-for="GraduationYear" type="number" min="1950" max="2100" class="form-control rounded-end-3" placeholder="e.g. 2024" />
+                            <input asp-for="GraduationYear" type="number" min="1950" max="2100"
+                                   class="form-control rounded-end-3" placeholder="e.g. 2024" />
                         </div>
                         <span asp-validation-for="GraduationYear" class="text-danger"></span>
                     </div>
 
+                    <!-- Assign User -->
                     <div class="col-md-4 mb-3">
-                        <label asp-for="UserId" class="form-label fw-semibold"></label>
+                        <label asp-for="UserId" class="form-label fw-semibold">Assign User</label>
                         <div class="input-group shadow-sm">
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-person-check"></i>
                             </span>
-                            <select asp-for="UserId" class="form-select rounded-end-3" asp-items="ViewBag.IdentityUserId">
+                            <select asp-for="UserId" class="form-select rounded-end-3"
+                                    asp-items="ViewBag.IdentityUserId" required>
                                 <option value="">-- Select User --</option>
                             </select>
                         </div>
                         <span asp-validation-for="UserId" class="text-danger"></span>
                     </div>
 
+                    <!-- Solicitation Code -->
                     <div class="col-md-4 mb-3">
                         <label class="form-label fw-semibold">&nbsp;</label>
-                        <div class="form-check form-switch shadow-sm p-3 bg-light rounded-3">
-                            <input asp-for="SolicitationCode" class="form-check-input" type="checkbox" role="switch" />
+                        <div class="form-check mt-2">
+                            <input asp-for="SolicitationCode" class="form-check-input me-2 border-primary" type="checkbox" />
                             <label asp-for="SolicitationCode" class="form-check-label fw-semibold"></label>
                         </div>
                         <span asp-validation-for="SolicitationCode" class="text-danger"></span>
                     </div>
-                </div>
 
+                </div>
                 <!-- Buttons -->
                 <div class="d-flex justify-content-between mt-5">
                     <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">

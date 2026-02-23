@@ -91,7 +91,14 @@ namespace Alumni_Management_System.Controllers
         [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
-            ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName");
+            //ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName");
+
+            ViewData["AlumniId"] = new SelectList(_context.Alumni .Where(a => a.SolicitationCode).Select(a => new
+                                    {
+                                        a.AlumniId,
+                                        FullName = a.FirstName + " " + a.LastName 
+                                    }).ToList(), "AlumniId", "FullName");
+
             ViewData["MessageId"] = new SelectList(_context.Messages, "MessageId", "MessageBody");
             return View();
         }
