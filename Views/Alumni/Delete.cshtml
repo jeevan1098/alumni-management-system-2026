@@ -1,4 +1,4 @@
-﻿@model Alumni_Management_System.Models.Alumni
+﻿@* @model Alumni_Management_System.Models.Alumni
 
 @{
     ViewData["Title"] = "Delete";
@@ -15,7 +15,7 @@
             @Html.DisplayNameFor(model => model.UserId)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.UserId)
+            @Html.DisplayFor(model => model.PermanentEmail)
         </dd>
         <dt class = "col-sm-2">
             @Html.DisplayNameFor(model => model.JagId)
@@ -156,4 +156,138 @@
         <input type="submit" value="Delete" class="btn btn-danger" /> |
         <a asp-action="Index">Back to List</a>
     </form>
+</div> *@
+@model Alumni_Management_System.Models.Alumni
+
+@{
+    ViewData["Title"] = "Delete Alumni";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4">
+
+        <div class="card-body p-5">
+
+            <!-- Header -->
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <i class="bi bi-exclamation-triangle-fill text-danger fs-1"></i>
+                <h2 class="fw-bold text-danger mt-3">
+                    Delete Alumni:
+                    <span class="text-primary">
+                        @Model.Prefix @Model.FirstName @Model.LastName
+                    </span>
+                </h2>
+                <p class="text-muted">
+                    You are about to permanently remove this alumni record.
+                    This action cannot be undone. Please confirm before proceeding.
+                </p>
+            </div>
+
+            <hr class="mb-4" />
+
+            <!-- Personal Information -->
+            <h5 class="fw-bold text-danger mb-3">
+                <i class="bi bi-person-fill text-danger me-2"></i>
+                Personal Information
+            </h5>
+
+            <dl class="row mb-4">
+
+                <dt class="col-sm-4">Full Name</dt>
+                <dd class="col-sm-8">
+                    @Model.Prefix @Model.FirstName @Model.LastName
+                </dd>
+
+                <dt class="col-sm-4">Preferred Name</dt>
+                <dd class="col-sm-8">
+                    @Model.PreferredFirstName
+                </dd>
+
+                <dt class="col-sm-4">Gender</dt>
+                <dd class="col-sm-8">@Model.Gender</dd>
+
+                <dt class="col-sm-4">Date of Birth</dt>
+                <dd class="col-sm-8">@Model.DateOfBirth</dd>
+
+                <dt class="col-sm-4">Jag ID</dt>
+                <dd class="col-sm-8">@Model.JagId</dd>
+
+                <dt class="col-sm-4">Graduation Year</dt>
+                <dd class="col-sm-8">@Model.GraduationYear</dd>
+
+            </dl>
+
+            <!-- Contact Information -->
+            <h5 class="fw-bold text-danger mb-3">
+                <i class="bi bi-envelope-fill text-danger me-2"></i>
+                Contact Information
+            </h5>
+
+            <dl class="row mb-4">
+
+                <dt class="col-sm-4">Student Email</dt>
+                <dd class="col-sm-8">@Model.StudentEmail</dd>
+
+                <dt class="col-sm-4">Permanent Email</dt>
+                <dd class="col-sm-8">@Model.PermanentEmail</dd>
+
+                <dt class="col-sm-4">Phone</dt>
+                <dd class="col-sm-8">@Model.Phone</dd>
+
+                <dt class="col-sm-4">Address</dt>
+                <dd class="col-sm-8">
+                    @Model.Address, @Model.City, @Model.State,
+                    @Model.Postcode, @Model.Country
+                </dd>
+
+            </dl>
+
+            <!-- Status Information -->
+            <h5 class="fw-bold text-danger mb-3">
+                <i class="bi bi-shield-fill text-danger me-2"></i>
+                Status
+            </h5>
+
+            <dl class="row mb-4">
+
+                <dt class="col-sm-4">Privacy</dt>
+                <dd class="col-sm-8">@Model.Privacy</dd>
+
+                <dt class="col-sm-4">Active</dt>
+                <dd class="col-sm-8">
+                    @if (Model.IsActive)
+                    {
+                        <span class="badge bg-success">Yes</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">No</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-4">Last Updated</dt>
+                <dd class="col-sm-8">@Model.LastUpdated</dd>
+
+            </dl>
+
+            <hr />
+
+            <!-- Confirmation Buttons -->
+            <form asp-action="Delete" class="d-flex justify-content-between mt-4">
+                <input type="hidden" asp-for="AlumniId" />
+
+                <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="bi bi-arrow-left me-2"></i>
+                    Cancel
+                </a>
+
+                <button type="submit" class="btn btn-danger rounded-pill px-4">
+                    <i class="bi bi-trash-fill me-2"></i>
+                    Confirm Delete
+                </button>
+            </form>
+
+        </div>
+    </div>
 </div>

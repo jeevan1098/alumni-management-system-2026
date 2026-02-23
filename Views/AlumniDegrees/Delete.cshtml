@@ -78,7 +78,7 @@
         <input type="submit" value="Delete" class="btn btn-danger" /> |
         <a asp-action="Index">Back to List</a>
     </form>
-</div> *@
+</div>
 @model Alumni_Management_System.Models.AlumniDegree
 
 @{
@@ -163,4 +163,162 @@
         </div>
     </div>
 </div>
+ *@
 
+
+@model Alumni_Management_System.Models.AlumniDegree
+
+@{
+    ViewData["Title"] = "Delete Degree Record";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <i class="bi bi-exclamation-triangle-fill text-danger fs-1"></i>
+                <h2 class="fw-bold text-danger mt-3">
+                    Delete Degree Record for
+                    <span class="text-primary">
+                        @Model.Alumni.FirstName @Model.Alumni.LastName
+                    </span>
+                </h2>
+                <p class="text-muted">
+                    This degree entry will be permanently removed.
+                </p>
+            </div>
+
+            <hr class="mb-4" />
+
+            <!-- Degree Information -->
+            <h5 class="fw-bold text-danger mb-3">
+                <i class="bi bi-book-fill text-danger me-2"></i>
+                Degree Information
+            </h5>
+
+            <dl class="row mb-4">
+
+                <dt class="col-sm-4">Degree Program</dt>
+                <dd class="col-sm-8">
+                    <span class="badge bg-primary">
+                        @Model.Degree.DegreeType
+                    </span>
+                </dd>
+
+                <dt class="col-sm-4">Date Conferred</dt>
+                <dd class="col-sm-8">@Model.DateConferred</dd>
+
+                <dt class="col-sm-4">GPA</dt>
+                <dd class="col-sm-8">@Model.Gpa</dd>
+
+                <dt class="col-sm-4">Years to Complete</dt>
+                <dd class="col-sm-8">@Model.YearsToCompleteDegree</dd>
+
+            </dl>
+
+            <!-- Career & Outcomes -->
+            <h5 class="fw-bold text-danger mb-3">
+                <i class="bi bi-briefcase-fill text-danger me-2"></i>
+                Career & Outcomes
+            </h5>
+
+            <dl class="row mb-4">
+
+                <dt class="col-sm-4">Employment While Studying</dt>
+                <dd class="col-sm-8">@Model.EmploymentWhileStudying</dd>
+
+                <dt class="col-sm-4">Degree Specific Job</dt>
+                <dd class="col-sm-8">
+                    @if (Model.DegreeSpecificJob == true)
+                    {
+                        <span class="badge bg-success">Yes</span>
+                    }
+                    else if (Model.DegreeSpecificJob == false)
+                    {
+                        <span class="badge bg-secondary">No</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">Not Specified</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-4">Participated in Research</dt>
+                <dd class="col-sm-8">
+                    @if (Model.ParticipatedInResearch == true)
+                    {
+                        <span class="badge bg-success">Yes</span>
+                    }
+                    else if (Model.ParticipatedInResearch == false)
+                    {
+                        <span class="badge bg-secondary">No</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">Not Specified</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-4">Job Secured Upon Graduation</dt>
+                <dd class="col-sm-8">
+                    @if (Model.JobSecuredUponGraduation == true)
+                    {
+                        <span class="badge bg-success">Yes</span>
+                    }
+                    else if (Model.JobSecuredUponGraduation == false)
+                    {
+                        <span class="badge bg-secondary">No</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">Not Specified</span>
+                    }
+                </dd>
+
+                <dt class="col-sm-4">Attended / Plans Grad School</dt>
+                <dd class="col-sm-8">
+                    @if (Model.AttendedOrPlansGradSchool == true)
+                    {
+                        <span class="badge bg-success">Yes</span>
+                    }
+                    else if (Model.AttendedOrPlansGradSchool == false)
+                    {
+                        <span class="badge bg-secondary">No</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-warning text-dark">Not Specified</span>
+                    }
+                </dd>
+
+            </dl>
+
+            <hr />
+
+            <!-- Buttons -->
+            <form asp-action="Delete">
+                <input type="hidden" asp-for="AlumniDegreeId" />
+
+                <div class="d-flex justify-content-between mt-4">
+
+                    <a asp-action="Index"
+                       asp-route-alumniId="@Model.AlumniId"
+                       class="btn btn-outline-secondary rounded-pill px-4">
+                        <i class="bi bi-arrow-left me-2"></i>
+                        Cancel
+                    </a>
+
+                    <button type="submit"
+                            class="btn btn-danger rounded-pill px-4">
+                        <i class="bi bi-trash-fill me-2"></i>
+                        Confirm Delete
+                    </button>
+
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>

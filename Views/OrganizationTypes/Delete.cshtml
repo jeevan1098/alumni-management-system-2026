@@ -1,4 +1,4 @@
-﻿@model Alumni_Management_System.Models.OrganizationType
+﻿@* @model Alumni_Management_System.Models.OrganizationType
 
 @{
     ViewData["Title"] = "Delete";
@@ -24,4 +24,54 @@
         <input type="submit" value="Delete" class="btn btn-danger" /> |
         <a asp-action="Index">Back to List</a>
     </form>
+</div> *@
+@model Alumni_Management_System.Models.OrganizationType
+
+@{
+    ViewData["Title"] = "Delete Organization Type";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-danger bg-opacity-10 p-3 rounded-circle me-3">
+                    <i class="bi bi-trash-fill text-danger fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0">
+                        Delete Organization Type: <span class="text-primary">@Model.OrganizationName</span>
+                    </h3>
+                    <small class="text-muted">Are you sure you want to permanently delete this record?</small>
+                </div>
+            </div>
+
+            <hr class="mb-4" />
+
+            <!-- Organization Type Details -->
+            <h5 class="fw-bold text-primary mb-3">
+                <i class="bi bi-building me-2 text-danger"></i>Organization Type Details
+            </h5>
+            <dl class="row mb-4">
+                <dt class="col-md-3 fw-semibold"><i class="bi bi-building me-2 text-danger"></i>Name</dt>
+                <dd class="col-md-9">@Html.DisplayFor(model => model.OrganizationName)</dd>
+            </dl>
+
+            <!-- Delete Confirmation Buttons -->
+            <form asp-action="Delete">
+                <input type="hidden" asp-for="OrganizationTypeId" />
+                <div class="d-flex justify-content-between mt-5">
+                    <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
+                        <i class="bi bi-arrow-left me-2"></i>Back
+                    </a>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-trash-fill me-2"></i>Delete
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
 </div>

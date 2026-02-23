@@ -1,4 +1,4 @@
-﻿@model Alumni_Management_System.Models.Employer
+﻿@* @model Alumni_Management_System.Models.Employer
 
 @{
     ViewData["Title"] = "Delete";
@@ -36,4 +36,64 @@
         <input type="submit" value="Delete" class="btn btn-danger" /> |
         <a asp-action="Index">Back to List</a>
     </form>
+</div> *@
+
+@model Alumni_Management_System.Models.Employer
+
+@{
+    ViewData["Title"] = "Delete Employer";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-danger bg-opacity-10 p-3 rounded-circle me-3">
+                    <i class="bi bi-trash-fill text-danger fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0">
+                        Delete Employer: <span class="text-primary">@Model.EmployerName</span>
+                    </h3>
+                    <small class="text-muted">Are you sure you want to permanently delete this employer?</small>
+                </div>
+            </div>
+
+            <hr class="mb-4" />
+
+            <!-- Employer Details -->
+            <dl class="row mb-4">
+                <dt class="col-md-3 fw-semibold">
+                    <i class="bi bi-building me-2 text-danger"></i>Employer Name
+                </dt>
+                <dd class="col-md-9">@Html.DisplayFor(model => model.EmployerName)</dd>
+
+                <dt class="col-md-3 fw-semibold">
+                    <i class="bi bi-geo-alt-fill me-2 text-danger"></i>Location
+                </dt>
+                <dd class="col-md-9">@Html.DisplayFor(model => model.Location)</dd>
+
+                <dt class="col-md-3 fw-semibold">
+                    <i class="bi bi-briefcase-fill me-2 text-danger"></i>Industry
+                </dt>
+                <dd class="col-md-9">@Html.DisplayFor(model => model.Industry)</dd>
+            </dl>
+
+            <!-- Delete Form Buttons -->
+            <form asp-action="Delete">
+                <input type="hidden" asp-for="EmployerId" />
+                <div class="d-flex justify-content-between mt-5">
+                    <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
+                        <i class="bi bi-arrow-left me-2"></i>Back
+                    </a>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-trash-fill me-2"></i>Delete
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
 </div>

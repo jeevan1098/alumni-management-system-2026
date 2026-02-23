@@ -1,4 +1,4 @@
-﻿@model Alumni_Management_System.Models.AlumniInternship
+﻿@* @model Alumni_Management_System.Models.AlumniInternship
 
 @{
     ViewData["Title"] = "Delete";
@@ -54,4 +54,103 @@
         <input type="submit" value="Delete" class="btn btn-danger" /> |
         <a asp-action="Index">Back to List</a>
     </form>
+</div> *@
+@model Alumni_Management_System.Models.AlumniInternship
+
+@{
+    ViewData["Title"] = "Delete Internship Record";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+
+            <!-- Header -->
+            <div class="text-center mb-4">
+                <i class="bi bi-exclamation-triangle-fill text-danger fs-1"></i>
+                <h2 class="fw-bold text-danger mt-3">
+                    Delete Internship Record for
+                    <span class="text-primary">
+                        @Model.Alumni.FirstName @Model.Alumni.LastName
+                    </span>
+                </h2>
+                <p class="text-muted">
+                    This internship record will be permanently removed.
+                </p>
+            </div>
+
+            <hr class="mb-4" />
+
+            <!-- Internship Details -->
+            <h5 class="fw-bold text-danger mb-3">
+                <i class="bi bi-mortarboard-fill me-2"></i>
+                Internship Details
+            </h5>
+
+            <dl class="row mb-4">
+
+                <dt class="col-sm-4">Internship Type</dt>
+                <dd class="col-sm-8">
+                    <span class="badge bg-info text-dark">
+                        @Model.InternshipType
+                    </span>
+                </dd>
+
+                <dt class="col-sm-4">Title</dt>
+                <dd class="col-sm-8 fw-semibold">
+                    @Model.Title
+                </dd>
+
+                <dt class="col-sm-4">Employer</dt>
+                <dd class="col-sm-8">
+                    <span class="badge bg-primary">
+                        @Model.Employer.EmployerName
+                    </span>
+                </dd>
+
+                <dt class="col-sm-4">Start Date</dt>
+                <dd class="col-sm-8">
+                    @Model.StartDate.ToString("MMMM dd, yyyy")
+                </dd>
+
+                <dt class="col-sm-4">End Date</dt>
+                <dd class="col-sm-8">
+                    @if (Model.EndDate == default)
+                    {
+                        <span class="badge bg-success">Ongoing</span>
+                    }
+                    else
+                    {
+                        @Model.EndDate.ToString("MMMM dd, yyyy")
+                    }
+                </dd>
+
+            </dl>
+
+            <hr />
+
+            <!-- Buttons -->
+            <form asp-action="Delete">
+                <input type="hidden" asp-for="AlumniInternshipId" />
+
+                <div class="d-flex justify-content-between mt-4">
+
+                    <a asp-action="Index"
+                       asp-route-alumniId="@Model.AlumniId"
+                       class="btn btn-outline-secondary rounded-pill px-4">
+                        <i class="bi bi-arrow-left me-2"></i>
+                        Cancel
+                    </a>
+
+                    <button type="submit"
+                            class="btn btn-danger rounded-pill px-4">
+                        <i class="bi bi-trash-fill me-2"></i>
+                        Confirm Delete
+                    </button>
+
+                </div>
+            </form>
+
+        </div>
+    </div>
 </div>
