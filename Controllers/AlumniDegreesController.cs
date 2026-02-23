@@ -107,7 +107,18 @@ namespace Alumni_Management_System.Controllers
                 ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName");
             }
 
-            ViewData["DegreeId"] = new SelectList(_context.DegreePrograms, "DegreeId", "DegreeType");
+            //ViewData["DegreeId"] = new SelectList(_context.DegreePrograms, "DegreeId", "DegreeType");
+            ViewData["DegreeId"] = new SelectList( _context.DegreePrograms .Select(d => new
+            {
+                d.DegreeId,
+                DisplayText = d.DegreeType + ", " +
+                              d.Institution + ", " +
+                              d.MajorFieldOfStudy + ", " +
+                              d.Department
+            }),
+                "DegreeId",
+                "DisplayText");
+
             return View();
         }
 

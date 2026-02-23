@@ -23,7 +23,6 @@ namespace Alumni_Management_System.Data
         public virtual DbSet<DegreeProgram> DegreePrograms { get; set; }
         public virtual DbSet<Employer> Employers { get; set; }
         public virtual DbSet<OrganizationType> OrganizationTypes { get; set; }
-        public virtual DbSet<AuditLog> AuditLogs { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {

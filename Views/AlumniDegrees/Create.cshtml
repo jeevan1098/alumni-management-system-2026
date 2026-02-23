@@ -79,15 +79,11 @@
 @model Alumni_Management_System.Models.AlumniDegree
 
 @{
-    ViewData["Title"] = "Add Degree";
-}
-@{
-    ViewData["Title"] = "Alumni Directory";
+    ViewData["Title"] = "Add Alumni Degree";
     var userRole = ViewData["UserRole"]?.ToString();
-    var currentAlumniId = ViewData["CurrentAlumniId"] as int?;
-    var isAlumni = userRole == "Alumni";
-    var isAdmin = userRole == "Admin";
-    var isStaff = userRole == "Staff";
+    bool isAdmin = userRole == "Admin";
+    bool isAlumni = userRole == "Alumni";
+    int? currentAlumniId = ViewData["CurrentAlumniId"] as int?;
 }
 
 <div class="container mt-5 mb-5">
@@ -116,23 +112,33 @@
                 </h5>
 
                 <div class="row mb-4">
-                    <div class="col-md-6">
-                        <label class="form-label fw-semibold">Alumni</label>
+                     <div class="col-md-6">
+                        <label class="form-label fw-semibold">
+                            <span class="text-danger">*</span> Alumni Name
+                        </label>
                         <div class="input-group shadow-sm">
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-person-fill"></i>
                             </span>
-                           <select asp-for="AlumniId" class="form-select rounded-end-3" asp-items="ViewBag.AlumniId">
-                                @if (isAdmin)
-                                {
-                                    <option value="">Select an alumni</option>
-                                }
-                           </select>
+                            @if (isAdmin)
+                            {
+                                <select asp-for="AlumniId" class="form-select rounded-end-3" asp-items="ViewBag.AlumniId">
+                                    <option value="">-- Select an Alumni --</option>
+                                </select>
+                            }
+                            else
+                            {
+                                <select asp-for="AlumniId" class="form-select rounded-end-3" asp-items="ViewBag.AlumniId" disabled></select>
+                                <input type="hidden" asp-for="AlumniId" value="@currentAlumniId" />
+                            }
                         </div>
-                    </div>
+                        <span asp-validation-for="AlumniId" class="text-danger"></span>
+                    </div>       
 
                     <div class="col-md-6">
-                        <label class="form-label fw-semibold">Degree Program</label>
+                        <label class="form-label fw-semibold">
+                            <span class="text-danger">*</span> Degree Program
+                        </label>
                         <div class="input-group shadow-sm">
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-book-fill"></i>
@@ -140,9 +146,10 @@
                             <select asp-for="DegreeId"
                                     class="form-select rounded-end-3"
                                     asp-items="ViewBag.DegreeId">
-                                <option value="">Select a degree program</option>
+                                <option value="">-- Select a Degree Program --</option>
                             </select>
                         </div>
+                        <span asp-validation-for="DegreeId" class="text-danger"></span>
                     </div>
                 </div>
 
@@ -155,13 +162,16 @@
 
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label asp-for="DateConferred" class="form-label fw-semibold"></label>
+                        <label asp-for="DateConferred" class="form-label fw-semibold">
+                            <span class="text-danger">*</span> Date Conferred
+                        </label>
                         <div class="input-group shadow-sm">
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-calendar-event-fill"></i>
                             </span>
                             <input asp-for="DateConferred" type="date" class="form-control rounded-end-3" />
                         </div>
+                        <span asp-validation-for="DateConferred" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-4 mb-3">
@@ -170,8 +180,9 @@
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-clock-fill"></i>
                             </span>
-                            <input asp-for="YearsToCompleteDegree" placeholder="e.g. 4 years" class="form-control rounded-end-3" />
+                            <input asp-for="YearsToCompleteDegree" type="number" min="0" max="10" placeholder="e.g. 4" class="form-control rounded-end-3" />
                         </div>
+                        <span asp-validation-for="YearsToCompleteDegree" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-4 mb-3">
@@ -180,8 +191,9 @@
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-bar-chart-fill"></i>
                             </span>
-                            <input asp-for="Gpa" placeholder="e.g. 3.75" class="form-control rounded-end-3" />
+                            <input asp-for="Gpa" type="number" step="0.01" min="0" max="4.00" placeholder="e.g. 3.75" class="form-control rounded-end-3" />
                         </div>
+                        <span asp-validation-for="Gpa" class="text-danger"></span>
                     </div>
                 </div>
 
@@ -201,6 +213,7 @@
                             </span>
                             <input asp-for="EmploymentWhileStudying" placeholder="Example: Part-time software developer at XYZ Corp" class="form-control rounded-end-3" />
                         </div>
+                        <span asp-validation-for="EmploymentWhileStudying" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-6 mb-3">
@@ -210,11 +223,12 @@
                                 <i class="bi bi-briefcase"></i>
                             </span>
                             <select asp-for="DegreeSpecificJob" class="form-select rounded-end-3">
-                                <option value="">Select an option</option>
+                                <option value="">-- Select an Option --</option>
                                 <option value="true">Yes</option>
                                 <option value="false">No</option>
                             </select>
                         </div>
+                        <span asp-validation-for="DegreeSpecificJob" class="text-danger"></span>
                     </div>
                 </div>
 
@@ -226,11 +240,12 @@
                                 <i class="bi bi-search"></i>
                             </span>
                             <select asp-for="ParticipatedInResearch" class="form-select rounded-end-3">
-                                <option value="">Select an option</option>
+                                <option value="">-- Select an Option --</option>
                                 <option value="true">Yes</option>
                                 <option value="false">No</option>
                             </select>
                         </div>
+                        <span asp-validation-for="ParticipatedInResearch" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-4 mb-3">
@@ -240,11 +255,12 @@
                                 <i class="bi bi-award-fill"></i>
                             </span>
                             <select asp-for="JobSecuredUponGraduation" class="form-select rounded-end-3">
-                                <option value="">Select an option</option>
+                                <option value="">-- Select an Option --</option>
                                 <option value="true">Yes</option>
                                 <option value="false">No</option>
                             </select>
                         </div>
+                        <span asp-validation-for="JobSecuredUponGraduation" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-4 mb-3">
@@ -254,11 +270,12 @@
                                 <i class="bi bi-mortarboard"></i>
                             </span>
                             <select asp-for="AttendedOrPlansGradSchool" class="form-select rounded-end-3">
-                                <option value="">Select an option</option>
+                                <option value="">-- Select an Option --</option>
                                 <option value="true">Yes</option>
                                 <option value="false">No</option>
                             </select>
                         </div>
+                        <span asp-validation-for="AttendedOrPlansGradSchool" class="text-danger"></span>
                     </div>
                 </div>
 

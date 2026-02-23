@@ -137,8 +137,11 @@
     <div class="card shadow-lg border-0 rounded-4">
         <div class="card-body p-5">
 
+            <!-- Header -->
             <div class="d-flex align-items-center mb-4">
-                <i class="bi bi-person-plus-fill fs-2 text-primary me-3"></i>
+                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                    <i class="bi bi-person-plus-fill text-primary fs-3"></i>
+                </div>
                 <div>
                     <h3 class="fw-bold mb-0">Create Alumni Profile</h3>
                     <small class="text-muted">Enter alumni information below</small>
@@ -147,153 +150,286 @@
 
             <hr class="mb-4" />
 
-            <form asp-action="Create">
+            <form asp-action="Create" novalidate>
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
                 <!-- Personal Information -->
-                <h5 class="fw-semibold text-secondary mb-3">
+                <h5 class="fw-bold text-primary mb-3">
                     <i class="bi bi-person-circle me-2"></i>Personal Information
                 </h5>
 
                 <div class="row">
                     <div class="col-md-2 mb-3">
-                        <label asp-for="Prefix" class="form-label"></label>
-                        <input asp-for="Prefix" class="form-control rounded-3" />
+                        <label asp-for="Prefix" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-person-badge"></i>
+                            </span>
+                            <select asp-for="Prefix" class="form-select rounded-end-3">
+                                <option value="">Select...</option>
+                                <option value="Mr.">Mr.</option>
+                                <option value="Mrs.">Mrs.</option>
+                                <option value="Ms.">Ms.</option>
+                                <option value="Dr.">Dr.</option>
+                                <option value="Prof.">Prof.</option>
+                            </select>
+                        </div>
+                        <span asp-validation-for="Prefix" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-4 mb-3">
-                        <label asp-for="FirstName" class="form-label"></label>
-                        <input asp-for="FirstName" class="form-control rounded-3" />
+                        <label asp-for="FirstName" class="form-label fw-semibold">
+                            <span class="text-danger">*</span> First Name
+                        </label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-person-fill"></i>
+                            </span>
+                            <input asp-for="FirstName" class="form-control rounded-end-3" placeholder="Enter first name" />
+                        </div>
                         <span asp-validation-for="FirstName" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-3 mb-3">
-                        <label asp-for="PreferredFirstName" class="form-label"></label>
-                        <input asp-for="PreferredFirstName" class="form-control rounded-3" />
+                        <label asp-for="PreferredFirstName" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-star"></i>
+                            </span>
+                            <input asp-for="PreferredFirstName" class="form-control rounded-end-3" placeholder="Nickname" />
+                        </div>
+                        <span asp-validation-for="PreferredFirstName" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-3 mb-3">
-                        <label asp-for="LastName" class="form-label"></label>
-                        <input asp-for="LastName" class="form-control rounded-3" />
+                        <label asp-for="LastName" class="form-label fw-semibold">
+                            <span class="text-danger">*</span> Last Name
+                        </label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-person-fill"></i>
+                            </span>
+                            <input asp-for="LastName" class="form-control rounded-end-3" placeholder="Enter last name" />
+                        </div>
+                        <span asp-validation-for="LastName" class="text-danger"></span>
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label asp-for="Gender" class="form-label"></label>
-                        <input asp-for="Gender" class="form-control rounded-3" />
+                        <label asp-for="Gender" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-gender-ambiguous"></i>
+                            </span>
+                            <select asp-for="Gender" class="form-select rounded-end-3">
+                                <option value="">Select...</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                                <option value="Prefer not to say">Prefer not to say</option>
+                            </select>
+                        </div>
+                        <span asp-validation-for="Gender" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-4 mb-3">
-                        <label asp-for="DateOfBirth" class="form-label"></label>
-                        <input asp-for="DateOfBirth" type="date" class="form-control rounded-3" />
+                        <label asp-for="DateOfBirth" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-calendar-event"></i>
+                            </span>
+                            <input asp-for="DateOfBirth" type="date" class="form-control rounded-end-3" />
+                        </div>
+                        <span asp-validation-for="DateOfBirth" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-4 mb-3">
-                        <label asp-for="JagId" class="form-label"></label>
-                        <input asp-for="JagId" class="form-control rounded-3" placeholder="J0012345" />
+                        <label asp-for="JagId" class="form-label fw-semibold">
+                            <span class="text-danger">*</span> JAG ID
+                        </label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-credit-card-2-front"></i>
+                            </span>
+                            <input asp-for="JagId" class="form-control rounded-end-3" placeholder="J0012345" />
+                        </div>
                         <small class="text-muted">Must start with J00 followed by numbers</small>
+                        <span asp-validation-for="JagId" class="text-danger"></span>
                     </div>
                 </div>
 
                 <hr class="my-4" />
 
                 <!-- Contact Information -->
-                <h5 class="fw-semibold text-secondary mb-3">
+                <h5 class="fw-bold text-primary mb-3">
                     <i class="bi bi-envelope-fill me-2"></i>Contact Information
                 </h5>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label asp-for="StudentEmail" class="form-label"></label>
-                        <input asp-for="StudentEmail" class="form-control rounded-3" />
+                        <label asp-for="StudentEmail" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-envelope-at"></i>
+                            </span>
+                            <input asp-for="StudentEmail" type="email" class="form-control rounded-end-3" placeholder="student@university.edu" />
+                        </div>
+                        <span asp-validation-for="StudentEmail" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-6 mb-3">
-                        <label asp-for="PermanentEmail" class="form-label"></label>
-                        <input asp-for="PermanentEmail" class="form-control rounded-3" />
+                        <label asp-for="PermanentEmail" class="form-label fw-semibold">
+                            <span class="text-danger">*</span> Permanent Email
+                        </label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-envelope-fill"></i>
+                            </span>
+                            <input asp-for="PermanentEmail" type="email" class="form-control rounded-end-3" placeholder="personal@email.com" />
+                        </div>
+                        <span asp-validation-for="PermanentEmail" class="text-danger"></span>
                     </div>
                 </div>
 
                 <div class="row">
                     <div class="col-md-6 mb-3">
-                        <label asp-for="Phone" class="form-label"></label>
-                        <input asp-for="Phone" class="form-control rounded-3" />
+                        <label asp-for="Phone" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-telephone-fill"></i>
+                            </span>
+                            <input asp-for="Phone" type="tel" class="form-control rounded-end-3" placeholder="+1 (555) 123-4567" />
+                        </div>
+                        <span asp-validation-for="Phone" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-6 mb-3">
-                        <label asp-for="SocialMediaAccount" class="form-label"></label>
-                        <input asp-for="SocialMediaAccount" class="form-control rounded-3" />
+                        <label asp-for="SocialMediaAccount" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-share"></i>
+                            </span>
+                            <input asp-for="SocialMediaAccount" class="form-control rounded-end-3" placeholder="@@username or profile URL" />
+                        </div>
+                        <span asp-validation-for="SocialMediaAccount" class="text-danger"></span>
                     </div>
                 </div>
 
                 <hr class="my-4" />
 
                 <!-- Address -->
-                <h5 class="fw-semibold text-secondary mb-3">
+                <h5 class="fw-bold text-primary mb-3">
                     <i class="bi bi-geo-alt-fill me-2"></i>Address
                 </h5>
 
                 <div class="mb-3">
-                    <label asp-for="Address" class="form-label"></label>
-                    <input asp-for="Address" class="form-control rounded-3" />
+                    <label asp-for="Address" class="form-label fw-semibold"></label>
+                    <div class="input-group shadow-sm">
+                        <span class="input-group-text bg-light">
+                            <i class="bi bi-house-door-fill"></i>
+                        </span>
+                        <input asp-for="Address" class="form-control rounded-end-3" placeholder="Street address" />
+                    </div>
+                    <span asp-validation-for="Address" class="text-danger"></span>
                 </div>
 
                 <div class="row">
                     <div class="col-md-3 mb-3">
-                        <label asp-for="City" class="form-label"></label>
-                        <input asp-for="City" class="form-control rounded-3" />
+                        <label asp-for="City" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-building"></i>
+                            </span>
+                            <input asp-for="City" class="form-control rounded-end-3" placeholder="City" />
+                        </div>
+                        <span asp-validation-for="City" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-3 mb-3">
-                        <label asp-for="State" class="form-label"></label>
-                        <input asp-for="State" class="form-control rounded-3" />
+                        <label asp-for="State" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-map"></i>
+                            </span>
+                            <input asp-for="State" class="form-control rounded-end-3" placeholder="State/Province" />
+                        </div>
+                        <span asp-validation-for="State" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-3 mb-3">
-                        <label asp-for="Postcode" class="form-label"></label>
-                        <input asp-for="Postcode" class="form-control rounded-3" />
+                        <label asp-for="Postcode" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-mailbox"></i>
+                            </span>
+                            <input asp-for="Postcode" class="form-control rounded-end-3" placeholder="ZIP/Postal code" />
+                        </div>
+                        <span asp-validation-for="Postcode" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-3 mb-3">
-                        <label asp-for="Country" class="form-label"></label>
-                        <input asp-for="Country" class="form-control rounded-3" />
+                        <label asp-for="Country" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-globe"></i>
+                            </span>
+                            <input asp-for="Country" class="form-control rounded-end-3" placeholder="Country" />
+                        </div>
+                        <span asp-validation-for="Country" class="text-danger"></span>
                     </div>
                 </div>
 
                 <hr class="my-4" />
 
                 <!-- Academic Info -->
-                <h5 class="fw-semibold text-secondary mb-3">
+                <h5 class="fw-bold text-primary mb-3">
                     <i class="bi bi-mortarboard-fill me-2"></i>Academic Information
                 </h5>
 
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label asp-for="GraduationYear" class="form-label"></label>
-                        <input asp-for="GraduationYear" class="form-control rounded-3" />
+                        <label asp-for="GraduationYear" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-calendar-check"></i>
+                            </span>
+                            <input asp-for="GraduationYear" type="number" min="1950" max="2100" class="form-control rounded-end-3" placeholder="e.g. 2024" />
+                        </div>
+                        <span asp-validation-for="GraduationYear" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-4 mb-3">
-                        <label asp-for="SolicitationCode" class="form-label"></label>
-                        <input asp-for="SolicitationCode" class="form-control rounded-3" />
+                        <label asp-for="UserId" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-person-check"></i>
+                            </span>
+                            <select asp-for="UserId" class="form-select rounded-end-3" asp-items="ViewBag.IdentityUserId">
+                                <option value="">-- Select User --</option>
+                            </select>
+                        </div>
+                        <span asp-validation-for="UserId" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-4 mb-3">
-                        <label asp-for="UserId" class="form-label"></label>
-                        <select asp-for="UserId" class="form-select rounded-3"
-                                asp-items="ViewBag.IdentityUserId">
-                        </select>
+                        <label class="form-label fw-semibold">&nbsp;</label>
+                        <div class="form-check form-switch shadow-sm p-3 bg-light rounded-3">
+                            <input asp-for="SolicitationCode" class="form-check-input" type="checkbox" role="switch" />
+                            <label asp-for="SolicitationCode" class="form-check-label fw-semibold"></label>
+                        </div>
+                        <span asp-validation-for="SolicitationCode" class="text-danger"></span>
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-between mt-4">
+                <!-- Buttons -->
+                <div class="d-flex justify-content-between mt-5">
                     <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
                         <i class="bi bi-arrow-left me-2"></i>Back
                     </a>
 
-                    <button type="submit" class="btn btn-primary rounded-pill px-4">
-                        <i class="bi bi-check-circle me-2"></i>Create Alumni
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-check-circle-fill me-2"></i>Create Alumni
                     </button>
                 </div>
 

@@ -42,10 +42,6 @@ builder.Services.Configure<Microsoft.AspNetCore.Routing.RouteOptions>(options =>
     // This will be handled by middleware
 });
 
-// Register Audit Service
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<Alumni_Management_System.Services.IAuditService, Alumni_Management_System.Services.AuditService>();
-
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();

@@ -46,6 +46,7 @@
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 } *@
+
 @model Alumni_Management_System.Models.DegreeProgram
 
 @{
@@ -80,7 +81,7 @@
                                 <i class="bi bi-building"></i>
                             </span>
                             <input asp-for="Institution"
-                                   placeholder="Enter institution name"
+                                   placeholder="Eg: Mitchelle School of Business"
                                    class="form-control rounded-end-3" />
                         </div>
                         <span asp-validation-for="Institution" class="text-danger"></span>
@@ -108,7 +109,7 @@
                                 <i class="bi bi-journal-text"></i>
                             </span>
                             <input asp-for="MajorFieldOfStudy"
-                                   placeholder="Enter major or field of study"
+                                   placeholder="Eg: Computer Science"
                                    class="form-control rounded-end-3" />
                         </div>
                         <span asp-validation-for="MajorFieldOfStudy" class="text-danger"></span>
@@ -121,7 +122,7 @@
                                 <i class="bi bi-building-fill-check"></i>
                             </span>
                             <input asp-for="Department"
-                                   placeholder="Enter department name"
+                                   placeholder="Eg: School of Computing"
                                    class="form-control rounded-end-3" />
                         </div>
                         <span asp-validation-for="Department" class="text-danger"></span>

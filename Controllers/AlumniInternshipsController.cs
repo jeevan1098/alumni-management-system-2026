@@ -100,21 +100,32 @@ namespace Alumni_Management_System.Controllers
                 }
                 ViewData["CurrentAlumniId"] = alumni.AlumniId;
                 ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumni.AlumniId);
+                ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
             {
                 // Admin can select any alumni
                 ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName");
+                ViewData["UserRole"] = "Admin";
             }
 
-            ViewData["EmployerId"] = new SelectList(_context.Employers, "EmployerId", "EmployerName");
+            // Add "Other" option to employers list
+            var employers = await _context.Employers.OrderBy(e => e.EmployerName).ToListAsync();
+            var employerList = new List<SelectListItem>
+            {
+                new SelectListItem { Value = "", Text = "-- Select Employer --" },
+                new SelectListItem { Value = "0", Text = "Other (Add New)" }
+            };
+            employerList.AddRange(employers.Select(e => new SelectListItem { Value = e.EmployerId.ToString(), Text = e.EmployerName }));
+            ViewData["EmployerId"] = employerList;
+
             return View();
         }
 
         // POST: AlumniInternships/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("AlumniInternshipId,AlumniId,EmployerId,InternshipType,Title,StartDate,EndDate")] AlumniInternship alumniInternship)
+        public async Task<IActionResult> Create([Bind("AlumniInternshipId,AlumniId,EmployerId,InternshipType,Title,StartDate,EndDate")] AlumniInternship alumniInternship, string OtherEmployerName)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
@@ -127,6 +138,31 @@ namespace Alumni_Management_System.Controllers
                 {
                     TempData["ErrorMessage"] = "You can only create internship records for yourself.";
                     return RedirectToAction(nameof(Index));
+                }
+            }
+
+            // Handle "Other" employer - create new employer if needed
+            if (alumniInternship.EmployerId == 0 && !string.IsNullOrWhiteSpace(OtherEmployerName))
+            {
+                // Check if employer already exists (case-insensitive)
+                var existingEmployer = await _context.Employers
+                    .FirstOrDefaultAsync(e => e.EmployerName.ToLower() == OtherEmployerName.Trim().ToLower());
+
+                if (existingEmployer != null)
+                {
+                    // Use existing employer
+                    alumniInternship.EmployerId = existingEmployer.EmployerId;
+                }
+                else
+                {
+                    // Create new employer
+                    var newEmployer = new Employer
+                    {
+                        EmployerName = OtherEmployerName.Trim()
+                    };
+                    _context.Employers.Add(newEmployer);
+                    await _context.SaveChangesAsync();
+                    alumniInternship.EmployerId = newEmployer.EmployerId;
                 }
             }
 
@@ -156,12 +192,23 @@ namespace Alumni_Management_System.Controllers
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
                 ViewData["CurrentAlumniId"] = alumni?.AlumniId;
                 ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniInternship.AlumniId);
+                ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
             {
                 ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniInternship.AlumniId);
+                ViewData["UserRole"] = "Admin";
             }
-            ViewData["EmployerId"] = new SelectList(_context.Employers, "EmployerId", "EmployerName", alumniInternship.EmployerId);
+
+            var employers = await _context.Employers.OrderBy(e => e.EmployerName).ToListAsync();
+            var employerList = new List<SelectListItem>
+            {
+                new SelectListItem { Value = "", Text = "-- Select Employer --" },
+                new SelectListItem { Value = "0", Text = "Other (Add New)" }
+            };
+            employerList.AddRange(employers.Select(e => new SelectListItem { Value = e.EmployerId.ToString(), Text = e.EmployerName }));
+            ViewData["EmployerId"] = employerList;
+
             return View(alumniInternship);
         }
 
@@ -192,20 +239,31 @@ namespace Alumni_Management_System.Controllers
                 }
                 ViewData["CurrentAlumniId"] = alumni.AlumniId;
                 ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniInternship.AlumniId);
+                ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
             {
                 ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniInternship.AlumniId);
+                ViewData["UserRole"] = "Admin";
             }
 
-            ViewData["EmployerId"] = new SelectList(_context.Employers, "EmployerId", "EmployerName", alumniInternship.EmployerId);
+            // Add "Other" option to employers list
+            var employers = await _context.Employers.OrderBy(e => e.EmployerName).ToListAsync();
+            var employerList = new List<SelectListItem>
+            {
+                new SelectListItem { Value = "", Text = "-- Select Employer --" },
+                new SelectListItem { Value = "0", Text = "Other (Add New)" }
+            };
+            employerList.AddRange(employers.Select(e => new SelectListItem { Value = e.EmployerId.ToString(), Text = e.EmployerName }));
+            ViewData["EmployerId"] = employerList;
+
             return View(alumniInternship);
         }
 
         // POST: AlumniInternships/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("AlumniInternshipId,AlumniId,EmployerId,InternshipType,Title,StartDate,EndDate")] AlumniInternship alumniInternship)
+        public async Task<IActionResult> Edit(int id, [Bind("AlumniInternshipId,AlumniId,EmployerId,InternshipType,Title,StartDate,EndDate")] AlumniInternship alumniInternship, string OtherEmployerName)
         {
             if (id != alumniInternship.AlumniInternshipId)
             {
@@ -223,6 +281,31 @@ namespace Alumni_Management_System.Controllers
                 {
                     TempData["ErrorMessage"] = "You can only edit your own internship records.";
                     return RedirectToAction(nameof(Index));
+                }
+            }
+
+            // Handle "Other" employer - create new employer if needed
+            if (alumniInternship.EmployerId == 0 && !string.IsNullOrWhiteSpace(OtherEmployerName))
+            {
+                // Check if employer already exists (case-insensitive)
+                var existingEmployer = await _context.Employers
+                    .FirstOrDefaultAsync(e => e.EmployerName.ToLower() == OtherEmployerName.Trim().ToLower());
+
+                if (existingEmployer != null)
+                {
+                    // Use existing employer
+                    alumniInternship.EmployerId = existingEmployer.EmployerId;
+                }
+                else
+                {
+                    // Create new employer
+                    var newEmployer = new Employer
+                    {
+                        EmployerName = OtherEmployerName.Trim()
+                    };
+                    _context.Employers.Add(newEmployer);
+                    await _context.SaveChangesAsync();
+                    alumniInternship.EmployerId = newEmployer.EmployerId;
                 }
             }
 
@@ -266,12 +349,23 @@ namespace Alumni_Management_System.Controllers
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
                 ViewData["CurrentAlumniId"] = alumni?.AlumniId;
                 ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniInternship.AlumniId);
+                ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
             {
                 ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniInternship.AlumniId);
+                ViewData["UserRole"] = "Admin";
             }
-            ViewData["EmployerId"] = new SelectList(_context.Employers, "EmployerId", "EmployerName", alumniInternship.EmployerId);
+
+            var employers = await _context.Employers.OrderBy(e => e.EmployerName).ToListAsync();
+            var employerList = new List<SelectListItem>
+            {
+                new SelectListItem { Value = "", Text = "-- Select Employer --" },
+                new SelectListItem { Value = "0", Text = "Other (Add New)" }
+            };
+            employerList.AddRange(employers.Select(e => new SelectListItem { Value = e.EmployerId.ToString(), Text = e.EmployerName }));
+            ViewData["EmployerId"] = employerList;
+
             return View(alumniInternship);
         }
 

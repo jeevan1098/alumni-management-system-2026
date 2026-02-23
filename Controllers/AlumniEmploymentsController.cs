@@ -100,21 +100,32 @@ namespace Alumni_Management_System.Controllers
                 }
                 ViewData["CurrentAlumniId"] = alumni.AlumniId;
                 ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumni.AlumniId);
+                ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
             {
                 // Admin can select any alumni
                 ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName");
+                ViewData["UserRole"] = "Admin";
             }
 
-            ViewData["EmployerId"] = new SelectList(_context.Employers, "EmployerId", "EmployerName");
+            // Add "Other" option to employers list
+            var employers = await _context.Employers.OrderBy(e => e.EmployerName).ToListAsync();
+            var employerList = new List<SelectListItem>
+            {
+                new SelectListItem { Value = "", Text = "-- Select Employer --" },
+                new SelectListItem { Value = "0", Text = "Other (Add New)" }
+            };
+            employerList.AddRange(employers.Select(e => new SelectListItem { Value = e.EmployerId.ToString(), Text = e.EmployerName }));
+            ViewData["EmployerId"] = employerList;
+
             return View();
         }
 
         // POST: AlumniEmployments/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("AlumniEmploymentId,AlumniId,EmployerId,JobTitle,StartDate,EndDate,SalaryRange")] AlumniEmployment alumniEmployment)
+        public async Task<IActionResult> Create([Bind("AlumniEmploymentId,AlumniId,EmployerId,JobTitle,StartDate,EndDate,SalaryRange")] AlumniEmployment alumniEmployment, string OtherEmployerName)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
@@ -130,6 +141,31 @@ namespace Alumni_Management_System.Controllers
                 }
             }
 
+            // Handle "Other" employer - create new employer if needed
+            if (alumniEmployment.EmployerId == 0 && !string.IsNullOrWhiteSpace(OtherEmployerName))
+            {
+                // Check if employer already exists (case-insensitive)
+                var existingEmployer = await _context.Employers
+                    .FirstOrDefaultAsync(e => e.EmployerName.ToLower() == OtherEmployerName.Trim().ToLower());
+
+                if (existingEmployer != null)
+                {
+                    // Use existing employer
+                    alumniEmployment.EmployerId = existingEmployer.EmployerId;
+                }
+                else
+                {
+                    // Create new employer
+                    var newEmployer = new Employer
+                    {
+                        EmployerName = OtherEmployerName.Trim()
+                    };
+                    _context.Employers.Add(newEmployer);
+                    await _context.SaveChangesAsync();
+                    alumniEmployment.EmployerId = newEmployer.EmployerId;
+                }
+            }
+
             // Validation 1: StartDate cannot be in future
             if (alumniEmployment.StartDate > DateOnly.FromDateTime(DateTime.Now))
             {
@@ -140,30 +176,6 @@ namespace Alumni_Management_System.Controllers
             if (alumniEmployment.EndDate.HasValue && alumniEmployment.EndDate < alumniEmployment.StartDate)
             {
                 ModelState.AddModelError("EndDate", "End Date cannot be before Start Date.");
-            }
-
-            // Validation 3: Salary validation (if SalaryRange is numeric, parse and validate)
-            // Note: SalaryRange is a string in the model, so we'll validate if it contains a number
-            if (!string.IsNullOrEmpty(alumniEmployment.SalaryRange))
-            {
-                // Try to extract numeric value from salary range
-                var salaryNumbers = System.Text.RegularExpressions.Regex.Matches(alumniEmployment.SalaryRange, @"\d+");
-                foreach (System.Text.RegularExpressions.Match match in salaryNumbers)
-                {
-                    if (decimal.TryParse(match.Value, out decimal salary))
-                    {
-                        if (salary < 0)
-                        {
-                            ModelState.AddModelError("SalaryRange", "Salary cannot be negative.");
-                            break;
-                        }
-                        if (salary > 1000000000) // 1 billion
-                        {
-                            ModelState.AddModelError("SalaryRange", "Salary cannot exceed 1 billion.");
-                            break;
-                        }
-                    }
-                }
             }
 
             if (ModelState.IsValid)
@@ -180,14 +192,26 @@ namespace Alumni_Management_System.Controllers
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
                 ViewData["CurrentAlumniId"] = alumni?.AlumniId;
                 ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniEmployment.AlumniId);
+                ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
             {
                 ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniEmployment.AlumniId);
+                ViewData["UserRole"] = "Admin";
             }
-            ViewData["EmployerId"] = new SelectList(_context.Employers, "EmployerId", "EmployerName", alumniEmployment.EmployerId);
+
+            var employers = await _context.Employers.OrderBy(e => e.EmployerName).ToListAsync();
+            var employerList = new List<SelectListItem>
+            {
+                new SelectListItem { Value = "", Text = "-- Select Employer --" },
+                new SelectListItem { Value = "0", Text = "Other (Add New)" }
+            };
+            employerList.AddRange(employers.Select(e => new SelectListItem { Value = e.EmployerId.ToString(), Text = e.EmployerName }));
+            ViewData["EmployerId"] = employerList;
+
             return View(alumniEmployment);
         }
+
 
         // GET: AlumniEmployments/Edit/5
         public async Task<IActionResult> Edit(int? id)
@@ -216,20 +240,31 @@ namespace Alumni_Management_System.Controllers
                 }
                 ViewData["CurrentAlumniId"] = alumni.AlumniId;
                 ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniEmployment.AlumniId);
+                ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
             {
                 ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniEmployment.AlumniId);
+                ViewData["UserRole"] = "Admin";
             }
 
-            ViewData["EmployerId"] = new SelectList(_context.Employers, "EmployerId", "EmployerName", alumniEmployment.EmployerId);
+            // Add "Other" option to employers list
+            var employers = await _context.Employers.OrderBy(e => e.EmployerName).ToListAsync();
+            var employerList = new List<SelectListItem>
+            {
+                new SelectListItem { Value = "", Text = "-- Select Employer --" },
+                new SelectListItem { Value = "0", Text = "Other (Add New)" }
+            };
+            employerList.AddRange(employers.Select(e => new SelectListItem { Value = e.EmployerId.ToString(), Text = e.EmployerName }));
+            ViewData["EmployerId"] = employerList;
+
             return View(alumniEmployment);
         }
 
         // POST: AlumniEmployments/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("AlumniEmploymentId,AlumniId,EmployerId,JobTitle,StartDate,EndDate,SalaryRange")] AlumniEmployment alumniEmployment)
+        public async Task<IActionResult> Edit(int id, [Bind("AlumniEmploymentId,AlumniId,EmployerId,JobTitle,StartDate,EndDate,SalaryRange")] AlumniEmployment alumniEmployment, string OtherEmployerName)
         {
             if (id != alumniEmployment.AlumniEmploymentId)
             {
@@ -250,6 +285,31 @@ namespace Alumni_Management_System.Controllers
                 }
             }
 
+            // Handle "Other" employer - create new employer if needed
+            if (alumniEmployment.EmployerId == 0 && !string.IsNullOrWhiteSpace(OtherEmployerName))
+            {
+                // Check if employer already exists (case-insensitive)
+                var existingEmployer = await _context.Employers
+                    .FirstOrDefaultAsync(e => e.EmployerName.ToLower() == OtherEmployerName.Trim().ToLower());
+
+                if (existingEmployer != null)
+                {
+                    // Use existing employer
+                    alumniEmployment.EmployerId = existingEmployer.EmployerId;
+                }
+                else
+                {
+                    // Create new employer
+                    var newEmployer = new Employer
+                    {
+                        EmployerName = OtherEmployerName.Trim()
+                    };
+                    _context.Employers.Add(newEmployer);
+                    await _context.SaveChangesAsync();
+                    alumniEmployment.EmployerId = newEmployer.EmployerId;
+                }
+            }
+
             // Validation 1: StartDate cannot be in future
             if (alumniEmployment.StartDate > DateOnly.FromDateTime(DateTime.Now))
             {
@@ -260,28 +320,6 @@ namespace Alumni_Management_System.Controllers
             if (alumniEmployment.EndDate.HasValue && alumniEmployment.EndDate < alumniEmployment.StartDate)
             {
                 ModelState.AddModelError("EndDate", "End Date cannot be before Start Date.");
-            }
-
-            // Validation 3: Salary validation
-            if (!string.IsNullOrEmpty(alumniEmployment.SalaryRange))
-            {
-                var salaryNumbers = System.Text.RegularExpressions.Regex.Matches(alumniEmployment.SalaryRange, @"\d+");
-                foreach (System.Text.RegularExpressions.Match match in salaryNumbers)
-                {
-                    if (decimal.TryParse(match.Value, out decimal salary))
-                    {
-                        if (salary < 0)
-                        {
-                            ModelState.AddModelError("SalaryRange", "Salary cannot be negative.");
-                            break;
-                        }
-                        if (salary > 1000000000)
-                        {
-                            ModelState.AddModelError("SalaryRange", "Salary cannot exceed 1 billion.");
-                            break;
-                        }
-                    }
-                }
             }
 
             if (ModelState.IsValid)
@@ -312,12 +350,23 @@ namespace Alumni_Management_System.Controllers
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
                 ViewData["CurrentAlumniId"] = alumni?.AlumniId;
                 ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniEmployment.AlumniId);
+                ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
             {
                 ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniEmployment.AlumniId);
+                ViewData["UserRole"] = "Admin";
             }
-            ViewData["EmployerId"] = new SelectList(_context.Employers, "EmployerId", "EmployerName", alumniEmployment.EmployerId);
+
+            var employers = await _context.Employers.OrderBy(e => e.EmployerName).ToListAsync();
+            var employerList = new List<SelectListItem>
+            {
+                new SelectListItem { Value = "", Text = "-- Select Employer --" },
+                new SelectListItem { Value = "0", Text = "Other (Add New)" }
+            };
+            employerList.AddRange(employers.Select(e => new SelectListItem { Value = e.EmployerId.ToString(), Text = e.EmployerName }));
+            ViewData["EmployerId"] = employerList;
+
             return View(alumniEmployment);
         }
 
