@@ -1,4 +1,4 @@
-﻿@model Alumni_Management_System.Models.AlumniInternship
+﻿@* @model Alumni_Management_System.Models.AlumniInternship
 
 @{
     ViewData["Title"] = "Edit Internship";
@@ -53,7 +53,6 @@
                             class="form-select rounded-3"
                             asp-items="ViewBag.EmployerId"
                             id="employerDropdown">
-                        @* <option value="">-- Select Employer --</option> *@
                     </select>
                 </div>
 
@@ -144,6 +143,230 @@
         });
 
         // On page load, check if EndDate is empty and check the checkbox
+        window.addEventListener("DOMContentLoaded", function () {
+            if (!endDateField.value) {
+                currentInternshipCheckbox.checked = true;
+                endDateField.disabled = true;
+            }
+        });
+    </script>
+} *@
+
+@model Alumni_Management_System.Models.AlumniInternship
+
+@{
+    ViewData["Title"] = "Edit Internship";
+    var userRole = ViewData["UserRole"]?.ToString();
+    bool isAdmin = userRole == "Admin";
+    bool isAlumni = userRole == "Alumni";
+    int? currentAlumniId = ViewData["CurrentAlumniId"] as int?;
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-warning bg-opacity-10 p-3 rounded-circle me-3">
+                    <i class="bi bi-pencil-square text-warning fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0 text-warning">Edit Internship Record</h3>
+                    <small class="text-muted text-warning">Update internship details</small>
+                </div>
+            </div>
+
+            <hr class="mb-4" />
+
+            <form asp-action="Edit">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                <input type="hidden" asp-for="AlumniInternshipId" />
+
+                <!-- Alumni & Employer Section -->
+                <h5 class="fw-bold text-warning mb-3">
+                    <i class="bi bi-person-badge-fill me-2 text-warning"></i>Alumni & Employer Information
+                </h5>
+
+                <div class="row mb-4">
+
+                    <!-- Alumni -->
+                    <div class="col-md-6">
+                        <label asp-for="AlumniId" class="form-label fw-semibold">Alumni Name</label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-person-fill text-warning"></i>
+                            </span>
+
+                            @if (isAdmin)
+                            {
+                                <select asp-for="AlumniId"
+                                        class="form-select rounded-end-3"
+                                        asp-items="ViewBag.AlumniId">
+                                    <option value="">Select an alumni</option>
+                                </select>
+                            }
+                            else
+                            {
+                                <select asp-for="AlumniId"
+                                        class="form-select rounded-end-3"
+                                        asp-items="ViewBag.AlumniId"
+                                        disabled>
+                                </select>
+                                <input type="hidden" asp-for="AlumniId" value="@currentAlumniId" />
+                            }
+                        </div>
+                        <span asp-validation-for="AlumniId" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Employer -->
+                    <div class="col-md-6">
+                        <label asp-for="EmployerId" class="form-label fw-semibold">Employer Name</label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-building text-warning"></i>
+                            </span>
+                            <select asp-for="EmployerId"
+                                    class="form-select rounded-end-3"
+                                    asp-items="ViewBag.EmployerId"
+                                    id="employerDropdown">
+                            </select>
+                        </div>
+                        <span asp-validation-for="EmployerId" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <!-- Other Employer -->
+                <div class="mb-4" id="otherEmployerDiv" style="display:none;">
+                    <label class="form-label fw-semibold">Enter Employer Name</label>
+                    <div class="input-group shadow-sm">
+                        <span class="input-group-text bg-light">
+                            <i class="bi bi-building-add text-warning"></i>
+                        </span>
+                        <input type="text"
+                               name="OtherEmployerName"
+                               class="form-control rounded-end-3"
+                               placeholder="Enter employer name" />
+                    </div>
+                </div>
+
+                <hr class="my-4" />
+
+                <!-- Internship Details -->
+                <h5 class="fw-bold text-warning mb-3">
+                    <i class="bi bi-briefcase-fill me-2 text-warning"></i>Internship Details
+                </h5>
+
+                <div class="row">
+                    <!-- Internship Type -->
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="InternshipType" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-journal-text text-warning"></i>
+                            </span>
+                            <input asp-for="InternshipType"
+                                   class="form-control rounded-end-3"
+                                   placeholder="e.g., Summer Internship" />
+                        </div>
+                        <span asp-validation-for="InternshipType" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Title -->
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Title" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-person-workspace text-warning"></i>
+                            </span>
+                            <input asp-for="Title"
+                                   class="form-control rounded-end-3"
+                                   placeholder="Enter internship title" />
+                        </div>
+                        <span asp-validation-for="Title" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <!-- Start Date -->
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="StartDate" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-calendar-event-fill text-warning"></i>
+                            </span>
+                            <input asp-for="StartDate"
+                                   type="date"
+                                   class="form-control rounded-end-3" />
+                        </div>
+                        <span asp-validation-for="StartDate" class="text-danger small"></span>
+                    </div>
+
+                    <!-- End Date -->
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="EndDate" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-calendar-x-fill text-warning"></i>
+                            </span>
+                            <input asp-for="EndDate"
+                                   type="date"
+                                   class="form-control rounded-end-3"
+                                   id="endDateField" />
+                        </div>
+                        <span asp-validation-for="EndDate" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <!-- Current Internship -->
+                <div class="form-check mt-3 mb-4">
+                    <input type="checkbox"
+                           class="form-check-input"
+                           id="isCurrentInternshipCheckbox">
+                    <label class="form-check-label fw-semibold"
+                           for="isCurrentInternshipCheckbox">
+                        Current Internship
+                    </label>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex justify-content-between mt-5">
+                    <a asp-action="Index"
+                       class="btn btn-outline-secondary rounded-pill px-4">
+                        <i class="bi bi-arrow-left me-2"></i>Back
+                    </a>
+
+                    <button type="submit"
+                            class="btn btn-warning rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-check-circle-fill text-white me-2"></i>Save Changes
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    <script>
+        const employerDropdown = document.getElementById("employerDropdown");
+        const otherDiv = document.getElementById("otherEmployerDiv");
+        const currentInternshipCheckbox = document.getElementById("isCurrentInternshipCheckbox");
+        const endDateField = document.getElementById("endDateField");
+
+        employerDropdown.addEventListener("change", function () {
+            otherDiv.style.display = this.value == "0" ? "block" : "none";
+        });
+
+        currentInternshipCheckbox.addEventListener("change", function () {
+            endDateField.disabled = this.checked;
+            if (this.checked) endDateField.value = "";
+        });
+
         window.addEventListener("DOMContentLoaded", function () {
             if (!endDateField.value) {
                 currentInternshipCheckbox.checked = true;

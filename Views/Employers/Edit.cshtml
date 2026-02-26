@@ -1,4 +1,4 @@
-﻿@model Alumni_Management_System.Models.Employer
+﻿@* @model Alumni_Management_System.Models.Employer
 
 @{
     ViewData["Title"] = "Edit";
@@ -41,4 +41,107 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+} *@
+
+@model Alumni_Management_System.Models.Employer
+
+@{
+    ViewData["Title"] = "Edit Employer";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-warning bg-opacity-10 p-3 rounded-circle me-3">
+                    <i class="bi bi-building-fill text-warning fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0 text-warning">Edit Employer</h3>
+                    <small class="text-muted text-warning">
+                        Update employer information
+                    </small>
+                </div>
+            </div>
+
+            <hr class="mb-4" />
+
+            <form asp-action="Edit">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+                <input type="hidden" asp-for="EmployerId" />
+
+                <!-- Employer Information -->
+                <h5 class="fw-bold text-warning mb-3">
+                    <i class="bi bi-briefcase-fill me-2 text-warning"></i>
+                    Employer Information
+                </h5>
+
+                <div class="row mb-4">
+
+                    <!-- Employer Name -->
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="EmployerName" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-building text-warning"></i>
+                            </span>
+                            <input asp-for="EmployerName"
+                                   class="form-control rounded-end-3" />
+                        </div>
+                        <span asp-validation-for="EmployerName" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Location -->
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Location" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-geo-alt-fill text-warning"></i>
+                            </span>
+                            <input asp-for="Location"
+                                   class="form-control rounded-end-3" />
+                        </div>
+                        <span asp-validation-for="Location" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Industry -->
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="Industry" class="form-label fw-semibold"></label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-diagram-3-fill text-warning"></i>
+                            </span>
+                            <input asp-for="Industry"
+                                   class="form-control rounded-end-3" />
+                        </div>
+                        <span asp-validation-for="Industry" class="text-danger small"></span>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex justify-content-between mt-5">
+                    <a asp-action="Index"
+                       class="btn btn-outline-secondary rounded-pill px-4">
+                        <i class="bi bi-arrow-left me-2"></i>
+                        Back to List
+                    </a>
+
+                    <button type="submit"
+                            class="btn btn-warning rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-check-circle-fill text-white me-2"></i>
+                        Save Changes
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }
