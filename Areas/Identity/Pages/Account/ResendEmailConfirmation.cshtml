@@ -1,0 +1,86 @@
+﻿@page
+@model ResendEmailConfirmationModel
+@{
+    ViewData["Title"] = "Resend Email Confirmation - Alumni Management System";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #003366 0%, #0066cc 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .resend-container { max-width: 600px; width: 100%; margin: 20px; }
+        .resend-card { background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); padding: 50px; }
+        .resend-title { font-size: 28px; font-weight: 700; margin-bottom: 10px; color: #003366; text-align: center; }
+        .resend-subtitle { color: #666; margin-bottom: 30px; text-align: center; }
+        .form-control { border-radius: 10px; padding: 12px 20px; border: 2px solid #e0e0e0; transition: all 0.3s; }
+        .form-control:focus { border-color: #003366; box-shadow: 0 0 0 0.2rem rgba(0,51,102,0.15); }
+        .btn-resend { background: linear-gradient(135deg, #003366 0%, #0066cc 100%); border: none; border-radius: 10px; padding: 14px; font-weight: 600; font-size: 16px; transition: transform 0.2s; }
+        .btn-resend:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,51,102,0.3); }
+        .link-text { color: #003366; text-decoration: none; font-weight: 500; transition: color 0.2s; }
+        .link-text:hover { color: #0066cc; }
+        .icon-circle { width: 80px; height: 80px; background: linear-gradient(135deg, #003366 0%, #0066cc 100%); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+        .icon-circle i { font-size: 40px; color: white; }
+    </style>
+</head>
+<body>
+    <div class="resend-container">
+        <div class="resend-card">
+            <div class="icon-circle">
+                <i class="bi bi-envelope-check-fill"></i>
+            </div>
+            <h2 class="resend-title">
+                <i class="bi bi-envelope-check me-2"></i>Resend Email Confirmation
+            </h2>
+            <p class="resend-subtitle">
+                Didn't receive the confirmation email? Enter your email address and we'll send it again.
+            </p>
+
+            <form method="post">
+                <div asp-validation-summary="All" class="alert alert-danger" role="alert"></div>
+
+                <div class="mb-4">
+                    <label asp-for="Input.Email" class="form-label fw-semibold">
+                        <i class="bi bi-envelope-fill me-2"></i>Email Address
+                    </label>
+                    <input asp-for="Input.Email" class="form-control" aria-required="true"
+                           placeholder="Enter your registered email" />
+                    <span asp-validation-for="Input.Email" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="w-100 btn btn-primary btn-resend mb-4">
+                    <i class="bi bi-send-fill me-2"></i>Resend Confirmation Email
+                </button>
+
+                <div class="text-center">
+                    <a asp-page="./Login" class="link-text">
+                        <i class="bi bi-arrow-left me-1"></i>Back to Login
+                    </a>
+                </div>
+            </form>
+        </div>
+
+        <div class="text-center mt-4">
+            <p class="text-white">
+                <small>&copy; @DateTime.Now.Year University of South Alabama. All rights reserved.</small>
+            </p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+</body>
+</html>

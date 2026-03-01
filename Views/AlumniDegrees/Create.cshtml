@@ -97,7 +97,7 @@
                 </div>
                 <div>
                     <h3 class="fw-bold mb-0">Add Degree Record</h3>
-                    <small class="text-muted">Enter academic information for alumni</small>
+                    <small class="text-info">Enter academic information for alumni</small>
                 </div>
             </div>
 
@@ -120,15 +120,21 @@
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-person-fill"></i>
                             </span>
-                                <select asp-for="AlumniId" class="form-select rounded-end-3" asp-items="ViewBag.AlumniId">
                             @if (isAdmin)
                             {
+                                <select asp-for="AlumniId" class="form-select rounded-end-3" asp-items="ViewBag.AlumniId">
                                     <option value="">-- Select an Alumni --</option>
-                            }
                                 </select>
+                            }
+                            else
+                            {
+                                <select asp-for="AlumniId" class="form-select rounded-end-3" asp-items="ViewBag.AlumniId" disabled>
+                                </select>
+                                <input type="hidden" asp-for="AlumniId" value="@currentAlumniId" />
+                            }
                         </div>
                         <span asp-validation-for="AlumniId" class="text-danger"></span>
-                    </div>       
+                    </div>
 
                     <div class="col-md-6">
                         <label class="form-label fw-semibold">

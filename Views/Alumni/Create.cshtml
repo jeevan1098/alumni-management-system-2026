@@ -21,7 +21,7 @@
                 <label asp-for="JagId" class="control-label"></label>
                 <input asp-for="JagId" class="form-control" placeholder="J0012345" />
                 <span asp-validation-for="JagId" class="text-danger"></span>
-                <small class="form-text text-muted">Must start with 'J00' followed by numbers (e.g., J0012345)</small>
+                <small class="form-text text-info">Must start with 'J00' followed by numbers (e.g., J0012345)</small>
             </div>
             <div class="form-group">
                 <label asp-for="Prefix" class="control-label"></label>
@@ -144,7 +144,7 @@
                 </div>
                 <div>
                     <h3 class="fw-bold mb-0">Create Alumni Profile</h3>
-                    <small class="text-muted">Enter alumni information below</small>
+                    <small class="text-info">Enter alumni information below</small>
                 </div>
             </div>
 
@@ -254,7 +254,7 @@
                             </span>
                             <input asp-for="JagId" class="form-control rounded-end-3" placeholder="J0012345" />
                         </div>
-                        <small class="text-muted">Must start with J00 followed by numbers</small>
+                        <small class="text-info">Must start with J00 followed by numbers</small>
                         <span asp-validation-for="JagId" class="text-danger"></span>
                     </div>
                 </div>

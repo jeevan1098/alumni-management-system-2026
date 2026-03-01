@@ -1,0 +1,282 @@
+﻿@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<!-- ===== PAGE STYLE (RESTORE COLORS) ===== -->
+<style>
+    .banner {
+        background: linear-gradient(135deg,#4facfe,#00f2fe);
+        color: white;
+        padding: 22px;
+        border-radius: 12px;
+        margin-bottom: 18px;
+    }
+
+    .card-soft {
+        border: none;
+        border-radius: 12px;
+        padding: 18px;
+        background: white;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        transition: .2s;
+    }
+
+    body.dark .card-soft {
+        background: #1e1e1e;
+        color: #ddd;
+    }
+
+    .card-soft:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 18px rgba(0,0,0,0.08);
+    }
+
+    .stat-number {
+        font-size: 22px;
+        font-weight: 700;
+    }
+
+    /* STAT COLORS (RESTORED) */
+    .stat1 {
+        background: #dbeafe;
+    }
+
+    .stat2 {
+        background: #d1fae5;
+    }
+
+    .stat3 {
+        background: #fef3c7;
+    }
+
+    .stat4 {
+        background: #e0e7ff;
+    }
+
+    .stat5 {
+        background: #e5e7eb;
+    }
+
+    .stat6 {
+        background: #fee2e2;
+    }
+
+    body.dark .stat1,
+    body.dark .stat2,
+    body.dark .stat3,
+    body.dark .stat4,
+    body.dark .stat5,
+    body.dark .stat6 {
+        background: #2a2a2a;
+    }
+</style>
+
+<!-- ===== HEADER ===== -->
+<div class="banner">
+    <h3>Welcome to Alumni Management System</h3>
+    <p class="mb-0">Manage alumni, programs, employment and system activity</p>
+</div>
+
+<!-- ===== STATS ===== -->
+<div class="row g-3 mb-4">
+
+    <div class="col-md-2">
+        <div class="card-soft stat1 text-center">
+            <div class="stat-number">@ViewData["TotalAlumni"]</div>
+            Alumni
+        </div>
+    </div>
+
+    <div class="col-md-2">
+        <div class="card-soft stat2 text-center">
+            <div class="stat-number">@ViewData["TotalRegistry"]</div>
+            Registry
+        </div>
+    </div>
+
+    <div class="col-md-2">
+        <div class="card-soft stat3 text-center">
+            <div class="stat-number">@ViewData["TotalUsers"]</div>
+            Users
+        </div>
+    </div>
+
+    <div class="col-md-2">
+        <div class="card-soft stat4 text-center">
+            <div class="stat-number">@ViewData["TotalMessages"]</div>
+            Messages
+        </div>
+    </div>
+
+    <div class="col-md-2">
+        <div class="card-soft stat5 text-center">
+            <div class="stat-number">@ViewData["TotalEmployments"]</div>
+            Employments
+        </div>
+    </div>
+
+    <div class="col-md-2">
+        <div class="card-soft stat6 text-center">
+            <div class="stat-number">@ViewData["PendingApprovals"]</div>
+            Pending
+        </div>
+    </div>
+
+</div>
+
+<!-- ===== CHART + ACTIVITY ===== -->
+<div class="row g-3 mb-4">
+
+    <!-- Chart -->
+    <div class="col-lg-8">
+        <div class="card-soft p-3">
+            <h6>Alumni Growth</h6>
+            <canvas id="chart" height="110"></canvas>
+        </div>
+    </div>
+
+    <!-- Activity -->
+    <div class="col-lg-4">
+        <div class="card-soft p-3">
+            <h6>Recent Activity</h6>
+            <ul class="small mb-0">
+                @if (ViewBag.RecentActivity != null && ViewBag.RecentActivity.Count > 0)
+                {
+                    foreach (var item in ViewBag.RecentActivity)
+                    {
+                        <li>@item</li>
+                    }
+                }
+                else
+                {
+                    <li>No recent activity</li>
+                }
+            </ul>
+        </div>
+    </div>
+
+</div>
+
+<!-- ===== MODULE GRID ===== -->
+<div class="row g-3">
+
+    <div class="col-md-3">
+        <a asp-controller="DegreePrograms" asp-action="Index" class="text-decoration-none">
+            <div class="card-soft text-center">
+                <i class="bi bi-mortarboard fs-3"></i>
+                <div>Degree Programs</div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-3">
+        <a asp-controller="AlumniDegrees" asp-action="Index" class="text-decoration-none">
+            <div class="card-soft text-center">
+                <i class="bi bi-award fs-3"></i>
+                <div>Alumni Degrees</div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-3">
+        <a asp-controller="AlumniInternships" asp-action="Index" class="text-decoration-none">
+            <div class="card-soft text-center">
+                <i class="bi bi-person-workspace fs-3"></i>
+                <div>Internships</div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-3">
+        <a asp-controller="AlumniOrganizations" asp-action="Index" class="text-decoration-none">
+            <div class="card-soft text-center">
+                <i class="bi bi-diagram-3 fs-3"></i>
+                <div>Organizations</div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-3">
+        <a asp-controller="Employers" asp-action="Index" class="text-decoration-none">
+            <div class="card-soft text-center">
+                <i class="bi bi-building fs-3"></i>
+                <div>Employers</div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-3">
+        <a asp-controller="Messages" asp-action="Index" class="text-decoration-none">
+            <div class="card-soft text-center">
+                <i class="bi bi-envelope fs-3"></i>
+                <div>Messages</div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-3">
+        <a asp-controller="AlumniRegistries" asp-action="Index" class="text-decoration-none">
+            <div class="card-soft text-center">
+                <i class="bi bi-journal-text fs-3"></i>
+                <div>Registry</div>
+            </div>
+        </a>
+    </div>
+
+    <div class="col-md-3">
+        <a asp-controller="Alumni" asp-action="Index" class="text-decoration-none">
+            <div class="card-soft text-center">
+                <i class="bi bi-people fs-3"></i>
+                <div>Alumni</div>
+            </div>
+        </a>
+    </div>
+
+</div>
+
+<!-- ===== CHART SCRIPT ===== -->
+<script>
+    var labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ChartLabels ?? new List<int>()));
+    var alumniData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.AlumniData ?? new List<int>()));
+    var registryData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.RegistryData ?? new List<int>()));
+
+    if (labels.length > 0) {
+        new Chart(document.getElementById('chart'), {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [
+                    {
+                        label: "Alumni",
+                        data: alumniData,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3
+                    },
+                    {
+                        label: "Registry",
+                        data: registryData,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                plugins: {
+                    legend: { display: true }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            stepSize: 1,
+                            precision: 0
+                        }
+                    }
+                }
+            }
+        });
+    }
+</script>
+

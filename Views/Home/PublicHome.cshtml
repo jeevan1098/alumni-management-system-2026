@@ -1,0 +1,41 @@
+﻿@{
+    Layout = null;   // ❗ NO SIDEBAR BEFORE LOGIN
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Login - Alumni</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+</head>
+
+<body class="bg-light">
+
+<div class="container mt-5">
+
+    <div class="text-center mb-4">
+        <h1>Alumni Management System</h1>
+        <p class="text-info">Login or Register to continue</p>
+    </div>
+
+    <div class="card shadow-lg col-md-5 mx-auto">
+        <div class="card-body text-center p-4">
+
+            <h4 class="mb-3">Welcome</h4>
+
+            <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-primary w-100 mb-2">
+                <i class="bi bi-box-arrow-in-right"></i> Login
+            </a>
+
+            <a asp-controller="Account" asp-action="VerifyJagId" class="btn btn-outline-secondary w-100">
+                <i class="bi bi-person-plus"></i> Register Alumni
+            </a>
+
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

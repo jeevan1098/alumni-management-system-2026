@@ -99,11 +99,13 @@ namespace Alumni_Management_System.Controllers
                 }
                 ViewData["CurrentAlumniId"] = alumni.AlumniId;
                 ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumni.AlumniId);
+                ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
             {
                 // Admin can select any alumni
                 ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName");
+                ViewData["UserRole"] = "Admin";
             }
 
             ViewData["OrganizationTypeId"] = new SelectList(_context.OrganizationTypes, "OrganizationTypeId", "OrganizationName");

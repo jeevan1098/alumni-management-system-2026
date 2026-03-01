@@ -12,7 +12,7 @@
 <div class="row mb-4">
     <div class="col-md-12">
         <h1><i class="bi bi-people-fill"></i> Alumni Directory</h1>
-        <p class="text-muted">
+        <p class="text-info">
             @if (isAlumni)
             {
                 <text>Connect with fellow alumni who have chosen to be visible in the directory</text>
@@ -31,7 +31,7 @@
 
 <!-- Action Buttons -->
 <div class="row mb-3">
-    <div class="col-md-12">
+    <div class="col-md-6">
         @if (isAlumni && currentAlumniId.HasValue)
         {
             <a asp-action="MyProfile" class="btn btn-primary btn-lg mb-2">
@@ -45,6 +45,19 @@
             </a>
         }
     </div>
+    @if (isAlumni)
+    {
+        <div class="col-md-6 text-end">
+            <div class="btn-group" role="group" aria-label="View toggle">
+                <button type="button" class="btn btn-outline-primary active" id="cardViewBtn" onclick="toggleView('card')">
+                    <i class="bi bi-grid-3x3-gap-fill"></i> Card View
+                </button>
+                <button type="button" class="btn btn-outline-primary" id="tableViewBtn" onclick="toggleView('table')">
+                    <i class="bi bi-table"></i> Table View
+                </button>
+            </div>
+        </div>
+    }
 </div>
 
 <!-- Search Bar -->
@@ -75,7 +88,7 @@
 @if (isAlumni)
 {
     <!-- Card View for Alumni Users -->
-    <div class="row">
+    <div class="row" id="cardView">
         @if (!Model.Any())
         {
             <div class="col-md-12">
@@ -98,7 +111,7 @@
                                 <h5 class="card-title mb-0">
                                     @(!string.IsNullOrEmpty(item.PreferredFirstName) ? item.PreferredFirstName : item.FirstName) @item.LastName
                                 </h5>
-                                <small class="text-muted">@item.JagId</small>
+                                <small class="text-info">@item.JagId</small>
                             </div>
                         </div>
 
@@ -150,6 +163,61 @@
             </div>
         }
     </div>
+
+    <!-- Table View for Alumni Users (Hidden by default) -->
+    <div class="table-responsive" id="tableView" style="display:none;">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>JAG ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Phone</th>
+                    <th>Graduation Year</th>
+                    <th>Location</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="7" class="text-center">
+                            <div class="alert alert-info mb-0">
+                                <i class="bi bi-info-circle"></i> No alumni found.
+                            </div>
+                        </td>
+                    </tr>
+                }
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>@item.JagId</td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(item.Prefix))
+                            {
+                                <text>@item.Prefix </text>
+                            }
+                            @item.FirstName @item.LastName
+                            @if (!string.IsNullOrEmpty(item.PreferredFirstName))
+                            {
+                                <br /><small class="text-info">(@item.PreferredFirstName)</small>
+                            }
+                        </td>
+                        <td>@item.PermanentEmail</td>
+                        <td>@item.Phone</td>
+                        <td>@item.GraduationYear</td>
+                        <td>@item.City@(!string.IsNullOrEmpty(item.City) && !string.IsNullOrEmpty(item.State) ? ", " : "")@item.State</td>
+                        <td>
+                            <a asp-action="Details" asp-route-id="@item.AlumniId" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-eye"></i> View
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
 }
 else
 {
@@ -193,7 +261,7 @@ else
                             @item.FirstName @item.LastName
                             @if (!string.IsNullOrEmpty(item.PreferredFirstName))
                             {
-                                <br /><small class="text-muted">(@item.PreferredFirstName)</small>
+                                <br /><small class="text-info">(@item.PreferredFirstName)</small>
                             }
                         </td>
                         <td>@item.PermanentEmail</td>
@@ -244,7 +312,7 @@ else
     </div>
 } *@
 
-@model IEnumerable<Alumni_Management_System.Models.Alumni>
+@* @model IEnumerable<Alumni_Management_System.Models.Alumni>
 
 @{
     ViewData["Title"] = "Alumni Directory";
@@ -262,7 +330,7 @@ else
         </div>
         <div>
             <h3 class="fw-bold mb-0">Alumni Directory</h3>
-            <small class="text-muted">
+            <small class="text-info">
                 @if (isAlumni)
                 {
                     <text>Connect with fellow alumni who are visible in the directory</text>
@@ -341,7 +409,7 @@ else
                                     <h5 class="card-title mb-0">
                                         @(!string.IsNullOrEmpty(item.PreferredFirstName) ? item.PreferredFirstName : item.FirstName) @item.LastName
                                     </h5>
-                                    <small class="text-muted">@item.JagId</small>
+                                    <small class="text-info">@item.JagId</small>
                                 </div>
                             </div>
 
@@ -435,7 +503,7 @@ else
                                 @if (!string.IsNullOrEmpty(item.PreferredFirstName))
                                 {
                                     <br />
-                                    <small class="text-muted">(@item.PreferredFirstName)</small>
+                                    <small class="text-info">(@item.PreferredFirstName)</small>
          }
                             </td>
                             <td>@item.PermanentEmail</td>
@@ -492,3 +560,283 @@ else
         </div>
     }
 </div>
+
+@section Scripts {
+    <script>
+        function toggleView(viewType) {
+            const cardView = document.getElementById('cardView');
+            const tableView = document.getElementById('tableView');
+            const cardViewBtn = document.getElementById('cardViewBtn');
+            const tableViewBtn = document.getElementById('tableViewBtn');
+
+            if (viewType === 'card') {
+                cardView.style.display = 'flex';
+                tableView.style.display = 'none';
+                cardViewBtn.classList.add('active');
+                tableViewBtn.classList.remove('active');
+                localStorage.setItem('alumniDirectoryView', 'card');
+            } else {
+                cardView.style.display = 'none';
+                tableView.style.display = 'block';
+                tableViewBtn.classList.add('active');
+                cardViewBtn.classList.remove('active');
+                localStorage.setItem('alumniDirectoryView', 'table');
+            }
+        }
+
+        // Restore saved view preference on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            const savedView = localStorage.getItem('alumniDirectoryView') || 'card';
+            toggleView(savedView);
+        });
+    </script>
+} *@
+@model IEnumerable<Alumni_Management_System.Models.Alumni>
+
+@{
+    ViewData["Title"] = "Alumni Directory";
+    var userRole = ViewData["UserRole"]?.ToString();
+    var currentAlumniId = ViewData["CurrentAlumniId"] as int?;
+    var isAlumni = userRole == "Alumni";
+    var isAdmin = userRole == "Admin";
+    var isStaff = userRole == "Staff";
+}
+
+<div class="container mt-5 mb-5">
+
+    <!-- Header -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+            <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                <i class="bi bi-people-fill text-primary fs-4"></i>
+            </div>
+            <div>
+                <h3 class="fw-bold mb-0">Alumni Directory</h3>
+                <small class="text-info">
+                    @if (isAlumni)
+                    {
+                        <text>Connect with fellow alumni</text>
+                    }
+                    else if (isAdmin)
+                    {
+                        <text>Manage and view alumni records</text>
+                    }
+                    else
+                    {
+                        <text>View alumni records</text>
+                    }
+                </small>
+            </div>
+        </div>
+
+        <!-- Toggle (ONLY FOR ALUMNI) -->
+        @if (isAlumni)
+        {
+            <div class="btn-group" role="group">
+                <button id="tableViewBtn" class="btn btn-outline-secondary active"
+                        onclick="toggleView('table')" type="button">
+                    <i class="bi bi-table text-danger"></i>
+                </button>
+                <button id="cardViewBtn" class="btn btn-outline-secondary"
+                        onclick="toggleView('card')" type="button">
+                    <i class="bi bi-grid text-danger"></i>
+                </button>
+            </div>
+        }
+    </div>
+
+    <!-- Search -->
+    <form asp-action="Index" method="get" class="mb-4 row g-3">
+        <div class="col-md-10">
+            <div class="input-group input-group-lg">
+                <span class="input-group-text bg-white">
+                    <i class="bi bi-search text-primary"></i>
+                </span>
+                <input type="text" name="searchString"
+                       value="@ViewData["CurrentFilter"]"
+                       class="form-control"
+                       placeholder="Search by name, JAG ID or email..." />
+            </div>
+        </div>
+        <div class="col-md-2">
+            <button type="submit" class="btn btn-primary w-100 btn-lg">
+                Search
+            </button>
+        </div>
+    </form>
+
+
+    <!-- ================= TABLE VIEW ================= -->
+    <div id="tableView">
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle text-center">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Jag ID</th>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Grad Year</th>
+                        <th>City</th>
+                        <th>State</th>
+                        @if (!isAlumni)
+                        {
+                            <th>Status</th>
+                        }
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!Model.Any())
+                    {
+                        <tr>
+                            <td colspan="9">
+                                <div class="alert alert-info mb-0">
+                                    <i class="bi bi-info-circle text-primary"></i>
+                                    No alumni found.
+                                </div>
+                            </td>
+                        </tr>
+                    }
+
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.JagId</td>
+                            <td>
+                                @item.FirstName @item.LastName
+                                @if (!string.IsNullOrEmpty(item.PreferredFirstName))
+                                {
+                                    <br />
+                                    <small class="text-info">
+                                        (@item.PreferredFirstName)
+                                    </small>
+                                }
+                            </td>
+                            <td>@item.PermanentEmail</td>
+                            <td>@item.Phone</td>
+                            <td>@item.GraduationYear</td>
+                            <td>@item.City</td>
+                            <td>@item.State</td>
+
+                            @if (!isAlumni)
+                            {
+                                <td>
+                                    @if (item.IsActive)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Inactive</span>
+                                    }
+                                </td>
+                            }
+
+                            <td>
+                                <a asp-action="Details"
+                                   asp-route-id="@item.AlumniId"
+                                   class="btn btn-sm btn-outline-primary rounded-circle"
+                                   title="View">
+                                    <i class="bi bi-eye-fill text-primary"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+
+    <!-- ================= CARD VIEW (ALUMNI ONLY) ================= -->
+    @if (isAlumni)
+    {
+        <div id="cardView" class="row" style="display:none;">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card shadow-sm h-100 border-0">
+                        <div class="card-body">
+
+                            <div class="d-flex align-items-center mb-3">
+                                <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center"
+                                     style="width:60px;height:60px;">
+                                    <i class="bi bi-person-fill text-primary fs-4"></i>
+                                </div>
+
+                                <div class="ms-3">
+                                    <h5 class="mb-0">
+                                        @item.FirstName @item.LastName
+                                    </h5>
+                                    <small class="text-info">
+                                        @item.GraduationYear
+                                    </small>
+                                </div>
+                            </div>
+
+                            <p class="mb-1">
+                                <i class="bi bi-envelope-fill text-primary me-2"></i>
+                                @item.PermanentEmail
+                            </p>
+
+                            <p class="mb-1">
+                                <i class="bi bi-telephone-fill text-primary me-2"></i>
+                                @item.Phone
+                            </p>
+
+                            <p class="mb-0">
+                                <i class="bi bi-geo-alt-fill text-primary me-2"></i>
+                                @item.City, @item.State
+                            </p>
+                        </div>
+
+                        <div class="card-footer bg-transparent border-0">
+                            <a asp-action="Details"
+                               asp-route-id="@item.AlumniId"
+                               class="btn btn-primary w-100">
+                                <i class="bi bi-eye-fill text-white me-1"></i>
+                                View Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+
+</div>
+
+
+@section Scripts {
+    <script>
+        function toggleView(viewType) {
+
+            const cardView = document.getElementById('cardView');
+            const tableView = document.getElementById('tableView');
+            const cardBtn = document.getElementById('cardViewBtn');
+            const tableBtn = document.getElementById('tableViewBtn');
+
+            if (!cardView) return;
+
+            if (viewType === 'card') {
+                tableView.style.display = 'none';
+                cardView.style.display = 'flex';
+                cardBtn.classList.add('active');
+                tableBtn.classList.remove('active');
+            } else {
+                tableView.style.display = 'block';
+                cardView.style.display = 'none';
+                tableBtn.classList.add('active');
+                cardBtn.classList.remove('active');
+            }
+        }
+
+        // Default = TABLE VIEW
+        document.addEventListener('DOMContentLoaded', function () {
+            toggleView('table');
+        });
+    </script>
+}
+
