@@ -1,0 +1,71 @@
+﻿@{
+    ViewData["Title"] = "Help & Support";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">
+        <i class="bi bi-question-circle-fill"></i>
+        Help & Support Center
+    </h2>
+
+    <div class="alert alert-info">
+        Welcome to the Alumni Management System Help Center.
+        Here you can learn how to use the platform.
+    </div>
+
+    <!-- FAQ -->
+    <div class="accordion" id="helpAccordion">
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#q1">
+                    How do I update my profile?
+                </button>
+            </h2>
+            <div id="q1" class="accordion-collapse collapse show">
+                <div class="accordion-body">
+                    Go to Profile from the top menu and update your details.
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#q2">
+                    How do admins manage alumni?
+                </button>
+            </h2>
+            <div id="q2" class="accordion-collapse collapse">
+                <div class="accordion-body">
+                    Admin users can manage alumni records using the sidebar navigation.
+                </div>
+            </div>
+        </div>
+
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed"
+                        type="button"
+                        data-bs-toggle="collapse"
+                        data-bs-target="#q3">
+                    Who do I contact for support?
+                </button>
+            </h2>
+            <div id="q3" class="accordion-collapse collapse">
+                <div class="accordion-body">
+                    Email: support@ams.edu <br />
+                    Phone: +1 (251) 000-0000
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>

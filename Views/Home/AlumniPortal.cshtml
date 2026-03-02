@@ -1,38 +1,131 @@
-﻿@{
-    ViewData["Title"] = "Alumni Portal";
+﻿@* @{ *@
+@*     ViewData["Title"] = "Alumni Portal"; *@
+@* } *@
+
+@* <div class="banner"> *@
+@*     <h3>My Alumni Portal</h3> *@
+@*     <p>Welcome back, @User.Identity.Name</p> *@
+@* </div> *@
+
+@* @if (ViewData["ProfileCompletion"] != null) *@
+@* { *@
+@*     <div class="card-soft mb-3"> *@
+@*         <h6>Profile Completion</h6> *@
+
+@*         <div class="progress"> *@
+@*             <div class="progress-bar bg-success" *@
+@*                  style="width:@ViewData["ProfileCompletion"]%"> *@
+@*                 @ViewData["ProfileCompletion"]% *@
+@*             </div> *@
+@*         </div> *@
+@*     </div> *@
+@* } *@
+
+@* <div class="row g-3"> *@
+
+@*     <div class="col-md-4"> *@
+@*         <a asp-controller="Alumni" asp-action="MyProfile" class="btn btn-primary w-100">My Profile</a> *@
+@*     </div> *@
+
+@*     <div class="col-md-4"> *@
+@*         <a asp-controller="Messages" asp-action="Index" class="btn btn-info w-100">Messages</a> *@
+@*     </div> *@
+
+@*     <div class="col-md-4"> *@
+@*         <a asp-controller="AlumniDegrees" asp-action="Index" class="btn btn-warning w-100">My Degrees</a> *@
+@*     </div> *@
+
+@* </div> *@
+
+@{
+    ViewData["Title"] = "Dashboard";
 }
 
-<div class="banner">
-    <h3>My Alumni Portal</h3>
-    <p>Welcome back, @User.Identity.Name</p>
-</div>
+<div class="container-fluid">
 
-@if (ViewData["ProfileCompletion"] != null)
-{
-    <div class="card-soft mb-3">
-        <h6>Profile Completion</h6>
+    <!-- ================= HERO ================= -->
+    <div class="hero mb-4">
 
-        <div class="progress">
-            <div class="progress-bar bg-success"
-                 style="width:@ViewData["ProfileCompletion"]%">
-                @ViewData["ProfileCompletion"]%
+        <div>
+            <h2>Welcome back, @User.Identity.Name 👋</h2>
+
+            <p>
+                Manage your alumni profile, track career progress,
+                and stay connected with the
+                <strong>University of South Alabama</strong>.
+            </p>
+        </div>
+
+    </div>
+
+
+
+    <!-- ================= PROFILE STATUS ================= -->
+    <div class="card shadow-sm mb-4 border-0">
+        <div class="card-body">
+
+            <div class="d-flex justify-content-between">
+                <h5>Profile Completion</h5>
+                <strong>@ViewData["ProfileCompletion"]%</strong>
             </div>
+
+            <div class="progress mt-2" style="height:10px;">
+                <div class="progress-bar bg-success"
+                     style="width:@ViewData["ProfileCompletion"]%">
+                </div>
+            </div>
+
         </div>
     </div>
-}
 
-<div class="row g-3">
 
-    <div class="col-md-4">
-        <a asp-controller="Alumni" asp-action="MyProfile" class="btn btn-primary w-100">My Profile</a>
+
+    <!-- ================= QUICK ACTIONS ================= -->
+    <h5 class="mb-3">Quick Actions</h5>
+
+    <div class="row g-4">
+
+        <div class="col-md-4">
+            <a asp-controller="Alumni" asp-action="MyProfile"
+               class="quick-card">
+                <i class="bi bi-person"></i>
+                <span>My Profile</span>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a asp-controller="AlumniDegrees" asp-action="Index"
+               class="quick-card">
+                <i class="bi bi-award"></i>
+                <span>Degrees</span>
+            </a>
+        </div>
+
+        <div class="col-md-4">
+            <a asp-controller="Messages" asp-action="Index"
+               class="quick-card">
+                <i class="bi bi-chat-dots"></i>
+                <span>Messages</span>
+            </a>
+        </div>
+
     </div>
 
-    <div class="col-md-4">
-        <a asp-controller="Messages" asp-action="Index" class="btn btn-info w-100">Messages</a>
-    </div>
 
-    <div class="col-md-4">
-        <a asp-controller="AlumniDegrees" asp-action="Index" class="btn btn-warning w-100">My Degrees</a>
+
+    <!-- ================= ALUMNI INFO ================= -->
+    <div class="card shadow-sm border-0 mt-5">
+        <div class="card-body">
+
+            <h5>South Alabama Alumni Network</h5>
+
+            <p>
+                The University of South Alabama Alumni Association
+                connects graduates worldwide through mentorship,
+                innovation programs, and professional networking.
+            </p>
+
+        </div>
     </div>
 
 </div>
