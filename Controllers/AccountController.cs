@@ -140,21 +140,26 @@ namespace Alumni_Management_System.Controllers
                 // Assign Alumni role
                 await _userManager.AddToRoleAsync(user, Constants.AlumniRole);
 
-                // Create Alumni profile
-                var alumni = new Alumni
-                {
-                    UserId = user.Id,
-                    JagId = model.JagId,
-                    FirstName = model.FirstName,
-                    LastName = model.LastName,
-                    PermanentEmail = model.Email,
-                    GraduationYear = model.GraduationYear ?? DateTime.Now.Year,
-                    IsActive = true,
-                    Privacy = true,
-                    LastUpdated = DateTime.Now
-                };
+                // NEW STRATEGY: Find existing Alumni record by JagId and map UserId
+                var alumni = await _context.Alumni
+                    .FirstOrDefaultAsync(a => a.JagId == model.JagId);
 
-                _context.Alumni.Add(alumni);
+                if (alumni == null)
+                {
+                    // Alumni profile doesn't exist - Admin needs to import it first
+                    _logger.LogError($"Alumni profile not found for JAG ID: {model.JagId}");
+
+                    // Delete the user account we just created
+                    await _userManager.DeleteAsync(user);
+
+                    ModelState.AddModelError("", "Alumni profile not found in the system. Please contact the administrator to configure your profile first.");
+                    return View(model);
+                }
+
+                // Map the UserId to the existing Alumni record
+                alumni.UserId = user.Id;
+                alumni.LastUpdated = DateTime.Now;
+                _context.Alumni.Update(alumni);
 
                 // Update Alumni Registry - mark account as created
                 registryEntry.AccountCreated = true;
@@ -165,11 +170,11 @@ namespace Alumni_Management_System.Controllers
                 // Sign in the user
                 await _signInManager.SignInAsync(user, isPersistent: false);
 
-                _logger.LogInformation("User registered successfully and signed in.");
+                _logger.LogInformation($"User registered successfully and mapped to Alumni ID: {alumni.AlumniId}");
 
-                TempData["InfoMessage"] = "Registration successful! Please complete your profile to get started.";
-                // Redirect to profile edit page for first-time users
-                return RedirectToAction("Edit", "Alumni", new { id = alumni.AlumniId });
+                TempData["SuccessMessage"] = "Registration successful! Welcome to the Alumni Management System.";
+                // Redirect to Alumni Portal
+                return RedirectToAction("AlumniPortal", "Home");
             }
 
             // If we got this far, something failed, redisplay form

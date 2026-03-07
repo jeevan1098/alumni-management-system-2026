@@ -132,6 +132,7 @@ namespace Alumni_Management_System.Controllers
             if (ModelState.IsValid)
             {
                 alumni.LastUpdated = DateTime.Now;
+                alumni.IsActive = false;
                 _context.Add(alumni);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Alumni created successfully!";

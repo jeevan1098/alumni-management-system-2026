@@ -680,10 +680,10 @@ else
                         <th>Grad Year</th>
                         <th>City</th>
                         <th>State</th>
-                        @if (!isAlumni)
+                        @* @if (!isAlumni)
                         {
                             <th>Status</th>
-                        }
+                        } *@
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -720,7 +720,7 @@ else
                             <td>@item.City</td>
                             <td>@item.State</td>
 
-                            @if (!isAlumni)
+                            @* @if (!isAlumni)
                             {
                                 <td>
                                     @if (item.IsActive)
@@ -732,16 +732,43 @@ else
                                         <span class="badge bg-danger">Inactive</span>
                                     }
                                 </td>
+                            } *@
+                            @if (isAdmin)
+                            {
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a asp-action="Details"
+                                           asp-route-id="@item.AlumniId"
+                                           class="btn btn-sm btn-outline-primary rounded-circle me-1"
+                                           title="View">
+                                            <i class="bi bi-eye-fill text-primary"></i>
+                                        </a>
+                                        <a asp-action="Edit"
+                                           asp-route-id="@item.AlumniId"
+                                           class="btn btn-sm btn-outline-warning rounded-circle me-1"
+                                           title="Edit">
+                                            <i class="bi bi-pencil-fill text-warning"></i>
+                                        </a>
+                                        <a asp-action="Delete"
+                                           asp-route-id="@item.AlumniId"
+                                           class="btn btn-sm btn-outline-danger rounded-circle"
+                                           title="Delete">
+                                            <i class="bi bi-trash-fill text-danger"></i>
+                                        </a>
+                                    </div>
+                                </td>
                             }
-
-                            <td>
-                                <a asp-action="Details"
-                                   asp-route-id="@item.AlumniId"
-                                   class="btn btn-sm btn-outline-primary rounded-circle"
-                                   title="View">
-                                    <i class="bi bi-eye-fill text-primary"></i>
-                                </a>
-                            </td>
+                            else if (isAlumni)
+                            {
+                                <td>
+                                    <a asp-action="Details"
+                                       asp-route-id="@item.AlumniId"
+                                       class="btn btn-sm btn-outline-primary rounded-circle"
+                                       title="View">
+                                        <i class="bi bi-eye-fill text-primary"></i>
+                                    </a>
+                                </td>
+                            }
                         </tr>
                     }
                 </tbody>
