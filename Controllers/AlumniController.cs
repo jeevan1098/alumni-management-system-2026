@@ -295,12 +295,48 @@ namespace Alumni_Management_System.Controllers
         [Authorize(Roles = "Admin")] // Only Admin can delete
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var alumni = await _context.Alumni.FindAsync(id);
-            if (alumni != null)
+            // 1. Fetch the Alumni record and include the associated User
+            var alumni = await _context.Alumni
+                .Include(a => a.User)
+                .FirstOrDefaultAsync(m => m.AlumniId == id);
+
+            if (alumni == null)
             {
-                _context.Alumni.Remove(alumni);
-                await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Alumni deleted successfully!";
+                return NotFound();
+            }
+
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    // 2. Identify the linked AppUser
+                    var user = alumni.User;
+
+                    // 3. Remove the Alumni profile first
+                    // This triggers the database CASCADE to history tables (Degrees, etc.)
+                    _context.Alumni.Remove(alumni);
+
+                    // 4. Remove the linked Identity User if they have one
+                    // This is the "Reverse Cascade" manual step
+                    if (user != null)
+                    {
+                        var result = await _userManager.DeleteAsync(user);
+                        if (!result.Succeeded)
+                        {
+                            throw new Exception("Failed to delete associated user account.");
+                        }
+                    }
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    TempData["SuccessMessage"] = "Alumni and associated user account deleted successfully!";
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    TempData["ErrorMessage"] = "Error during deletion: " + ex.Message;
+                }
             }
 
             return RedirectToAction(nameof(Index));
