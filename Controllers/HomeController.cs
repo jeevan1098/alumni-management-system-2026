@@ -244,7 +244,7 @@ namespace Alumni_Management_System.Controllers
         public async Task<IActionResult> AlumniPortal()
         {
             var user = await _userManager.GetUserAsync(User);
-            var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == user.Id);
+            var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == user.JagId);
 
             if (alumni != null)
             {

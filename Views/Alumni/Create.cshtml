@@ -402,7 +402,7 @@
                         <span asp-validation-for="GraduationYear" class="text-danger"></span>
                     </div>
 
-                    <!-- Assign User -->
+                  @*   <!-- Assign User -->
                     <div class="col-md-4 mb-3">
                         <label asp-for="UserId" class="form-label fw-semibold">Assign User</label>
                         <div class="input-group shadow-sm">
@@ -415,6 +415,16 @@
                             </select>
                         </div>
                         <span asp-validation-for="UserId" class="text-danger"></span>
+                    </div> *@
+
+                    <!-- Status -->
+                    <div class="col-md-4 mb-3">
+                        <label class="form-label fw-semibold">&nbsp;</label>
+                        <div class="form-check mt-2">
+                            <input asp-for="IsActive" class="form-check-input me-2 border-primary" type="checkbox" />
+                            <label asp-for="IsActive" class="form-check-label fw-semibold"></label>
+                        </div>
+                        <span asp-validation-for="IsActive" class="text-danger"></span>
                     </div>
 
                     <!-- Solicitation Code -->

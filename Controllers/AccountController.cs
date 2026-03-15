@@ -230,18 +230,26 @@ namespace Alumni_Management_System.Controllers
                 // 4. Assign Alumni Role
                 await _userManager.AddToRoleAsync(user, Constants.AlumniRole);
 
-                // 5. LINKING STEP: Instead of 'new Alumni()', we update the imported one
-                existingAlumni.UserId = user.Id; // Linking the new Identity ID to the imported record
-                existingAlumni.LastUpdated = DateTime.Now;
+                // NEW STRATEGY: Find existing Alumni record by JagId and map UserId
+                var alumni = await _context.Alumni
+                    .FirstOrDefaultAsync(a => a.JagId == model.JagId);
 
-                // Update contact info if they provided a new one during registration
-                existingAlumni.PermanentEmail = model.Email;
-                if (!string.IsNullOrEmpty(model.PhoneNumber))
+                if (alumni == null)
                 {
-                    existingAlumni.Phone = model.PhoneNumber;
+                    // Alumni profile doesn't exist - Admin needs to import it first
+                    _logger.LogError($"Alumni profile not found for JAG ID: {model.JagId}");
+
+                    // Delete the user account we just created
+                    await _userManager.DeleteAsync(user);
+
+                    ModelState.AddModelError("", "Alumni profile not found in the system. Please contact the administrator to configure your profile first.");
+                    return View(model);
                 }
 
-                _context.Alumni.Update(existingAlumni);
+                // Map the UserId to the existing Alumni record
+                alumni.UserId = user.Id;
+                alumni.LastUpdated = DateTime.Now;
+                _context.Alumni.Update(alumni);
 
                 // 6. Update Registry status
                 registryEntry.AccountCreated = true;
@@ -252,8 +260,11 @@ namespace Alumni_Management_System.Controllers
                 // 7. Sign in and Redirect
                 await _signInManager.SignInAsync(user, isPersistent: false);
 
-                TempData["InfoMessage"] = "Welcome back! Your imported profile has been linked to your new account.";
-                return RedirectToAction("Edit", "Alumni", new { id = existingAlumni.AlumniId });
+                _logger.LogInformation($"User registered successfully and mapped to Alumni ID: {alumni.AlumniId}");
+
+                TempData["SuccessMessage"] = "Registration successful! Welcome to the Alumni Management System.";
+                // Redirect to Alumni Portal
+                return RedirectToAction("AlumniPortal", "Home");
             }
 
             // Handle Identity errors
