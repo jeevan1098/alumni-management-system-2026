@@ -17,7 +17,7 @@
     if (!string.IsNullOrEmpty(Model.PermanentEmail)) completedFields++;
     if (!string.IsNullOrEmpty(Model.Phone)) completedFields++;
     if (!string.IsNullOrEmpty(Model.Gender)) completedFields++;
-    if (Model.DateOfBirth.HasValue) completedFields++;
+    if (Model.AgeAtGraduation.HasValue) completedFields++;
     if (!string.IsNullOrEmpty(Model.Address)) completedFields++;
     if (!string.IsNullOrEmpty(Model.City)) completedFields++;
     if (!string.IsNullOrEmpty(Model.State)) completedFields++;
@@ -74,7 +74,6 @@
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="AlumniId" />
-            <input type="hidden" asp-for="UserId" />
             <input type="hidden" asp-for="LastUpdated" />
             <input type="hidden" asp-for="IsActive" />
 
@@ -136,9 +135,10 @@
                             <span asp-validation-for="Gender" class="text-danger"></span>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label asp-for="DateOfBirth" class="form-label"></label>
-                            <input asp-for="DateOfBirth" class="form-control" type="date" />
-                            <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                            <label asp-for="AgeAtGraduation" class="form-label"></label>
+                            <input asp-for="AgeAtGraduation" class="form-control" type="number" min="15" placeholder="e.g., 22" />
+                            <span asp-validation-for="AgeAtGraduation" class="text-danger"></span>
+                            <small class="text-muted">Minimum age: 15</small>
                         </div>
                     </div>
                     <div class="row">

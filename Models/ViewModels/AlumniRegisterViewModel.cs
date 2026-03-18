@@ -17,6 +17,12 @@ namespace Alumni_Management_System.Models.ViewModels
         public string LastName { get; set; }
 
         [Required]
+        [StringLength(30, MinimumLength = 3, ErrorMessage = "Username must be between 3 and 30 characters.")]
+        [RegularExpression(@"^[a-zA-Z0-9._]+$", ErrorMessage = "Username can only contain letters, numbers, dots, and underscores.")]
+        [Display(Name = "Username")]
+        public string Username { get; set; }
+
+        [Required]
         [EmailAddress]
         [Display(Name = "Email")]
         public string Email { get; set; }
@@ -35,12 +41,6 @@ namespace Alumni_Management_System.Models.ViewModels
         [Display(Name = "Phone Number")]
         [Phone]
         public string PhoneNumber { get; set; }
-
-        [Display(Name = "Graduation Year")]
-        public int? GraduationYear { get; set; }
-
-        [Display(Name = "Degree Program")]
-        public string DegreeProgram { get; set; }
     }
 }
 

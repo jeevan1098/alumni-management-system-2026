@@ -49,9 +49,9 @@
                 <span asp-validation-for="Gender" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="DateOfBirth" class="control-label"></label>
-                <input asp-for="DateOfBirth" class="form-control" />
-                <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                <label asp-for="AgeAtGraduation" class="control-label"></label>
+                <input asp-for="AgeAtGraduation" class="form-control" type="number" min="15" />
+                <span asp-validation-for="AgeAtGraduation" class="text-danger"></span>
             </div>
             <div class="form-group">
                 <label asp-for="StudentEmail" class="control-label"></label>
@@ -234,14 +234,15 @@
                     </div>
 
                     <div class="col-md-4 mb-3">
-                        <label asp-for="DateOfBirth" class="form-label fw-semibold"></label>
+                        <label asp-for="AgeAtGraduation" class="form-label fw-semibold"></label>
                         <div class="input-group shadow-sm">
                             <span class="input-group-text bg-light">
-                                <i class="bi bi-calendar-event"></i>
+                                <i class="bi bi-123"></i>
                             </span>
-                            <input asp-for="DateOfBirth" type="date" class="form-control rounded-end-3" />
+                            <input asp-for="AgeAtGraduation" type="number" min="15" class="form-control rounded-end-3" placeholder="e.g., 22" />
                         </div>
-                        <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                        <span asp-validation-for="AgeAtGraduation" class="text-danger"></span>
+                        <small class="text-muted">Minimum age: 15</small>
                     </div>
 
                     <div class="col-md-4 mb-3">

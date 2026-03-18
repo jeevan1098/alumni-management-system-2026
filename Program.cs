@@ -107,7 +107,7 @@ app.Use(async (context, next) =>
             if (user != null && user.IsFirstLogin && context.User.IsInRole(Constants.AlumniRole))
             {
                 var dbContext = context.RequestServices.GetRequiredService<ApplicationDbContext>();
-                var alumni = await dbContext.Alumni.FirstOrDefaultAsync(a => a.UserId == user.Id);
+                var alumni = await dbContext.Alumni.FirstOrDefaultAsync(a => a.JagId == user.JagId);
 
                 if (alumni != null)
                 {

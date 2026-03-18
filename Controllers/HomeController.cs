@@ -115,6 +115,11 @@ namespace Alumni_Management_System.Controllers
                 return View("PublicHome");
 
             var user = await _userManager.GetUserAsync(User);
+            
+            // User is authenticated but not found in database
+            if (user == null)
+                return View("PublicHome");
+
             var roles = await _userManager.GetRolesAsync(user);
 
             if (roles.Contains("Admin"))
@@ -148,11 +153,8 @@ namespace Alumni_Management_System.Controllers
                 .Select(g => new { Year = g.Key, Count = g.Count() })
                 .ToListAsync();
 
-            var registryChart = await _context.AlumniRegistries
-                .Where(r => r.GraduationYear > 0)
-                .GroupBy(r => r.GraduationYear)
-                .Select(g => new { Year = g.Key, Count = g.Count() })
-                .ToListAsync();
+            // AlumniRegistry no longer has GraduationYear, so we'll use Alumni table only
+            // var registryChart = new List<dynamic>(); // Empty list since registry doesn't have year data
 
             // Convert to List BEFORE Union
             // Convert to NON-NULLABLE int list
@@ -162,24 +164,11 @@ namespace Alumni_Management_System.Controllers
                 .Select(x => x.Value)
                 .ToList();
 
-            var registryYears = registryChart
-                .Select(x => (int?)x.Year)
-                .Where(x => x.HasValue)
-                .Select(x => x.Value)
-                .ToList();
-
-            // Merge safely
+            // Since AlumniRegistry no longer has GraduationYear, we'll use only Alumni data
             var years = alumniYears
-                .Concat(registryYears)
                 .Distinct()
                 .OrderBy(x => x)
                 .ToList();
-
-            ViewBag.ChartLabels = years;
-
-
-
-
 
             ViewBag.ChartLabels = years;
 
@@ -187,9 +176,8 @@ namespace Alumni_Management_System.Controllers
                 .Select(y => alumniChart.FirstOrDefault(a => a.Year == y)?.Count ?? 0)
                 .ToList();
 
-            ViewBag.RegistryData = years
-                .Select(y => registryChart.FirstOrDefault(r => r.Year == y)?.Count ?? 0)
-                .ToList();
+            // Registry data is now empty since we removed GraduationYear
+            ViewBag.RegistryData = years.Select(y => 0).ToList();
 
             // =========================================================
             // 🔴 REAL LIVE ACTIVITY FEED
@@ -244,6 +232,11 @@ namespace Alumni_Management_System.Controllers
         public async Task<IActionResult> AlumniPortal()
         {
             var user = await _userManager.GetUserAsync(User);
+            
+            // User is authenticated but not found in database
+            if (user == null)
+                return RedirectToAction("Index");
+
             var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == user.JagId);
 
             if (alumni != null)
@@ -255,7 +248,7 @@ namespace Alumni_Management_System.Controllers
                 if (!string.IsNullOrEmpty(alumni.PermanentEmail)) done++;
                 if (!string.IsNullOrEmpty(alumni.Phone)) done++;
                 if (!string.IsNullOrEmpty(alumni.Gender)) done++;
-                if (alumni.DateOfBirth.HasValue) done++;
+                if (alumni.AgeAtGraduation > 0) done++;
                 if (!string.IsNullOrEmpty(alumni.Address)) done++;
                 if (!string.IsNullOrEmpty(alumni.City)) done++;
                 if (!string.IsNullOrEmpty(alumni.State)) done++;

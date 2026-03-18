@@ -59,7 +59,7 @@ namespace Alumni_Management_System.Controllers
             ViewData["UserRole"] = roles.FirstOrDefault();
 
             // Pass current user's alumni ID for "My Profile" button
-            var currentAlumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+            var currentAlumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
             ViewData["CurrentAlumniId"] = currentAlumni?.AlumniId;
 
             return View(await alumniQuery.ToListAsync());
@@ -74,7 +74,7 @@ namespace Alumni_Management_System.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+            var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
             if (alumni == null)
             {
                 TempData["ErrorMessage"] = "Alumni profile not found.";
@@ -107,8 +107,7 @@ namespace Alumni_Management_System.Controllers
         [Authorize(Roles = "Admin")] // Only Admin can create alumni manually
         public IActionResult Create()
         {
-            //ViewData["IdentityUserId"] = new SelectList(_context.Users, "Id", "Id");
-            ViewData["IdentityUserId"] = new SelectList(_context.Users.OrderBy(u => u.Email), "Id", "Email");
+            // No need for IdentityUserId dropdown since we're using JagId now
             return View();
         }
 
@@ -118,16 +117,8 @@ namespace Alumni_Management_System.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")] // Only Admin can create alumni manually
-        public async Task<IActionResult> Create([Bind("AlumniId,UserId,JagId,Prefix,FirstName,PreferredFirstName,LastName,Gender,DateOfBirth,StudentEmail,PermanentEmail,Phone,Address,City,State,Postcode,Country,GraduationYear,SolicitationCode,SocialMediaAccount,Privacy,IsActive,LastUpdated,IdentityUserId")] Alumni alumni)
+        public async Task<IActionResult> Create([Bind("AlumniId,JagId,Prefix,FirstName,PreferredFirstName,LastName,Gender,AgeAtGraduation,StudentEmail,PermanentEmail,Phone,Address,City,State,Postcode,Country,GraduationYear,SolicitationCode,SocialMediaAccount,Privacy,IsActive,LastUpdated")] Alumni alumni)
         {
-            // Validate: DOB cannot be after Graduation Year
-            if (alumni.DateOfBirth.HasValue && alumni.GraduationYear > 0)
-            {
-                if (alumni.DateOfBirth.Value.Year > alumni.GraduationYear)
-                {
-                    ModelState.AddModelError("DateOfBirth", "Date of Birth cannot be after Graduation Year.");
-                }
-            }
 
             if (ModelState.IsValid)
             {
@@ -138,7 +129,6 @@ namespace Alumni_Management_System.Controllers
                 TempData["SuccessMessage"] = "Alumni created successfully!";
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["IdentityUserId"] = new SelectList(_context.Users, "Id", "Id", alumni.User);
             return View(alumni);
         }
 
@@ -168,7 +158,7 @@ namespace Alumni_Management_System.Controllers
             if (roles.Contains(Constants.AlumniRole))
             {
                 // Alumni can only edit their own profile
-                if (alumni.UserId != currentUser.Id)
+                if (alumni.JagId != currentUser.JagId)
                 {
                     TempData["ErrorMessage"] = "You can only edit your own profile.";
                     return RedirectToAction(nameof(Index));
@@ -182,7 +172,7 @@ namespace Alumni_Management_System.Controllers
             }
             // Admin can edit any profile
 
-            ViewData["IdentityUserId"] = new SelectList(_context.Users, "Id", "Id", alumni.UserId);
+            // No need for IdentityUserId since we're using JagId now
             return View(alumni);
         }
 
@@ -191,7 +181,7 @@ namespace Alumni_Management_System.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("AlumniId,UserId,JagId,Prefix,FirstName,PreferredFirstName,LastName,Gender,DateOfBirth,StudentEmail,PermanentEmail,Phone,Address,City,State,Postcode,Country,GraduationYear,SolicitationCode,SocialMediaAccount,Privacy,IsActive,LastUpdated,IdentityUserId")] Alumni alumni)
+        public async Task<IActionResult> Edit(int id, [Bind("AlumniId,JagId,Prefix,FirstName,PreferredFirstName,LastName,Gender,AgeAtGraduation,StudentEmail,PermanentEmail,Phone,Address,City,State,Postcode,Country,GraduationYear,SolicitationCode,SocialMediaAccount,Privacy,IsActive,LastUpdated")] Alumni alumni)
         {
             if (id != alumni.AlumniId)
             {
@@ -210,7 +200,7 @@ namespace Alumni_Management_System.Controllers
             if (roles.Contains(Constants.AlumniRole))
             {
                 // Alumni can only edit their own profile
-                if (alumni.UserId != currentUser.Id)
+                if (alumni.JagId != currentUser.JagId)
                 {
                     TempData["ErrorMessage"] = "You can only edit your own profile.";
                     return RedirectToAction(nameof(Index));
@@ -223,14 +213,7 @@ namespace Alumni_Management_System.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Validate: DOB cannot be after Graduation Year
-            if (alumni.DateOfBirth.HasValue && alumni.GraduationYear > 0)
-            {
-                if (alumni.DateOfBirth.Value.Year > alumni.GraduationYear)
-                {
-                    ModelState.AddModelError("DateOfBirth", "Date of Birth cannot be after Graduation Year.");
-                }
-            }
+
 
             if (ModelState.IsValid)
             {
@@ -266,7 +249,7 @@ namespace Alumni_Management_System.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["IdentityUserId"] = new SelectList(_context.Users, "Id", "Id", alumni.UserId);
+            // No need for ViewData["IdentityUserId"] since we're using JagId now
             return View(alumni);
         }
 

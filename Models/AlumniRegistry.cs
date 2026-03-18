@@ -33,20 +33,6 @@ public partial class AlumniRegistry
     [Display(Name = "Last Name")]
     public string LastName { get; set; }
 
-    [Column("graduation_year")]
-    [Display(Name = "Graduation Year")]
-    public int? GraduationYear { get; set; }
-
-    [Column("degree_program")]
-    [StringLength(100)]
-    [Display(Name = "Degree Program")]
-    public string DegreeProgram { get; set; }
-
-    [Column("email_on_record")]
-    [StringLength(150)]
-    [Display(Name = "Email On Record")]
-    public string EmailOnRecord { get; set; }
-
     [Column("account_created")]
     [Display(Name = "Account Created")]
     public bool AccountCreated { get; set; }

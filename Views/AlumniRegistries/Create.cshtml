@@ -124,43 +124,6 @@
                     <span asp-validation-for="LastName" class="text-danger"></span>
                 </div>
 
-                <!-- Graduation Year -->
-                <div class="mb-3">
-                    <label asp-for="GraduationYear" class="form-label fw-semibold"></label>
-                    <div class="input-group shadow-sm">
-                        <span class="input-group-text bg-light">
-                            <i class="bi bi-calendar-event-fill"></i>
-                        </span>
-                        <input asp-for="GraduationYear" type="number" min="1900" max="2050" class="form-control rounded-end-3" placeholder="e.g. 2023" />
-                    </div>
-                    <span asp-validation-for="GraduationYear" class="text-danger"></span>
-                </div>
-
-
-                <!-- Degree Program -->
-                <div class="mb-3">
-                    <label asp-for="DegreeProgram" class="form-label fw-semibold"></label>
-                    <div class="input-group shadow-sm">
-                        <span class="input-group-text bg-light">
-                            <i class="bi bi-book-fill"></i>
-                        </span>
-                        <input asp-for="DegreeProgram" class="form-control rounded-end-3" />
-                    </div>
-                    <span asp-validation-for="DegreeProgram" class="text-danger"></span>
-                </div>
-
-                <!-- Email -->
-                <div class="mb-3">
-                    <label asp-for="EmailOnRecord" class="form-label fw-semibold"></label>
-                    <div class="input-group shadow-sm">
-                        <span class="input-group-text bg-light">
-                            <i class="bi bi-envelope-fill"></i>
-                        </span>
-                        <input asp-for="EmailOnRecord" type="email" class="form-control rounded-end-3" />
-                    </div>
-                    <span asp-validation-for="EmailOnRecord" class="text-danger"></span>
-                </div>
-
                 <!-- Account Created -->
                 <div class="form-check mb-4">
                     <input class="form-check-input" asp-for="AccountCreated" disabled/>

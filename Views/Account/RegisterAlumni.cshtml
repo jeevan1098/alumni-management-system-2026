@@ -50,11 +50,20 @@
                         </div>
 
                         <div class="mb-3">
+                            <label asp-for="Username" class="form-label"></label>
+                            <input asp-for="Username" class="form-control" placeholder="e.g., john_doe or john.doe123" maxlength="30" />
+                            <span asp-validation-for="Username" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="bi bi-exclamation-triangle text-warning"></i> <strong>Username cannot be changed later!</strong> Use only letters, numbers, dots, and underscores (3-30 characters).
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
                             <label asp-for="Email" class="form-label"></label>
-                            <input asp-for="Email" class="form-control" type="email" />
+                            <input asp-for="Email" class="form-control" type="email" placeholder="your.email@example.com" />
                             <span asp-validation-for="Email" class="text-danger"></span>
                             <div class="form-text">
-                                <i class="bi bi-envelope"></i> This will be your username for login
+                                <i class="bi bi-info-circle"></i> Your primary contact email (can be changed later)
                             </div>
                         </div>
 
@@ -80,25 +89,6 @@
                             <span asp-validation-for="PhoneNumber" class="text-danger"></span>
                             <div class="form-text">
                                 <i class="bi bi-info-circle"></i> Optional - You can update this later
-                            </div>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="GraduationYear" class="form-label"></label>
-                                <input asp-for="GraduationYear" class="form-control" type="number" min="1900" max="2100" readonly />
-                                <span asp-validation-for="GraduationYear" class="text-danger"></span>
-                                <div class="form-text">
-                                    <i class="bi bi-lock"></i> From Alumni Registry
-                                </div>
-                            </div>
-                            <div class="col-md-6 mb-3">
-                                <label asp-for="DegreeProgram" class="form-label"></label>
-                                <input asp-for="DegreeProgram" class="form-control" readonly />
-                                <span asp-validation-for="DegreeProgram" class="text-danger"></span>
-                                <div class="form-text">
-                                    <i class="bi bi-lock"></i> From Alumni Registry
-                                </div>
                             </div>
                         </div>
 

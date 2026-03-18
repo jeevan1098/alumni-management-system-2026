@@ -48,10 +48,11 @@ namespace Alumni_Management_System.Data
 
                 entity.HasIndex(a => a.JagId).IsUnique();
 
-                // Configure One-to-One with ApplicationUser
+                // Configure One-to-One with AppUser via JagId
                 entity.HasOne(a => a.User)
                       .WithOne(u => u.Alumni)
-                      .HasForeignKey<Alumni>(a => a.UserId)
+                      .HasForeignKey<Alumni>(a => a.JagId)
+                      .HasPrincipalKey<AppUser>(u => u.JagId)
                       .IsRequired(false);
             });
 

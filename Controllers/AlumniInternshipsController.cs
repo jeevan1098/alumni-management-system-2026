@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -35,7 +35,7 @@ namespace Alumni_Management_System.Controllers
             // Alumni can only see their own internships
             if (roles.Contains(Constants.AlumniRole))
             {
-                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni != null)
                 {
                     query = query.Where(ai => ai.AlumniId == alumni.AlumniId);
@@ -72,7 +72,7 @@ namespace Alumni_Management_System.Controllers
             var roles = await _userManager.GetRolesAsync(currentUser);
             if (roles.Contains(Constants.AlumniRole))
             {
-                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null || alumniInternship.AlumniId != alumni.AlumniId)
                 {
                     TempData["ErrorMessage"] = "You can only view your own internship records.";
@@ -92,7 +92,7 @@ namespace Alumni_Management_System.Controllers
             // For Alumni users, auto-select their own AlumniId
             if (roles.Contains(Constants.AlumniRole))
             {
-                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null)
                 {
                     TempData["ErrorMessage"] = "Alumni profile not found.";
@@ -133,7 +133,7 @@ namespace Alumni_Management_System.Controllers
             // Validate: Alumni can only create internships for themselves
             if (roles.Contains(Constants.AlumniRole))
             {
-                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null || alumniInternship.AlumniId != alumni.AlumniId)
                 {
                     TempData["ErrorMessage"] = "You can only create internship records for yourself.";
@@ -189,7 +189,7 @@ namespace Alumni_Management_System.Controllers
             // Repopulate dropdowns
             if (roles.Contains(Constants.AlumniRole))
             {
-                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 ViewData["CurrentAlumniId"] = alumni?.AlumniId;
                 ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniInternship.AlumniId);
                 ViewData["UserRole"] = Constants.AlumniRole;
@@ -231,7 +231,7 @@ namespace Alumni_Management_System.Controllers
             var roles = await _userManager.GetRolesAsync(currentUser);
             if (roles.Contains(Constants.AlumniRole))
             {
-                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null || alumniInternship.AlumniId != alumni.AlumniId)
                 {
                     TempData["ErrorMessage"] = "You can only edit your own internship records.";
@@ -276,7 +276,7 @@ namespace Alumni_Management_System.Controllers
             // Validate: Alumni can only edit their own internships
             if (roles.Contains(Constants.AlumniRole))
             {
-                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null || alumniInternship.AlumniId != alumni.AlumniId)
                 {
                     TempData["ErrorMessage"] = "You can only edit your own internship records.";
@@ -346,7 +346,7 @@ namespace Alumni_Management_System.Controllers
             // Repopulate dropdowns
             if (roles.Contains(Constants.AlumniRole))
             {
-                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 ViewData["CurrentAlumniId"] = alumni?.AlumniId;
                 ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniInternship.AlumniId);
                 ViewData["UserRole"] = Constants.AlumniRole;
@@ -391,7 +391,7 @@ namespace Alumni_Management_System.Controllers
             var roles = await _userManager.GetRolesAsync(currentUser);
             if (roles.Contains(Constants.AlumniRole))
             {
-                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null || alumniInternship.AlumniId != alumni.AlumniId)
                 {
                     TempData["ErrorMessage"] = "You can only delete your own internship records.";
@@ -415,7 +415,7 @@ namespace Alumni_Management_System.Controllers
                 var roles = await _userManager.GetRolesAsync(currentUser);
                 if (roles.Contains(Constants.AlumniRole))
                 {
-                    var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                    var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                     if (alumni == null || alumniInternship.AlumniId != alumni.AlumniId)
                     {
                         TempData["ErrorMessage"] = "You can only delete your own internship records.";

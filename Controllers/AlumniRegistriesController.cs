@@ -224,9 +224,6 @@ namespace Alumni_Management_System.Controllers
                                     JagId = values[0].Trim(),
                                     FirstName = values[1].Trim(),
                                     LastName = values[2].Trim(),
-                                    GraduationYear = values.Length > 3 && int.TryParse(values[3], out int year) ? year : (int?)null,
-                                    DegreeProgram = values.Length > 4 ? values[4].Trim() : null,
-                                    EmailOnRecord = values.Length > 5 ? values[5].Trim() : null,
                                     AccountCreated = false
                                 };
 
@@ -290,9 +287,6 @@ namespace Alumni_Management_System.Controllers
                                         JagId = jagId,
                                         FirstName = firstName,
                                         LastName = lastName,
-                                        GraduationYear = int.TryParse(worksheet.Cells[row, 4].Value?.ToString(), out int year) ? year : (int?)null,
-                                        DegreeProgram = worksheet.Cells[row, 5].Value?.ToString()?.Trim(),
-                                        EmailOnRecord = worksheet.Cells[row, 6].Value?.ToString()?.Trim(),
                                         AccountCreated = false
                                     };
 

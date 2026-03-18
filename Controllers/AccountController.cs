@@ -66,9 +66,6 @@ namespace Alumni_Management_System.Controllers
             TempData["JagId"] = model.JagId;
             TempData["FirstName"] = registryEntry.FirstName;
             TempData["LastName"] = registryEntry.LastName;
-            TempData["GraduationYear"] = registryEntry.GraduationYear;
-            TempData["DegreeProgram"] = registryEntry.DegreeProgram;
-            TempData["EmailOnRecord"] = registryEntry.EmailOnRecord;
 
             return RedirectToAction(nameof(RegisterAlumni));
         }
@@ -87,10 +84,7 @@ namespace Alumni_Management_System.Controllers
             {
                 JagId = TempData["JagId"]?.ToString(),
                 FirstName = TempData["FirstName"]?.ToString(),
-                LastName = TempData["LastName"]?.ToString(),
-                GraduationYear = TempData["GraduationYear"] as int?,
-                DegreeProgram = TempData["DegreeProgram"]?.ToString(),
-                Email = TempData["EmailOnRecord"]?.ToString()
+                LastName = TempData["LastName"]?.ToString()
             };
 
             // Keep data in TempData for POST
@@ -209,10 +203,18 @@ namespace Alumni_Management_System.Controllers
                 return View(model);
             }
 
-            // 3. Create the Identity User account
+            // 3. Check if username is already taken
+            var existingUser = await _userManager.FindByNameAsync(model.Username);
+            if (existingUser != null)
+            {
+                ModelState.AddModelError("Username", "Username already taken. Please choose a different username.");
+                return View(model);
+            }
+
+            // 4. Create the Identity User account
             var user = new AppUser
             {
-                UserName = model.Email,
+                UserName = model.Username,  // Use custom username instead of email
                 Email = model.Email,
                 JagId = model.JagId,
                 PhoneNumber = model.PhoneNumber,
@@ -230,26 +232,11 @@ namespace Alumni_Management_System.Controllers
                 // 4. Assign Alumni Role
                 await _userManager.AddToRoleAsync(user, Constants.AlumniRole);
 
-                // NEW STRATEGY: Find existing Alumni record by JagId and map UserId
-                var alumni = await _context.Alumni
-                    .FirstOrDefaultAsync(a => a.JagId == model.JagId);
-
-                if (alumni == null)
-                {
-                    // Alumni profile doesn't exist - Admin needs to import it first
-                    _logger.LogError($"Alumni profile not found for JAG ID: {model.JagId}");
-
-                    // Delete the user account we just created
-                    await _userManager.DeleteAsync(user);
-
-                    ModelState.AddModelError("", "Alumni profile not found in the system. Please contact the administrator to configure your profile first.");
-                    return View(model);
-                }
-
-                // Map the UserId to the existing Alumni record
-                alumni.UserId = user.Id;
-                alumni.LastUpdated = DateTime.Now;
-                _context.Alumni.Update(alumni);
+                // 5. Verify Alumni record exists (already checked above, but double-check)
+                // No need to map UserId anymore - relationship is via JagId
+                // Just update the last updated timestamp
+                existingAlumni.LastUpdated = DateTime.Now;
+                _context.Alumni.Update(existingAlumni);
 
                 // 6. Update Registry status
                 registryEntry.AccountCreated = true;
@@ -260,7 +247,7 @@ namespace Alumni_Management_System.Controllers
                 // 7. Sign in and Redirect
                 await _signInManager.SignInAsync(user, isPersistent: false);
 
-                _logger.LogInformation($"User registered successfully and mapped to Alumni ID: {alumni.AlumniId}");
+                _logger.LogInformation($"User registered successfully and mapped to Alumni ID: {existingAlumni.AlumniId}");
 
                 TempData["SuccessMessage"] = "Registration successful! Welcome to the Alumni Management System.";
                 // Redirect to Alumni Portal

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -35,7 +35,7 @@ namespace Alumni_Management_System.Controllers
             // Alumni can only see their own messages
             if (roles.Contains(Constants.AlumniRole))
             {
-                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni != null)
                 {
                     query = query.Where(am => am.AlumniId == alumni.AlumniId);
@@ -76,7 +76,7 @@ namespace Alumni_Management_System.Controllers
             var roles = await _userManager.GetRolesAsync(currentUser);
             if (roles.Contains(Constants.AlumniRole))
             {
-                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null || alumniMessage.AlumniId != alumni.AlumniId)
                 {
                     TempData["ErrorMessage"] = "You can only view your own messages.";

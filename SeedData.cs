@@ -35,58 +35,58 @@ namespace Alumni_Management_System
         public static async Task EnsureTestUsersAsync(UserManager<AppUser> userManager)
         {
             // Admin User
-            if (!await userManager.Users.AnyAsync(x => x.UserName == "admin@admin.com"))
+            if (!await userManager.Users.AnyAsync(x => x.UserName == "admin"))
             {
                 var admin = new AppUser
                 {
-                    UserName = "admin@admin.com",
-                    Email = "admin@admin.com",
+                    UserName = "admin",
+                    Email = "admin@university.edu",
                     EmailConfirmed = true,
                     JagId = "J0000001",
                     CreatedAt = DateTime.Now
                 };
-                await userManager.CreateAsync(admin, "Password1!");
+                await userManager.CreateAsync(admin, "Admin@123");
                 await userManager.AddToRoleAsync(admin, Constants.AdminRole);
             }
 
             // Staff User
-            if (!await userManager.Users.AnyAsync(x => x.UserName == "staff@university.edu"))
+            if (!await userManager.Users.AnyAsync(x => x.UserName == "staff"))
             {
                 var staff = new AppUser
                 {
-                    UserName = "staff@university.edu",
+                    UserName = "staff",
                     Email = "staff@university.edu",
                     EmailConfirmed = true,
                     JagId = "J0000002",
                     CreatedAt = DateTime.Now
                 };
-                await userManager.CreateAsync(staff, "Password1!");
+                await userManager.CreateAsync(staff, "Staff@123");
                 await userManager.AddToRoleAsync(staff, Constants.StaffRole);
             }
 
             // Alumni Users
             var alumniUsers = new[]
             {
-                new { Email = "john.doe@email.com", JagId = "J0012345", FirstName = "John", LastName = "Doe" },
-                new { Email = "jane.smith@email.com", JagId = "J0012346", FirstName = "Jane", LastName = "Smith" },
-                new { Email = "michael.johnson@email.com", JagId = "J0012347", FirstName = "Michael", LastName = "Johnson" },
-                new { Email = "sarah.williams@email.com", JagId = "J0012348", FirstName = "Sarah", LastName = "Williams" },
-                new { Email = "david.brown@email.com", JagId = "J0012349", FirstName = "David", LastName = "Brown" }
+                new { Username = "john_doe", Email = "john.doe@email.com", JagId = "J0012345", FirstName = "John", LastName = "Doe" },
+                new { Username = "jane_smith", Email = "jane.smith@email.com", JagId = "J0012346", FirstName = "Jane", LastName = "Smith" },
+                new { Username = "michael.j", Email = "michael.johnson@email.com", JagId = "J0012347", FirstName = "Michael", LastName = "Johnson" },
+                new { Username = "sarah.w", Email = "sarah.williams@email.com", JagId = "J0012348", FirstName = "Sarah", LastName = "Williams" },
+                new { Username = "david_brown", Email = "david.brown@email.com", JagId = "J0012349", FirstName = "David", LastName = "Brown" }
             };
 
             foreach (var alumniData in alumniUsers)
             {
-                if (!await userManager.Users.AnyAsync(x => x.UserName == alumniData.Email))
+                if (!await userManager.Users.AnyAsync(x => x.UserName == alumniData.Username))
                 {
                     var alumniUser = new AppUser
                     {
-                        UserName = alumniData.Email,
+                        UserName = alumniData.Username,
                         Email = alumniData.Email,
                         EmailConfirmed = true,
                         JagId = alumniData.JagId,
                         CreatedAt = DateTime.Now
                     };
-                    await userManager.CreateAsync(alumniUser, "Password1!");
+                    await userManager.CreateAsync(alumniUser, "Alumni@123");
                     await userManager.AddToRoleAsync(alumniUser, Constants.AlumniRole);
                 }
             }
@@ -148,58 +148,21 @@ namespace Alumni_Management_System
             {
                 var registries = new[]
                 {
-                    new AlumniRegistry { JagId = "J0012345", FirstName = "John", LastName = "Doe", GraduationYear = 2020, DegreeProgram = "Computer Science", EmailOnRecord = "john.doe@email.com", AccountCreated = true },
-                    new AlumniRegistry { JagId = "J0012346", FirstName = "Jane", LastName = "Smith", GraduationYear = 2021, DegreeProgram = "Business Administration", EmailOnRecord = "jane.smith@email.com", AccountCreated = true },
-                    new AlumniRegistry { JagId = "J0012347", FirstName = "Michael", LastName = "Johnson", GraduationYear = 2019, DegreeProgram = "Engineering", EmailOnRecord = "michael.johnson@email.com", AccountCreated = true },
-                    new AlumniRegistry { JagId = "J0012348", FirstName = "Sarah", LastName = "Williams", GraduationYear = 2022, DegreeProgram = "Data Science", EmailOnRecord = "sarah.williams@email.com", AccountCreated = true },
-                    new AlumniRegistry { JagId = "J0012349", FirstName = "David", LastName = "Brown", GraduationYear = 2020, DegreeProgram = "Information Technology", EmailOnRecord = "david.brown@email.com", AccountCreated = true },
-                    new AlumniRegistry { JagId = "J0012350", FirstName = "Emily", LastName = "Davis", GraduationYear = 2018, DegreeProgram = "Computer Science", EmailOnRecord = "emily.davis@email.com", AccountCreated = false },
-                    new AlumniRegistry { JagId = "J0012351", FirstName = "Robert", LastName = "Miller", GraduationYear = 2017, DegreeProgram = "Business Administration", EmailOnRecord = "robert.miller@email.com", AccountCreated = false }
+                    new AlumniRegistry { JagId = "J0012345", FirstName = "John", LastName = "Doe", AccountCreated = true },
+                    new AlumniRegistry { JagId = "J0012346", FirstName = "Jane", LastName = "Smith", AccountCreated = true },
+                    new AlumniRegistry { JagId = "J0012347", FirstName = "Michael", LastName = "Johnson", AccountCreated = true },
+                    new AlumniRegistry { JagId = "J0012348", FirstName = "Sarah", LastName = "Williams", AccountCreated = true },
+                    new AlumniRegistry { JagId = "J0012349", FirstName = "David", LastName = "Brown", AccountCreated = true },
+                    new AlumniRegistry { JagId = "J0012350", FirstName = "Emily", LastName = "Davis", AccountCreated = false },
+                    new AlumniRegistry { JagId = "J0012351", FirstName = "Robert", LastName = "Miller", AccountCreated = false }
                 };
                 await context.AlumniRegistries.AddRangeAsync(registries);
                 await context.SaveChangesAsync();
             }
 
-            // Seed Alumni (linked to users)
-            if (!await context.Alumni.AnyAsync())
-            {
-                var johnUser = await userManager.FindByEmailAsync("john.doe@email.com");
-                var janeUser = await userManager.FindByEmailAsync("jane.smith@email.com");
-                var michaelUser = await userManager.FindByEmailAsync("michael.johnson@email.com");
-                var sarahUser = await userManager.FindByEmailAsync("sarah.williams@email.com");
-                var davidUser = await userManager.FindByEmailAsync("david.brown@email.com");
-
-                var alumniRecords = new List<Alumni>();
-
-                if (johnUser != null)
-                {
-                    alumniRecords.Add(new Alumni
-                    {
-                        UserId = johnUser.Id,
-                        JagId = "J0012345",
-                        FirstName = "John",
-                        LastName = "Doe",
-                        PermanentEmail = "john.doe@email.com",
-                        StudentEmail = "john.doe@students.university.edu",
-                        Phone = "555-0101",
-                        Address = "123 Main St",
-                        City = "Springfield",
-                        State = "IL",
-                        Postcode = "62701",
-                        Country = "USA",
-                        GraduationYear = 2020,
-                        DateOfBirth = new DateOnly(1998, 5, 15),
-                        Gender = "Male",
-                        Privacy = true,
-                        IsActive = true,
-                        LastUpdated = DateTime.Now
-                    });
-                }
-
-                // Add more alumni records as needed...
-                await context.Alumni.AddRangeAsync(alumniRecords);
-                await context.SaveChangesAsync();
-            }
+            // Note: Alumni seeding commented out due to foreign key constraints
+            // Alumni records can be created directly through the application UI after user registration
+            // This ensures proper relationships with AppUser accounts
         }
     }
 }

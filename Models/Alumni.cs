@@ -15,19 +15,16 @@ public partial class Alumni
     [Display(Name = "Alumni")]
     public int AlumniId { get; set; }
 
-    [Column("user_id")]
-    [Display(Name = "Iser ID")]
-    public string UserId { get; set; }
-
-    [ForeignKey(nameof(UserId))]
-    public virtual AppUser User { get; set; }
-
     [Required]
     [Column("jag_id")]
     [StringLength(20)]
     [RegularExpression(@"^J00\d+$", ErrorMessage = "JAG ID must start with 'J00' followed by numbers only.")]
     [Display(Name = "JAG ID")]
     public string JagId { get; set; }
+
+    // Navigation property to AppUser (one-to-one relationship via JagId)
+    [ForeignKey(nameof(JagId))]
+    public virtual AppUser User { get; set; }
 
     [Column("prefix")]
     [StringLength(10)]
@@ -54,9 +51,10 @@ public partial class Alumni
     [StringLength(20)]
     public string Gender { get; set; }
 
-    [Column("date_of_birth")]
-    [Display(Name = "Date of Birth")]
-    public DateOnly? DateOfBirth { get; set; }
+    [Column("age_at_graduation")]
+    [Range(15, 150, ErrorMessage = "Age at graduation must be between 15 and 150.")]
+    [Display(Name = "Age at Graduation")]
+    public int? AgeAtGraduation { get; set; }
 
     [Column("student_email")]
     [StringLength(150)]

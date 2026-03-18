@@ -35,7 +35,7 @@ namespace Alumni_Management_System.Controllers
             // Alumni can only see their own degrees
             if (roles.Contains(Constants.AlumniRole))
             {
-                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni != null)
                 {
                     query = query.Where(ad => ad.AlumniId == alumni.AlumniId);
@@ -72,7 +72,7 @@ namespace Alumni_Management_System.Controllers
             var roles = await _userManager.GetRolesAsync(currentUser);
             if (roles.Contains(Constants.AlumniRole))
             {
-                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null || alumniDegree.AlumniId != alumni.AlumniId)
                 {
                     TempData["ErrorMessage"] = "You can only view your own degrees.";
@@ -92,7 +92,7 @@ namespace Alumni_Management_System.Controllers
             // For Alumni users, auto-select their own AlumniId
             if (roles.Contains(Constants.AlumniRole))
             {
-                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null)
                 {
                     TempData["ErrorMessage"] = "Alumni profile not found.";
@@ -135,7 +135,7 @@ namespace Alumni_Management_System.Controllers
             // Validate: Alumni can only create degrees for themselves
             if (roles.Contains(Constants.AlumniRole))
             {
-                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null || alumniDegree.AlumniId != alumni.AlumniId)
                 {
                     TempData["ErrorMessage"] = "You can only create degrees for yourself.";
@@ -191,7 +191,7 @@ namespace Alumni_Management_System.Controllers
             // Repopulate dropdowns
             if (roles.Contains(Constants.AlumniRole))
             {
-                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 ViewData["CurrentAlumniId"] = alumni?.AlumniId;
                 ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniDegree.AlumniId);
             }
@@ -222,7 +222,7 @@ namespace Alumni_Management_System.Controllers
             var roles = await _userManager.GetRolesAsync(currentUser);
             if (roles.Contains(Constants.AlumniRole))
             {
-                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null || alumniDegree.AlumniId != alumni.AlumniId)
                 {
                     TempData["ErrorMessage"] = "You can only edit your own degrees.";
@@ -256,7 +256,7 @@ namespace Alumni_Management_System.Controllers
             // Validate: Alumni can only edit their own degrees
             if (roles.Contains(Constants.AlumniRole))
             {
-                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null || alumniDegree.AlumniId != alumni.AlumniId)
                 {
                     TempData["ErrorMessage"] = "You can only edit your own degrees.";
@@ -327,7 +327,7 @@ namespace Alumni_Management_System.Controllers
             // Repopulate dropdowns
             if (roles.Contains(Constants.AlumniRole))
             {
-                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 ViewData["CurrentAlumniId"] = alumni?.AlumniId;
                 ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniDegree.AlumniId);
             }
@@ -361,7 +361,7 @@ namespace Alumni_Management_System.Controllers
             var roles = await _userManager.GetRolesAsync(currentUser);
             if (roles.Contains(Constants.AlumniRole))
             {
-                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null || alumniDegree.AlumniId != alumni.AlumniId)
                 {
                     TempData["ErrorMessage"] = "You can only delete your own degrees.";
@@ -385,7 +385,7 @@ namespace Alumni_Management_System.Controllers
                 var roles = await _userManager.GetRolesAsync(currentUser);
                 if (roles.Contains(Constants.AlumniRole))
                 {
-                    var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id);
+                    var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                     if (alumni == null || alumniDegree.AlumniId != alumni.AlumniId)
                     {
                         TempData["ErrorMessage"] = "You can only delete your own degrees.";

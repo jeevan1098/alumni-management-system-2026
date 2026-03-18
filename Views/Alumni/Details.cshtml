@@ -65,11 +65,10 @@
                 <div class="col-md-6 mb-3">
                     <h5 class="fw-bold">Personal Details</h5>
 
-                    @if (Model.DateOfBirth != null)
+                    @if (Model.AgeAtGraduation.HasValue)
                     {
                         <p class="mb-1">
-                            🎂 Date of Birth:
-                            @Model.DateOfBirth.Value.ToString("MMMM dd, yyyy")
+                            🎓 Age at Graduation: @Model.AgeAtGraduation years
                         </p>
                     }
 
