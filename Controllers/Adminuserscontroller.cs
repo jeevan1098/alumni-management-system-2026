@@ -1,0 +1,241 @@
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Alumni_Management_System.Models;
+
+namespace Alumni_Management_System.Controllers
+{
+    [Authorize(Roles = "Admin")]
+    public class AdminUsersController : Controller
+    {
+        private readonly UserManager<AppUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
+
+        // Roles excluded from User Management table and dropdowns
+        private static readonly string[] ExcludedRoles = { "Alumni" };
+
+        public AdminUsersController(UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager)
+        {
+            _userManager = userManager;
+            _roleManager = roleManager;
+        }
+
+        // GET: /AdminUsers
+        public async Task<IActionResult> Index()
+        {
+            var allUsers = await _userManager.Users.ToListAsync();
+
+            // Only show Admin and Viewer users — skip Alumni entirely
+            var userRoles = new List<(AppUser User, string Role)>();
+            foreach (var user in allUsers)
+            {
+                var roles = await _userManager.GetRolesAsync(user);
+                var primaryRole = roles.FirstOrDefault() ?? "No Role";
+
+                if (ExcludedRoles.Contains(primaryRole))
+                    continue;
+
+                userRoles.Add((user, primaryRole));
+            }
+
+            // Dropdown only shows Admin and Viewer
+            var allowedRoles = _roleManager.Roles
+                .Select(r => r.Name)
+                .Where(r => !ExcludedRoles.Contains(r))
+                .ToList();
+
+            ViewBag.AllRoles = allowedRoles;
+            ViewBag.UserRoles = userRoles;
+            return View();
+        }
+
+        // POST: /AdminUsers/UpdateRole
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateRole(string userId, string newRole)
+        {
+            if (ExcludedRoles.Contains(newRole))
+            {
+                TempData["Error"] = "Cannot assign the Alumni role from User Management.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                TempData["Error"] = "User not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var currentRoles = await _userManager.GetRolesAsync(user);
+
+            // Block touching Alumni users from this page
+            if (currentRoles.Any(r => ExcludedRoles.Contains(r)))
+            {
+                TempData["Error"] = "Alumni user roles cannot be changed from User Management.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            await _userManager.RemoveFromRolesAsync(user, currentRoles);
+
+            if (!string.IsNullOrEmpty(newRole))
+            {
+                if (!await _roleManager.RoleExistsAsync(newRole))
+                    await _roleManager.CreateAsync(new IdentityRole(newRole));
+
+                await _userManager.AddToRoleAsync(user, newRole);
+            }
+
+            TempData["Success"] = $"Role updated to '{newRole}' for {user.Email}.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: /AdminUsers/ResetPassword
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ResetPassword(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                TempData["Error"] = "User not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var defaultPassword = "Reset@1234";
+            var result = await _userManager.ResetPasswordAsync(user, token, defaultPassword);
+
+            if (result.Succeeded)
+                TempData["Success"] = $"Password reset for {user.Email}. Temporary password: {defaultPassword}";
+            else
+                TempData["Error"] = "Password reset failed: " + string.Join(", ", result.Errors.Select(e => e.Description));
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: /AdminUsers/DeleteUser
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteUser(string userId)
+        {
+            var user = await _userManager.FindByIdAsync(userId);
+            if (user == null)
+            {
+                TempData["Error"] = "User not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (currentUser?.Id == userId)
+            {
+                TempData["Error"] = "You cannot delete your own account.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var result = await _userManager.DeleteAsync(user);
+            if (result.Succeeded)
+                TempData["Success"] = $"User {user.Email} deleted successfully.";
+            else
+                TempData["Error"] = "Delete failed: " + string.Join(", ", result.Errors.Select(e => e.Description));
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // GET: /AdminUsers/Register
+        public IActionResult Register()
+        {
+            ViewBag.AllRoles = _roleManager.Roles
+                .Select(r => r.Name)
+                .Where(r => !ExcludedRoles.Contains(r))
+                .ToList();
+            return View();
+        }
+
+        // POST: /AdminUsers/Register
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Register(string username, string email, string password, string confirmPassword, string role)
+        {
+            ViewBag.AllRoles = _roleManager.Roles
+                .Select(r => r.Name)
+                .Where(r => !ExcludedRoles.Contains(r))
+                .ToList();
+
+            if (string.IsNullOrWhiteSpace(username) || string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
+            {
+                TempData["Error"] = "Username, email and password are all required.";
+                return View();
+            }
+
+            if (password != confirmPassword)
+            {
+                TempData["Error"] = "Passwords do not match.";
+                return View();
+            }
+
+            if (ExcludedRoles.Contains(role))
+            {
+                TempData["Error"] = "Cannot create an Alumni user from this page.";
+                return View();
+            }
+
+            // Check username uniqueness
+            var existingByUsername = await _userManager.FindByNameAsync(username);
+            if (existingByUsername != null)
+            {
+                TempData["Error"] = "Username is already taken. Please choose a different one.";
+                return View();
+            }
+
+            // Check email uniqueness
+            var existingByEmail = await _userManager.FindByEmailAsync(email);
+            if (existingByEmail != null)
+            {
+                TempData["Error"] = "A user with this email already exists.";
+                return View();
+            }
+
+            // Auto-increment JAG ID from highest existing J00... value
+            var allJagIds = await _userManager.Users
+                .Where(u => u.JagId != null && u.JagId.StartsWith("J00"))
+                .Select(u => u.JagId)
+                .ToListAsync();
+
+            int maxNumber = allJagIds
+                .Select(id => int.TryParse(id.Substring(3), out int n) ? n : 0)
+                .DefaultIfEmpty(0)
+                .Max();
+
+            string nextJagId = $"J00{(maxNumber + 1):D4}";
+
+            var newUser = new AppUser
+            {
+                UserName = username,
+                Email = email,
+                EmailConfirmed = true,
+                JagId = nextJagId,
+                CreatedAt = DateTime.Now,
+                IsFirstLogin = true
+            };
+
+            var result = await _userManager.CreateAsync(newUser, password);
+
+            if (result.Succeeded)
+            {
+                if (!string.IsNullOrEmpty(role))
+                {
+                    if (!await _roleManager.RoleExistsAsync(role))
+                        await _roleManager.CreateAsync(new IdentityRole(role));
+                    await _userManager.AddToRoleAsync(newUser, role);
+                }
+                TempData["Success"] = $"User '{username}' registered with role '{role}'. JAG ID: {nextJagId}";
+                return RedirectToAction(nameof(Index));
+            }
+
+            TempData["Error"] = "Registration failed: " + string.Join(", ", result.Errors.Select(e => e.Description));
+            return View();
+        }
+    }
+}

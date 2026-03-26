@@ -1,0 +1,112 @@
+﻿@{
+    ViewData["Title"] = "User Management";
+    var userRoles = ViewBag.UserRoles as List<(Alumni_Management_System.Models.AppUser User, string Role)>;
+    var allRoles = ViewBag.AllRoles as List<string>;
+}
+
+<div class="container-fluid px-4">
+
+    <h2 class="mt-4 mb-3">User Management</h2>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i>@TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i>@TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <div class="mb-3">
+        <a asp-action="Register" class="btn btn-primary">
+            <i class="bi bi-person-plus-fill me-1"></i> Register New User
+        </a>
+    </div>
+
+    <div class="card shadow-sm">
+        <div class="card-body p-0">
+            <table class="table table-bordered table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Email</th>
+                        <th>Current Role</th>
+                        <th>Change Role</th>
+                        <th>Reset Password</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (userRoles != null && userRoles.Any())
+                    {
+                        foreach (var (user, role) in userRoles)
+                        {
+                            <tr>
+                                <td>@user.Email</td>
+                                <td>
+                                    <span class="badge bg-secondary">@role</span>
+                                </td>
+
+                                @* Change Role — only Admin and Viewer shown *@
+                                <td>
+                                    <form asp-action="UpdateRole" method="post" class="d-flex gap-2 align-items-center">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="userId" value="@user.Id" />
+                                        <select name="newRole" class="form-select form-select-sm" style="min-width:120px;">
+                                            @if (allRoles != null)
+                                            {
+                                                foreach (var r in allRoles)
+                                                {
+                                                    if (r == role)
+                                                    {
+                                                        <option value="@r" selected>@r</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@r">@r</option>
+                                                    }
+                                                }
+                                            }
+                                        </select>
+                                        <button type="submit" class="btn btn-warning btn-sm">Update</button>
+                                    </form>
+                                </td>
+
+                                @* Reset Password *@
+                                <td>
+                                    <form asp-action="ResetPassword" method="post"
+                                          onsubmit="return confirm('Reset password for @user.Email?')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="userId" value="@user.Id" />
+                                        <button type="submit" class="btn btn-secondary btn-sm">Reset</button>
+                                    </form>
+                                </td>
+
+                                @* Delete *@
+                                <td>
+                                    <form asp-action="DeleteUser" method="post"
+                                          onsubmit="return confirm('Permanently delete @user.Email?')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="userId" value="@user.Id" />
+                                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">No admin or viewer users found.</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
