@@ -40,8 +40,8 @@ namespace Alumni_Management_System.Controllers
             // Role-based filtering
             if (roles.Contains(Constants.AlumniRole))
             {
-                // Alumni can only see other alumni who have SolicitationCode = true
-                alumniQuery = alumniQuery.Where(a => a.SolicitationCode == true);
+                // Alumni can only see other alumni who have Privacy = false
+                alumniQuery = alumniQuery.Where(a => a.Privacy == false);
             }
             // Admin and Staff can see all alumni (no filtering)
 
