@@ -34,7 +34,7 @@
             <table class="table table-bordered table-hover mb-0 align-middle">
                 <thead class="table-light">
                     <tr>
-                        <th>Email</th>
+                        <th>Username</th>
                         <th>Current Role</th>
                         <th>Change Role</th>
                         <th>Reset Password</th>
@@ -47,7 +47,7 @@
                         foreach (var (user, role) in userRoles)
                         {
                             <tr>
-                                <td>@user.Email</td>
+                                <td>@user.UserName</td>
                                 <td>
                                     <span class="badge bg-secondary">@role</span>
                                 </td>
