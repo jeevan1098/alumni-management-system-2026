@@ -1,0 +1,56 @@
+﻿@{
+    ViewData["Title"] = "Register New User";
+    var allRoles = ViewBag.AllRoles as List<string>;
+}
+
+<div class="container" style="max-width: 480px; margin-top: 60px;">
+
+    <h2 class="mb-1">Register</h2>
+    <p class="text-muted mb-4">Create a new account.</p>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+    }
+
+    <form asp-action="Register" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="mb-3">
+            <input type="text" name="username" class="form-control" placeholder="Username" required />
+        </div>
+
+        <div class="mb-3">
+            <input type="email" name="email" class="form-control" placeholder="Email" required />
+        </div>
+
+        <div class="mb-3">
+            <input type="password" name="password" class="form-control" placeholder="Password" required />
+        </div>
+
+        <div class="mb-3">
+            <input type="password" name="confirmPassword" class="form-control" placeholder="Confirm Password" required />
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label text-muted small">Select Role</label>
+            <select name="role" class="form-select">
+                @if (allRoles != null)
+                {
+                    foreach (var r in allRoles)
+                    {
+                        <option value="@r">@r</option>
+                    }
+                }
+            </select>
+        </div>
+
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary">Register</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Back to Dashboard</a>
+        </div>
+    </form>
+</div>
