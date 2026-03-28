@@ -98,6 +98,7 @@
                             <th><i class="bi bi-calendar-event me-1 text-primary"></i>Created At</th>
                             <th><i class="bi bi-person-fill me-1 text-primary"></i>Created By</th>
                             <th><i class="bi bi-list-task me-2 text-primary"></i>Actions</th>
+                            <th> </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -118,6 +119,12 @@
                                     </a>
                                     <a asp-action="Delete" asp-route-id="@item.MessageId" class="btn btn-sm btn-outline-danger rounded-pill">
                                         <i class="bi bi-trash-fill"></i>
+                                    </a>
+                                   
+                                </td>
+                                <td>
+                                    <a asp-action="Alumnimessagefilter" asp-route-id="@item.MessageId" class="btn btn-sm btn-success rounded-pill">
+                                        <i class="bi bi-send-fill me-1"></i>Send Mail
                                     </a>
                                 </td>
                             </tr>

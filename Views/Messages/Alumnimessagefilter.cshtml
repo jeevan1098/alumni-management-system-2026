@@ -1,0 +1,135 @@
+﻿@model IEnumerable<Alumni_Management_System.Models.ViewModels.AlumniMailingViewmodel>
+
+@{
+    ViewData["Title"] = "Alumni Message Filter";
+}
+
+<h2>Alumni Message Filter (Email Campaign)</h2>
+
+<!-- 🔍 GLOBAL SEARCH -->
+<div style="margin-bottom:15px;">
+    <input type="text" id="globalSearch"
+           placeholder="Search (e.g. John, IT, 2024, MS)"
+           style="width:400px;" />
+</div>
+
+<!-- 🔢 RESULT COUNT -->
+<div style="margin-bottom:10px; font-weight:bold;">
+    Results Found: <span id="resultCount">0</span>
+</div>
+
+<form asp-action="SaveSelectedAlumniMessage" method="post">
+
+    <table class="table table-bordered" id="alumniTable">
+        <thead>
+            <tr>
+                <th>
+                    <input type="checkbox" id="selectAll" />
+                </th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Graduation Year</th>
+                <th>Degree</th>
+                <th>Degree Type</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @for (int i = 0; i < Model.Count(); i++)
+            {
+                <tr>
+                    <td>
+                        <input type="checkbox" asp-for="@Model.ElementAt(i).IsSelected" />
+                        <input type="hidden" asp-for="@Model.ElementAt(i).PermanentEmail" />
+                    </td>
+
+                    <td class="name">
+                        @Model.ElementAt(i).FirstName @Model.ElementAt(i).LastName
+                    </td>
+
+                    <td class="email">
+                        @Model.ElementAt(i).PermanentEmail
+                    </td>
+
+                    <td class="year">
+                        @Model.ElementAt(i).GraduationYear
+                    </td>
+
+                    <td class="degree">
+                        @Model.ElementAt(i).Degree
+                    </td>
+
+                    <td class="degreetype">
+                        @Model.ElementAt(i).DegreeType
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <button type="submit" class="btn btn-primary">
+        Send Email to Selected
+    </button>
+
+</form>
+
+<!-- ================= JAVASCRIPT ================= -->
+<script>
+    function filterTable() {
+
+        let input = document.getElementById("globalSearch").value.toLowerCase();
+
+        let filters = input.split(",")
+                           .map(x => x.trim())
+                           .filter(x => x.length > 0);
+
+        let rows = document.querySelectorAll("#alumniTable tbody tr");
+
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+
+            let text = (
+                row.querySelector(".name").innerText + " " +
+                row.querySelector(".email").innerText + " " +
+                row.querySelector(".year").innerText + " " +
+                row.querySelector(".degree").innerText + " " +
+                row.querySelector(".degreetype").innerText
+            ).toLowerCase();
+
+            let show = filters.every(f => text.includes(f));
+
+            row.style.display = show ? "" : "none";
+
+            if (show) visibleCount++;
+        });
+
+        document.getElementById("resultCount").innerText = visibleCount;
+    }
+
+
+    // 🔍 trigger on typing
+    document.getElementById("globalSearch").addEventListener("keyup", filterTable);
+
+
+    // ☑️ SELECT ALL (only visible rows)
+    document.getElementById("selectAll").addEventListener("change", function () {
+
+        let checkboxes = document.querySelectorAll("#alumniTable tbody input[type='checkbox']");
+
+        checkboxes.forEach(cb => {
+            let row = cb.closest("tr");
+
+            if (row.style.display !== "none") {
+                cb.checked = this.checked;
+            }
+        });
+    });
+
+
+    // 🔥 INITIAL COUNT
+    window.onload = function () {
+        let totalRows = document.querySelectorAll("#alumniTable tbody tr").length;
+        document.getElementById("resultCount").innerText = totalRows;
+    };
+</script>

@@ -1,14 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Alumni_Management_System.Data;
+using Alumni_Management_System.Models;
+using Alumni_Management_System.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
-using Alumni_Management_System.Data;
-using Alumni_Management_System.Models;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+
 
 namespace Alumni_Management_System.Controllers
 {
@@ -179,5 +181,70 @@ namespace Alumni_Management_System.Controllers
         {
             return _context.Messages.Any(e => e.MessageId == id);
         }
+        public async Task<IActionResult> Alumnimessagefilter(int id)
+        {
+            var messageId = id;
+
+            var data = await _context.Alumni
+                .Where(a => a.SolicitationCode == true
+                            && a.IsActive == false
+                            && a.User != null
+                            )
+                .Include(a => a.AlumniDegrees)
+                    .ThenInclude(d => d.Degree)
+                .Select(a => new AlumniMailingViewmodel
+                {
+                    AlumniId = a.AlumniId,
+
+                    FirstName = a.FirstName,
+                    LastName = a.LastName,
+                    PermanentEmail = a.PermanentEmail,
+                    GraduationYear = a.GraduationYear,
+
+                    // ✅ Degree Name
+                    Degree = string.Join(", ",
+                        a.AlumniDegrees
+                            .Select(d => d.Degree.MajorFieldOfStudy)
+                            .Distinct()
+                    ),
+
+                    // ✅ NEW: Degree Type (BS, MS, etc.)
+                    DegreeType = string.Join(", ",
+                        a.AlumniDegrees
+                            .Select(d => d.Degree.DegreeType)
+                            .Distinct()
+                    )
+                })
+                .ToListAsync();
+
+            return View(data);
+        }
+        [HttpPost]
+        public async Task<IActionResult> SaveSelectedAlumniMessage(int MessageId, List<AlumniMailingViewmodel> model)
+        {
+            var selectedAlumni = model.Where(x => x.IsSelected).ToList();
+
+            foreach (var item in selectedAlumni)
+            {
+                // prevent duplicate entries
+                var exists = await _context.AlumniMessages
+                    .AnyAsync(x => x.MessageId == MessageId && x.AlumniId == item.AlumniId);
+
+                if (!exists)
+                {
+                    _context.AlumniMessages.Add(new AlumniMessage
+                    {
+                        MessageId = MessageId,
+                        AlumniId = item.AlumniId,
+                        SentAt = DateTime.Now   // or null if not sent yet
+                    });
+                }
+            }
+
+            await _context.SaveChangesAsync();
+
+            return RedirectToAction("Index");
+        }
+
     }
 }
