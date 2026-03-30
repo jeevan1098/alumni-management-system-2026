@@ -14,6 +14,7 @@
           
 
             public bool IsSelected { get; set; } // for checkbox selection
-        }
+            public bool IsAlreadyMapped { get; set; }
+    }
     
 }

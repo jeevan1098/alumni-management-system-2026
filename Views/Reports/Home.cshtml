@@ -1,0 +1,137 @@
+﻿@{
+    ViewData["Title"] = "Reports";
+}
+
+<style>
+    .report-card {
+        background: linear-gradient(135deg, #e3f2fd, #bbdefb);
+        border-radius: 12px;
+        padding: 20px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        margin-bottom: 25px;
+    }
+
+    .report-title {
+        font-weight: bold;
+        color: #0d47a1;
+        margin-bottom: 5px;
+    }
+
+    .report-desc {
+        font-size: 14px;
+        color: #333;
+        margin-bottom: 15px;
+    }
+
+    .btn-custom {
+        background-color: #1976d2;
+        color: white;
+        border: none;
+    }
+
+        .btn-custom:hover {
+            background-color: #0d47a1;
+        }
+</style>
+
+<div class="container">
+
+    <h2 class="mb-4">📊 Reports Dashboard</h2>
+
+    <!-- ================= REPORT 1 ================= -->
+    <div class="report-card">
+        <div class="report-title">🖨 Mailing Labels of Alumni</div>
+        <div class="report-desc">
+            Generate mailing labels filtered by Major, Degree Type, and Year.
+        </div>
+
+        <form asp-controller="Reports" asp-action="MailingLabels" method="get">
+            <div class="row">
+                <div class="col-md-4">
+                    <label>Major</label>
+                    <input type="text" name="major" class="form-control" />
+                </div>
+
+                <div class="col-md-4">
+                    <label>Degree Type</label>
+                    <select name="degreeType" class="form-control">
+                        <option value="">All</option>
+                        <option value="BS">BS</option>
+                        <option value="MS">MS</option>
+                        <option value="PhD">PhD</option>
+                    </select>
+                </div>
+
+                <div class="col-md-4">
+                    <label>Year</label>
+                    <input type="number" name="year" class="form-control" />
+                </div>
+            </div>
+
+            <br />
+
+            <button type="submit" class="btn btn-custom">
+                Generate Report
+            </button>
+        </form>
+    </div>
+
+
+    <!-- ================= REPORT 2 ================= -->
+    <div class="report-card">
+        <div class="report-title">📊 Alumni Count Report</div>
+        <div class="report-desc">
+            Displays alumni count grouped by Department, Major, and Degree Type within a year range.
+        </div>
+
+        <form asp-controller="Reports" asp-action="AlumniCount" method="get">
+            <div class="row">
+                <div class="col-md-3">
+                    <label>From Year</label>
+                    <input type="number" name="fromYear" class="form-control" />
+                </div>
+
+                <div class="col-md-3">
+                    <label>To Year</label>
+                    <input type="number" name="toYear" class="form-control" />
+                </div>
+            </div>
+
+            <br />
+
+            <button type="submit" class="btn btn-custom">
+                Generate Report
+            </button>
+        </form>
+    </div>
+
+
+    <!-- ================= REPORT 3 ================= -->
+    <div class="report-card">
+        <div class="report-title">📈 Average GPA Report</div>
+        <div class="report-desc">
+            Shows average GPA grouped by Department, Major, and Degree Type across selected years.
+        </div>
+
+        <form asp-controller="Reports" asp-action="AverageGPA" method="get">
+            <div class="row">
+                <div class="col-md-3">
+                    <label>From Year</label>
+                    <input type="number" name="fromYear" class="form-control" />
+                </div>
+
+                <div class="col-md-3">
+                    <label>To Year</label>
+                    <input type="number" name="toYear" class="form-control" />
+                </div>
+            </div>
+
+            <br />
+
+            <button type="submit" class="btn btn-custom">
+                Generate Report
+            </button>
+        </form>
+    </div>
+
+</div>

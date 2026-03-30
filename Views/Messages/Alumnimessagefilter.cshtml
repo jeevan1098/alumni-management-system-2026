@@ -2,23 +2,27 @@
 
 @{
     ViewData["Title"] = "Alumni Message Filter";
+    var list = Model.ToList();
 }
 
 <h2>Alumni Message Filter (Email Campaign)</h2>
 
-<!-- 🔍 GLOBAL SEARCH -->
+<!-- 🔍 SEARCH -->
 <div style="margin-bottom:15px;">
     <input type="text" id="globalSearch"
            placeholder="Search (e.g. John, IT, 2024, MS)"
            style="width:400px;" />
 </div>
 
-<!-- 🔢 RESULT COUNT -->
+<!-- 🔢 COUNT -->
 <div style="margin-bottom:10px; font-weight:bold;">
     Results Found: <span id="resultCount">0</span>
 </div>
 
 <form asp-action="SaveSelectedAlumniMessage" method="post">
+
+    <!-- ✅ MESSAGE ID -->
+    <input type="hidden" name="MessageId" value="@ViewBag.MessageId" />
 
     <table class="table table-bordered" id="alumniTable">
         <thead>
@@ -35,33 +39,49 @@
         </thead>
 
         <tbody>
-            @for (int i = 0; i < Model.Count(); i++)
+            @for (int i = 0; i < list.Count; i++)
             {
-                <tr>
+                <tr class="@(list[i].IsAlreadyMapped ? "table-secondary" : "")">
+
                     <td>
-                        <input type="checkbox" asp-for="@Model.ElementAt(i).IsSelected" />
-                        <input type="hidden" asp-for="@Model.ElementAt(i).PermanentEmail" />
+                        <!-- ✅ CHECKBOX (MODEL BINDING FIXED) -->
+                        <input type="checkbox"
+                               name="model[@i].IsSelected"
+                               value="true"
+                               @(list[i].IsSelected ? "checked" : "")
+                               @(list[i].IsAlreadyMapped ? "disabled" : "") />
+
+                        <!-- required for unchecked -->
+                        <input type="hidden" name="model[@i].IsSelected" value="false" />
+
+                        <!-- DATA -->
+                        <input type="hidden" name="model[@i].AlumniId" value="@list[i].AlumniId" />
+                        <input type="hidden" name="model[@i].PermanentEmail" value="@list[i].PermanentEmail" />
+
+                        <!-- maintain already mapped flag -->
+                        <input type="hidden" name="model[@i].IsAlreadyMapped" value="@list[i].IsAlreadyMapped" />
                     </td>
 
                     <td class="name">
-                        @Model.ElementAt(i).FirstName @Model.ElementAt(i).LastName
+                        @list[i].FirstName @list[i].LastName
                     </td>
 
                     <td class="email">
-                        @Model.ElementAt(i).PermanentEmail
+                        @list[i].PermanentEmail
                     </td>
 
                     <td class="year">
-                        @Model.ElementAt(i).GraduationYear
+                        @list[i].GraduationYear
                     </td>
 
                     <td class="degree">
-                        @Model.ElementAt(i).Degree
+                        @list[i].Degree
                     </td>
 
                     <td class="degreetype">
-                        @Model.ElementAt(i).DegreeType
+                        @list[i].DegreeType
                     </td>
+
                 </tr>
             }
         </tbody>
@@ -73,7 +93,7 @@
 
 </form>
 
-<!-- ================= JAVASCRIPT ================= -->
+<!-- ================= SCRIPT ================= -->
 <script>
     function filterTable() {
 
@@ -108,19 +128,20 @@
     }
 
 
-    // 🔍 trigger on typing
+    // 🔍 SEARCH EVENT
     document.getElementById("globalSearch").addEventListener("keyup", filterTable);
 
 
-    // ☑️ SELECT ALL (only visible rows)
+    // ☑️ SELECT ALL (only visible + not disabled)
     document.getElementById("selectAll").addEventListener("change", function () {
 
         let checkboxes = document.querySelectorAll("#alumniTable tbody input[type='checkbox']");
 
         checkboxes.forEach(cb => {
+
             let row = cb.closest("tr");
 
-            if (row.style.display !== "none") {
+            if (row.style.display !== "none" && !cb.disabled) {
                 cb.checked = this.checked;
             }
         });
