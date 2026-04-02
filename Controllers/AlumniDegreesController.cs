@@ -78,6 +78,7 @@ namespace Alumni_Management_System.Controllers
             return View(alumniDegree);
         }
 
+        [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> Create()
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -116,6 +117,7 @@ namespace Alumni_Management_System.Controllers
             return View();
         }
 
+        [Authorize(Roles = "Admin,Staff")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("AlumniDegreeId,AlumniId,DegreeId,DateConferred,YearsToCompleteDegree,Gpa,EmploymentWhileStudying,DegreeSpecificJob,ParticipatedInResearch,JobSecuredUponGraduation,AttendedOrPlansGradSchool")] AlumniDegree alumniDegree)
@@ -188,6 +190,8 @@ namespace Alumni_Management_System.Controllers
             return View(alumniDegree);
         }
 
+        [Authorize(Roles = "Admin,Staff")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -223,6 +227,8 @@ namespace Alumni_Management_System.Controllers
             return View(alumniDegree);
         }
 
+        [Authorize(Roles = "Admin,Staff")]
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("AlumniDegreeId,AlumniId,DegreeId,DateConferred,YearsToCompleteDegree,Gpa,EmploymentWhileStudying,DegreeSpecificJob,ParticipatedInResearch,JobSecuredUponGraduation,AttendedOrPlansGradSchool")] AlumniDegree alumniDegree)

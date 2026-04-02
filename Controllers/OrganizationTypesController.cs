@@ -63,6 +63,7 @@ namespace Alumni_Management_System.Controllers
             return View(organizationType);
         }
 
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -78,6 +79,7 @@ namespace Alumni_Management_System.Controllers
             return View(organizationType);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("OrganizationTypeId,OrganizationName")] OrganizationType organizationType)

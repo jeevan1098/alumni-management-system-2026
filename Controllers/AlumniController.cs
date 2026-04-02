@@ -96,7 +96,7 @@ namespace Alumni_Management_System.Controllers
             return View(alumni);
         }
 
-        [Authorize(Roles = "Admin")] // Only Admin can create alumni manually
+        [Authorize(Roles = "Admin,Staff")] // Admin/Staff can create alumni manually
         public IActionResult Create()
         {
 
@@ -105,7 +105,7 @@ namespace Alumni_Management_System.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")] // Only Admin can create alumni manually
+        [Authorize(Roles = "Admin,Staff")] // Admin/Staff can create alumni manually
         public async Task<IActionResult> Create([Bind("AlumniId,JagId,Prefix,FirstName,PreferredFirstName,LastName,Gender,AgeAtGraduation,StudentEmail,PermanentEmail,Phone,Address,City,State,Postcode,Country,GraduationYear,SolicitationCode,SocialMediaAccount,Privacy,IsActive,LastUpdated")] Alumni alumni)
         {
 
@@ -121,6 +121,7 @@ namespace Alumni_Management_System.Controllers
             return View(alumni);
         }
 
+        [Authorize(Roles = "Admin,Alumni")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -166,6 +167,7 @@ namespace Alumni_Management_System.Controllers
             return View(alumni);
         }
 
+        [Authorize(Roles = "Admin,Alumni")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("AlumniId,JagId,Prefix,FirstName,PreferredFirstName,LastName,Gender,AgeAtGraduation,StudentEmail,PermanentEmail,Phone,Address,City,State,Postcode,Country,GraduationYear,SolicitationCode,SocialMediaAccount,Privacy,IsActive,LastUpdated")] Alumni alumni)

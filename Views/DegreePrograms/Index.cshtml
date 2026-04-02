@@ -24,9 +24,12 @@
 
             <!-- Create Button -->
             <div class="d-flex justify-content-end mb-3">
-                <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
-                    <i class="bi bi-plus-circle-fill me-2"></i>Create New
-                </a>
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-plus-circle-fill me-2"></i>Create New
+                    </a>
+                }
             </div>
 
             <!-- Table -->
@@ -55,16 +58,19 @@
                                        class="btn btn-sm btn-outline-primary rounded-pill me-2">
                                         <i class="bi bi-eye-fill"></i>
                                     </a>
-                                    <a asp-action="Edit"
-                                       asp-route-id="@item.DegreeId"
-                                       class="btn btn-sm btn-outline-warning rounded-pill me-2">
-                                        <i class="bi bi-pencil-fill"></i>
-                                    </a>
-                                    <a asp-action="Delete"
-                                       asp-route-id="@item.DegreeId"
-                                       class="btn btn-sm btn-outline-danger rounded-pill">
-                                        <i class="bi bi-trash-fill"></i>
-                                    </a>
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <a asp-action="Edit"
+                                           asp-route-id="@item.DegreeId"
+                                           class="btn btn-sm btn-outline-warning rounded-pill me-2">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </a>
+                                        <a asp-action="Delete"
+                                           asp-route-id="@item.DegreeId"
+                                           class="btn btn-sm btn-outline-danger rounded-pill">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </a>
+                                    }
                                 </td>
                             </tr>
                         }

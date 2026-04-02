@@ -101,9 +101,12 @@
                 <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
                     <i class="bi bi-arrow-left me-2"></i>Back to List
                 </a>
-                <a asp-action="Edit" asp-route-id="@Model?.AlumniInternshipId" class="btn btn-primary rounded-pill px-4">
-                    <i class="bi bi-pencil-square me-2"></i>Edit
-                </a>
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-action="Edit" asp-route-id="@Model?.AlumniInternshipId" class="btn btn-primary rounded-pill px-4">
+                        <i class="bi bi-pencil-square me-2"></i>Edit
+                    </a>
+                }
             </div>
 
         </div>

@@ -70,12 +70,15 @@
                                     <a asp-action="Details" asp-route-id="@item.AlumniEmploymentId" class="btn btn-sm btn-outline-primary rounded-pill">
                                         <i class="bi bi-eye-fill"></i>
                                     </a>
-                                    <a asp-action="Edit" asp-route-id="@item.AlumniEmploymentId" class="btn btn-sm btn-outline-warning rounded-pill">
-                                        <i class="bi bi-pencil-fill"></i>
-                                    </a>
-                                    <a asp-action="Delete" asp-route-id="@item.AlumniEmploymentId" class="btn btn-sm btn-outline-danger rounded-pill">
-                                        <i class="bi bi-trash-fill"></i>
-                                    </a>
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@item.AlumniEmploymentId" class="btn btn-sm btn-outline-warning rounded-pill">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </a>
+                                        <a asp-action="Delete" asp-route-id="@item.AlumniEmploymentId" class="btn btn-sm btn-outline-danger rounded-pill">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </a>
+                                    }
                                 </td>
                             </tr>
                         }

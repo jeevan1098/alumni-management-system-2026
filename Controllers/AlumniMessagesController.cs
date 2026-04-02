@@ -114,7 +114,7 @@ namespace Alumni_Management_System.Controllers
             return View(alumniMessage);
         }
 
-        [Authorize(Roles = "Admin,Staff")]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -132,9 +132,9 @@ namespace Alumni_Management_System.Controllers
             return View(alumniMessage);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> Edit(int id, [Bind("AlumniMessageId,AlumniId,MessageId,SentAt")] AlumniMessage alumniMessage)
         {
             if (id != alumniMessage.AlumniMessageId)

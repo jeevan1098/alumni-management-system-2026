@@ -63,6 +63,7 @@ namespace Alumni_Management_System.Controllers
             return View(degreeProgram);
         }
 
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -78,6 +79,7 @@ namespace Alumni_Management_System.Controllers
             return View(degreeProgram);
         }
 
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("DegreeId,Institution,DegreeType,MajorFieldOfStudy,Department")] DegreeProgram degreeProgram)
