@@ -1,50 +1,4 @@
-﻿@* @model IEnumerable<Alumni_Management_System.Models.Employer>
-
-@{
-    ViewData["Title"] = "Index";
-}
-
-<h1>Index</h1>
-
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.EmployerName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Location)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Industry)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.EmployerName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Location)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Industry)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.EmployerId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.EmployerId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.EmployerId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table> *@
+﻿
 @model IEnumerable<Alumni_Management_System.Models.Employer>
 
 @{
@@ -70,9 +24,12 @@
 
             <!-- Create Button -->
             <div class="d-flex justify-content-end mb-3">
-                <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
-                    <i class="bi bi-plus-circle-fill me-2"></i>Create New
-                </a>
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-plus-circle-fill me-2"></i>Create New
+                    </a>
+                }
             </div>
 
             <!-- Table -->

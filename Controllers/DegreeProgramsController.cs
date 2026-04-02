@@ -11,7 +11,7 @@ using Alumni_Management_System.Models;
 
 namespace Alumni_Management_System.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin,Staff")]
     public class DegreeProgramsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -21,13 +21,11 @@ namespace Alumni_Management_System.Controllers
             _context = context;
         }
 
-        // GET: DegreePrograms
         public async Task<IActionResult> Index()
         {
             return View(await _context.DegreePrograms.ToListAsync());
         }
 
-        // GET: DegreePrograms/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -45,17 +43,15 @@ namespace Alumni_Management_System.Controllers
             return View(degreeProgram);
         }
 
-        // GET: DegreePrograms/Create
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: DegreePrograms/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([Bind("DegreeId,Institution,DegreeType,MajorFieldOfStudy,Department")] DegreeProgram degreeProgram)
         {
             if (ModelState.IsValid)
@@ -67,7 +63,6 @@ namespace Alumni_Management_System.Controllers
             return View(degreeProgram);
         }
 
-        // GET: DegreePrograms/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -83,9 +78,6 @@ namespace Alumni_Management_System.Controllers
             return View(degreeProgram);
         }
 
-        // POST: DegreePrograms/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("DegreeId,Institution,DegreeType,MajorFieldOfStudy,Department")] DegreeProgram degreeProgram)
@@ -118,7 +110,7 @@ namespace Alumni_Management_System.Controllers
             return View(degreeProgram);
         }
 
-        // GET: DegreePrograms/Delete/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -136,9 +128,9 @@ namespace Alumni_Management_System.Controllers
             return View(degreeProgram);
         }
 
-        // POST: DegreePrograms/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var degreeProgram = await _context.DegreePrograms.FindAsync(id);

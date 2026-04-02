@@ -15,7 +15,7 @@ namespace Alumni_Management_System.Migrations
     [Migration("20260213234903_InitialCreate")]
     partial class InitialCreate
     {
-        /// <inheritdoc />
+
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

@@ -1,73 +1,9 @@
-﻿@* @model Alumni_Management_System.Models.AlumniOrganization
-
-@{
-    ViewData["Title"] = "Edit";
-}
-
-<h1>Edit</h1>
-
-<h4>AlumniOrganization</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="AlumniOrganizationId" />
-            <div class="form-group">
-                <label asp-for="AlumniId" class="control-label">
-                    <span class="text-danger">*</span> Alumni Name
-                </label>
-                <select asp-for="AlumniId" class="form-control" asp-items="ViewBag.AlumniId"></select>
-                <span asp-validation-for="AlumniId" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <label asp-for="OrganizationTypeId" class="control-label">
-                    <span class="text-danger">*</span> Organization Type
-                </label>
-                <select asp-for="OrganizationTypeId" class="form-control" asp-items="ViewBag.OrganizationTypeId">
-                    <option value="">-- Select Organization Type --</option>
-                </select>
-                <span asp-validation-for="OrganizationTypeId" class="text-danger"></span>
-            </div>
-            <div class="mb-3">
-                <label asp-for="OfficerRoles" class="form-label fw-semibold">
-                    <span class="text-danger">*</span> Officer Role
-                </label>
-                <div class="input-group shadow-sm">
-                    <span class="input-group-text bg-light"><i class="bi bi-person-badge"></i></span>
-                    <select asp-for="OfficerRoles" class="form-select rounded-end-3">
-                        <option value="">-- Select Highest Officer Role --</option>
-                        <option value="President">President</option>
-                        <option value="Vice President">Vice President</option>
-                        <option value="Secretary">Secretary</option>
-                        <option value="Treasurer">Treasurer</option>
-                        <option value="Officer">Officer</option>
-                        <option value="Member">Member</option>
-                    </select>
-                </div>
-                <small class="form-text text-info">Select the highest-ranking officer role held.</small>
-                <span asp-validation-for="OfficerRoles" class="text-danger"></span>
-            </div>
-
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
-    </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
-@section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-} *@
+﻿
 
 @model Alumni_Management_System.Models.AlumniOrganization
 
 @{
-    ViewData["Title"] = "Edit Alumni Organization";
+    ViewData["Title"] = "Edit Student Organization";
 }
 
 <div class="container mt-5 mb-5">
@@ -80,9 +16,9 @@
                     <i class="bi bi-people-fill text-warning fs-3"></i>
                 </div>
                 <div>
-                    <h3 class="fw-bold mb-0 text-warning">Edit Alumni Organization</h3>
+                    <h3 class="fw-bold mb-0 text-warning">Edit Student Organization</h3>
                     <small class="text-info text-warning">
-                        Update alumni organization involvement
+                        Update student organization involvement
                     </small>
                 </div>
             </div>

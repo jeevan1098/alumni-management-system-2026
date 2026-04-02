@@ -4,10 +4,10 @@
 
 namespace Alumni_Management_System.Migrations
 {
-    /// <inheritdoc />
+
     public partial class AddIsFirstLoginToAppUser : Migration
     {
-        /// <inheritdoc />
+
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<bool>(
@@ -18,7 +18,6 @@ namespace Alumni_Management_System.Migrations
                 defaultValue: false);
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(

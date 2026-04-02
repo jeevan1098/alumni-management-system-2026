@@ -21,13 +21,11 @@ namespace Alumni_Management_System.Controllers
             _context = context;
         }
 
-        // GET: Employers
         public async Task<IActionResult> Index()
         {
             return View(await _context.Employers.ToListAsync());
         }
 
-        // GET: Employers/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -45,17 +43,15 @@ namespace Alumni_Management_System.Controllers
             return View(employer);
         }
 
-        // GET: Employers/Create
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: Employers/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([Bind("EmployerId,EmployerName,Location,Industry")] Employer employer)
         {
             if (ModelState.IsValid)
@@ -67,7 +63,6 @@ namespace Alumni_Management_System.Controllers
             return View(employer);
         }
 
-        // GET: Employers/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -83,9 +78,6 @@ namespace Alumni_Management_System.Controllers
             return View(employer);
         }
 
-        // POST: Employers/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("EmployerId,EmployerName,Location,Industry")] Employer employer)
@@ -118,7 +110,7 @@ namespace Alumni_Management_System.Controllers
             return View(employer);
         }
 
-        // GET: Employers/Delete/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -136,9 +128,9 @@ namespace Alumni_Management_System.Controllers
             return View(employer);
         }
 
-        // POST: Employers/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var employer = await _context.Employers.FindAsync(id);

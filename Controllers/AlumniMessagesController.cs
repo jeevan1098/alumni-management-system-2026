@@ -12,7 +12,7 @@ using Alumni_Management_System.Models;
 
 namespace Alumni_Management_System.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "Admin,Staff")]
     public class AlumniMessagesController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -24,7 +24,6 @@ namespace Alumni_Management_System.Controllers
             _userManager = userManager;
         }
 
-        // GET: AlumniMessages
         public async Task<IActionResult> Index()
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -32,7 +31,6 @@ namespace Alumni_Management_System.Controllers
 
             IQueryable<AlumniMessage> query = _context.AlumniMessages.Include(a => a.Alumni).Include(a => a.Message);
 
-            // Alumni can only see their own messages
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -54,7 +52,6 @@ namespace Alumni_Management_System.Controllers
             return View(await query.ToListAsync());
         }
 
-        // GET: AlumniMessages/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -71,7 +68,6 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
-            // Check if Alumni user is trying to view another alumni's message
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
             if (roles.Contains(Constants.AlumniRole))
@@ -87,11 +83,9 @@ namespace Alumni_Management_System.Controllers
             return View(alumniMessage);
         }
 
-        // GET: AlumniMessages/Create
         [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
-            //ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName");
 
             ViewData["AlumniId"] = new SelectList(_context.Alumni .Where(a => a.SolicitationCode).Select(a => new
                                     {
@@ -103,7 +97,6 @@ namespace Alumni_Management_System.Controllers
             return View();
         }
 
-        // POST: AlumniMessages/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]
@@ -121,8 +114,7 @@ namespace Alumni_Management_System.Controllers
             return View(alumniMessage);
         }
 
-        // GET: AlumniMessages/Edit/5
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -140,10 +132,9 @@ namespace Alumni_Management_System.Controllers
             return View(alumniMessage);
         }
 
-        // POST: AlumniMessages/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> Edit(int id, [Bind("AlumniMessageId,AlumniId,MessageId,SentAt")] AlumniMessage alumniMessage)
         {
             if (id != alumniMessage.AlumniMessageId)
@@ -177,7 +168,6 @@ namespace Alumni_Management_System.Controllers
             return View(alumniMessage);
         }
 
-        // GET: AlumniMessages/Delete/5
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
@@ -198,7 +188,6 @@ namespace Alumni_Management_System.Controllers
             return View(alumniMessage);
         }
 
-        // POST: AlumniMessages/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")]

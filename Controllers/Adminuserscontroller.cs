@@ -12,7 +12,6 @@ namespace Alumni_Management_System.Controllers
         private readonly UserManager<AppUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
 
-        // Roles excluded from User Management table and dropdowns
         private static readonly string[] ExcludedRoles = { "Alumni" };
 
         public AdminUsersController(UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager)
@@ -21,12 +20,10 @@ namespace Alumni_Management_System.Controllers
             _roleManager = roleManager;
         }
 
-        // GET: /AdminUsers
         public async Task<IActionResult> Index()
         {
             var allUsers = await _userManager.Users.ToListAsync();
 
-            // Only show Admin and Viewer users — skip Alumni entirely
             var userRoles = new List<(AppUser User, string Role)>();
             foreach (var user in allUsers)
             {
@@ -39,7 +36,6 @@ namespace Alumni_Management_System.Controllers
                 userRoles.Add((user, primaryRole));
             }
 
-            // Dropdown only shows Admin and Viewer
             var allowedRoles = _roleManager.Roles
                 .Select(r => r.Name)
                 .Where(r => !ExcludedRoles.Contains(r))
@@ -50,7 +46,6 @@ namespace Alumni_Management_System.Controllers
             return View();
         }
 
-        // POST: /AdminUsers/UpdateRole
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateRole(string userId, string newRole)
@@ -70,7 +65,6 @@ namespace Alumni_Management_System.Controllers
 
             var currentRoles = await _userManager.GetRolesAsync(user);
 
-            // Block touching Alumni users from this page
             if (currentRoles.Any(r => ExcludedRoles.Contains(r)))
             {
                 TempData["Error"] = "Alumni user roles cannot be changed from User Management.";
@@ -91,7 +85,6 @@ namespace Alumni_Management_System.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: /AdminUsers/ResetPassword
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ResetPassword(string userId)
@@ -115,7 +108,6 @@ namespace Alumni_Management_System.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: /AdminUsers/DeleteUser
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteUser(string userId)
@@ -143,7 +135,6 @@ namespace Alumni_Management_System.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: /AdminUsers/Register
         public IActionResult Register()
         {
             ViewBag.AllRoles = _roleManager.Roles
@@ -153,7 +144,6 @@ namespace Alumni_Management_System.Controllers
             return View();
         }
 
-        // POST: /AdminUsers/Register
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Register(string username, string email, string password, string confirmPassword, string role)
@@ -181,7 +171,6 @@ namespace Alumni_Management_System.Controllers
                 return View();
             }
 
-            // Check username uniqueness
             var existingByUsername = await _userManager.FindByNameAsync(username);
             if (existingByUsername != null)
             {
@@ -189,7 +178,6 @@ namespace Alumni_Management_System.Controllers
                 return View();
             }
 
-            // Check email uniqueness
             var existingByEmail = await _userManager.FindByEmailAsync(email);
             if (existingByEmail != null)
             {
@@ -197,7 +185,6 @@ namespace Alumni_Management_System.Controllers
                 return View();
             }
 
-            // Auto-increment JAG ID from highest existing J00... value
             var allJagIds = await _userManager.Users
                 .Where(u => u.JagId != null && u.JagId.StartsWith("J00"))
                 .Select(u => u.JagId)

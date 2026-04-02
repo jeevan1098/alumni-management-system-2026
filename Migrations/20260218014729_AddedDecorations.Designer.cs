@@ -15,7 +15,7 @@ namespace Alumni_Management_System.Migrations
     [Migration("20260218014729_AddedDecorations")]
     partial class AddedDecorations
     {
-        /// <inheritdoc />
+
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

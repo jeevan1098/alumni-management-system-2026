@@ -140,11 +140,18 @@ namespace Alumni_Management_System.Migrations
                         .HasColumnType("nvarchar(150)")
                         .HasColumnName("student_email");
 
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("user_id");
+
                     b.HasKey("AlumniId")
                         .HasName("PK__Alumni__BB1DF35C3C7BFE94");
 
                     b.HasIndex("JagId")
                         .IsUnique();
+
+                    b.HasIndex("UserId");
 
                     b.HasIndex(new[] { "JagId" }, "UQ__Alumni__FBF400ED6AB71E0A")
                         .IsUnique();
@@ -438,7 +445,6 @@ namespace Alumni_Management_System.Migrations
                         .HasColumnName("is_first_login");
 
                     b.Property<string>("JagId")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
@@ -476,6 +482,8 @@ namespace Alumni_Management_System.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("JagId");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -759,9 +767,9 @@ namespace Alumni_Management_System.Migrations
             modelBuilder.Entity("Alumni_Management_System.Models.Alumni", b =>
                 {
                     b.HasOne("Alumni_Management_System.Models.AppUser", "User")
-                        .WithOne("Alumni")
-                        .HasForeignKey("Alumni_Management_System.Models.Alumni", "JagId")
-                        .HasPrincipalKey("Alumni_Management_System.Models.AppUser", "JagId");
+                        .WithMany("Alumni")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("User");
                 });

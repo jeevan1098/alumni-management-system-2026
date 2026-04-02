@@ -1,48 +1,8 @@
-﻿@* @model Alumni_Management_System.Models.AlumniOrganization
-
-@{
-    ViewData["Title"] = "Create";
-}
-
-<h1>Create</h1>
-
-<h4>AlumniOrganization</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Create">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <div class="form-group">
-                <label asp-for="AlumniId" class="control-label"></label>
-                <select asp-for="AlumniId" class ="form-control" asp-items="ViewBag.AlumniId"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="OrganizationTypeId" class="control-label"></label>
-                <select asp-for="OrganizationTypeId" class ="form-control" asp-items="ViewBag.OrganizationTypeId"></select>
-            </div>
-            <div class="form-group">
-                <label asp-for="OfficerRoles" class="control-label"></label>
-                <input asp-for="OfficerRoles" class="form-control" />
-                <span asp-validation-for="OfficerRoles" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Create" class="btn btn-primary" />
-            </div>
-        </form>
-    </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
-@section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-} *@
+﻿
 @model Alumni_Management_System.Models.AlumniOrganization
 
 @{
-    ViewData["Title"] = "Add Alumni Organization";
+    ViewData["Title"] = "Add Student Organization";
     var userRole = ViewData["UserRole"]?.ToString();
     var currentAlumniId = ViewData["CurrentAlumniId"] as int?;
     var isAdmin = userRole == "Admin";
@@ -57,7 +17,7 @@
                     <i class="bi bi-building text-primary fs-3"></i>
                 </div>
                 <div>
-                    <h3 class="fw-bold mb-0">Add Alumni Organization</h3>
+                    <h3 class="fw-bold mb-0">Add Student Organization</h3>
                     <small class="text-info">Enter organization and role information for alumni</small>
                 </div>
             </div>

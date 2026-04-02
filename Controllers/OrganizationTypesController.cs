@@ -21,13 +21,11 @@ namespace Alumni_Management_System.Controllers
             _context = context;
         }
 
-        // GET: OrganizationTypes
         public async Task<IActionResult> Index()
         {
             return View(await _context.OrganizationTypes.ToListAsync());
         }
 
-        // GET: OrganizationTypes/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -45,17 +43,15 @@ namespace Alumni_Management_System.Controllers
             return View(organizationType);
         }
 
-        // GET: OrganizationTypes/Create
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: OrganizationTypes/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([Bind("OrganizationTypeId,OrganizationName")] OrganizationType organizationType)
         {
             if (ModelState.IsValid)
@@ -67,7 +63,6 @@ namespace Alumni_Management_System.Controllers
             return View(organizationType);
         }
 
-        // GET: OrganizationTypes/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -83,9 +78,6 @@ namespace Alumni_Management_System.Controllers
             return View(organizationType);
         }
 
-        // POST: OrganizationTypes/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("OrganizationTypeId,OrganizationName")] OrganizationType organizationType)
@@ -118,7 +110,7 @@ namespace Alumni_Management_System.Controllers
             return View(organizationType);
         }
 
-        // GET: OrganizationTypes/Delete/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -136,9 +128,9 @@ namespace Alumni_Management_System.Controllers
             return View(organizationType);
         }
 
-        // POST: OrganizationTypes/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var organizationType = await _context.OrganizationTypes.FindAsync(id);

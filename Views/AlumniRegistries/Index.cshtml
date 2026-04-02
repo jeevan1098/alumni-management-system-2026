@@ -1,92 +1,4 @@
-﻿@* @model IEnumerable<Alumni_Management_System.Models.AlumniRegistry>
-
-@{
-    ViewData["Title"] = "Alumni Registry";
-}
-
-<h1>Alumni Registry</h1>
-
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @Html.Raw(TempData["SuccessMessage"])
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-
-@if (TempData["ErrorMessages"] != null)
-{
-    <div class="alert alert-warning alert-dismissible fade show" role="alert">
-        <strong>Import Errors:</strong><br/>
-        @Html.Raw(TempData["ErrorMessages"])
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-
-<p>
-    <a asp-action="Create" class="btn btn-primary">Create New</a>
-    <a asp-action="BulkImport" class="btn btn-success">Bulk Import</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.JagId)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.FirstName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.LastName)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.GraduationYear)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.DegreeProgram)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.EmailOnRecord)
-            </th>
-            <th>
-                @Html.DisplayNameFor(model => model.AccountCreated)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.JagId)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.FirstName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.LastName)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.GraduationYear)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.DegreeProgram)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.EmailOnRecord)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.AccountCreated)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.RegistryId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.RegistryId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.RegistryId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table> *@
+﻿
 
 @model IEnumerable<Alumni_Management_System.Models.AlumniRegistry>
 
@@ -131,9 +43,12 @@
 
             <!-- Buttons -->
             <div class="d-flex justify-content-end mb-3 gap-2">
-                <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
-                    <i class="bi bi-plus-circle-fill me-2"></i>Create New
-                </a>
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-plus-circle-fill me-2"></i>Create New
+                    </a>
+                }
                 <a asp-action="BulkImport" class="btn btn-success rounded-pill px-4 shadow-sm">
                     <i class="bi bi-upload me-2"></i>Bulk Import
                 </a>

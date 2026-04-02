@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Alumni_Management_System.Migrations
 {
-    /// <inheritdoc />
+
     public partial class AddAgeAtGraduationColumn : Migration
     {
-        /// <inheritdoc />
+
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(
@@ -61,7 +61,6 @@ namespace Alumni_Management_System.Migrations
                 principalColumn: "JagId");
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropForeignKey(

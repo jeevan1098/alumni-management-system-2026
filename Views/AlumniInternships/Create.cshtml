@@ -52,7 +52,7 @@
                             class="form-select rounded-3"
                             asp-items="ViewBag.EmployerId"
                             id="employerDropdown">
-                        @* <option value="">-- Select Employer --</option> *@
+
                     </select>
                 </div>
 
@@ -131,12 +131,10 @@
         const currentInternshipCheckbox = document.getElementById("isCurrentInternshipCheckbox");
         const endDateField = document.getElementById("endDateField");
 
-        // Show textbox if "Other" selected (value 0 = Other)
         employerDropdown.addEventListener("change", function () {
             otherDiv.style.display = this.value == "0" ? "block" : "none";
         });
 
-        // Disable EndDate if Current Internship is checked
         currentInternshipCheckbox.addEventListener("change", function () {
             endDateField.disabled = this.checked;
             if (this.checked) endDateField.value = "";

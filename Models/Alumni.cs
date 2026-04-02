@@ -22,8 +22,12 @@ public partial class Alumni
     [Display(Name = "JAG ID")]
     public string JagId { get; set; }
 
-    // Navigation property to AppUser (one-to-one relationship via JagId)
-    [ForeignKey(nameof(JagId))]
+    [Column("user_id")]
+    [StringLength(450)]
+    [Display(Name = "User ID")]
+    public string? UserId { get; set; }
+
+    [ForeignKey(nameof(UserId))]
     public virtual AppUser User { get; set; }
 
     [Column("prefix")]
@@ -130,12 +134,4 @@ public partial class Alumni
     [InverseProperty("Alumni")]
     public virtual ICollection<AlumniOrganization> AlumniOrganizations { get; set; } = new List<AlumniOrganization>();
 
-    //[ForeignKey("UserId")]
-    //[InverseProperty("Alumni")]
-   
-    // for one-to-one relationship with user
-    //public string IdentityUserId { get; set; }    
-
-    // navigation property to allow user info
-    //public virtual IdentityUser IdentityUser { get; set; }
 }

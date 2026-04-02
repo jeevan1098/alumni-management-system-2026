@@ -15,7 +15,7 @@ namespace Alumni_Management_System.Migrations
     [Migration("20260318194851_AddAgeAtGraduationColumn")]
     partial class AddAgeAtGraduationColumn
     {
-        /// <inheritdoc />
+
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618

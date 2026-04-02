@@ -8,7 +8,6 @@
     var currentUser = await UserManager.GetUserAsync(User);
     var isFirstLogin = currentUser?.IsFirstLogin ?? false;
 
-    // Calculate profile completion
     int totalFields = 18;
     int completedFields = 0;
 
@@ -240,22 +239,29 @@
                     <span asp-validation-for="IsActive" class="text-danger"></span>
                 </div>
                 <div class="card-body">
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" asp-for="SolicitationCode" />
-                        <label class="form-check-label" asp-for="SolicitationCode">
-                            @Html.DisplayNameFor(model => model.SolicitationCode)
-                        </label>
-                        <div class="form-text">
-                            Allow other alumni to see your profile in the directory and receive broadcast messages from administrators.
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-semibold">&nbsp;</label>
+                            <div class="form-check mt-2">
+                                <input asp-for="SolicitationCode" class="form-check-input me-2 border-primary" type="checkbox" />
+                                <label asp-for="SolicitationCode" class="form-check-label fw-semibold"></label>
+                            </div>
+                            <div class="form-text">
+                                Allow receive broadcast messages from administrators.
+                            </div>
+                            <span asp-validation-for="SolicitationCode" class="text-danger"></span>
                         </div>
-                        <span asp-validation-for="SolicitationCode" class="text-danger"></span>
-                    </div>
-                    <div class="form-check mb-3">
-                        <input class="form-check-input" type="checkbox" asp-for="Privacy" />
-                        <label class="form-check-label" asp-for="Privacy">
-                            @Html.DisplayNameFor(model => model.Privacy)
-                        </label>
-                        <span asp-validation-for="Privacy" class="text-danger"></span>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label fw-semibold">&nbsp;</label>
+                            <div class="form-check mt-2">
+                                <input asp-for="Privacy" class="form-check-input me-2 border-primary" type="checkbox" />
+                                <label asp-for="Privacy" class="form-check-label fw-semibold"></label>
+                            </div>
+                            <div class="form-text">
+                                Allow other alumni to see your profile in the directory.
+                            </div>
+                            <span asp-validation-for="Privacy" class="text-danger"></span>
+                        </div>
                     </div>
                 </div>
             </div>

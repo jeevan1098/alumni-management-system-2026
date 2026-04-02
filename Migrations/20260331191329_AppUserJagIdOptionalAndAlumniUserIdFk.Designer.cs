@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Alumni_Management_System.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260215003554_ChangeSolicitationCodeToBool")]
-    partial class ChangeSolicitationCodeToBool
+    [Migration("20260331191329_AppUserJagIdOptionalAndAlumniUserIdFk")]
+    partial class AppUserJagIdOptionalAndAlumniUserIdFk
     {
 
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -39,6 +39,10 @@ namespace Alumni_Management_System.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("address");
 
+                    b.Property<int?>("AgeAtGraduation")
+                        .HasColumnType("int")
+                        .HasColumnName("age_at_graduation");
+
                     b.Property<string>("City")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)")
@@ -48,10 +52,6 @@ namespace Alumni_Management_System.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("country");
-
-                    b.Property<DateOnly?>("DateOfBirth")
-                        .HasColumnType("date")
-                        .HasColumnName("date_of_birth");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -144,6 +144,7 @@ namespace Alumni_Management_System.Migrations
                         .HasColumnName("student_email");
 
                     b.Property<string>("UserId")
+                        .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("user_id");
 
@@ -153,9 +154,7 @@ namespace Alumni_Management_System.Migrations
                     b.HasIndex("JagId")
                         .IsUnique();
 
-                    b.HasIndex("UserId")
-                        .IsUnique()
-                        .HasFilter("[user_id] IS NOT NULL");
+                    b.HasIndex("UserId");
 
                     b.HasIndex(new[] { "JagId" }, "UQ__Alumni__FBF400ED6AB71E0A")
                         .IsUnique();
@@ -394,25 +393,11 @@ namespace Alumni_Management_System.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("account_created");
 
-                    b.Property<string>("DegreeProgram")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasColumnName("degree_program");
-
-                    b.Property<string>("EmailOnRecord")
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)")
-                        .HasColumnName("email_on_record");
-
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("first_name");
-
-                    b.Property<int?>("GraduationYear")
-                        .HasColumnType("int")
-                        .HasColumnName("graduation_year");
 
                     b.Property<string>("JagId")
                         .IsRequired()
@@ -458,8 +443,11 @@ namespace Alumni_Management_System.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsFirstLogin")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_first_login");
+
                     b.Property<string>("JagId")
-                        .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
@@ -497,6 +485,8 @@ namespace Alumni_Management_System.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("JagId");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -780,8 +770,9 @@ namespace Alumni_Management_System.Migrations
             modelBuilder.Entity("Alumni_Management_System.Models.Alumni", b =>
                 {
                     b.HasOne("Alumni_Management_System.Models.AppUser", "User")
-                        .WithOne("Alumni")
-                        .HasForeignKey("Alumni_Management_System.Models.Alumni", "UserId");
+                        .WithMany("Alumni")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("User");
                 });

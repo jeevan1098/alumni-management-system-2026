@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace Alumni_Management_System.Controllers
 {
-    [Authorize(Roles = "Alumni,Admin")]
+    [Authorize(Roles = "Alumni,Admin,Staff")]
     public class AlumniDegreesController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -24,7 +24,6 @@ namespace Alumni_Management_System.Controllers
             _userManager = userManager;
         }
 
-        // GET: AlumniDegrees
         public async Task<IActionResult> Index()
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -32,7 +31,6 @@ namespace Alumni_Management_System.Controllers
 
             IQueryable<AlumniDegree> query = _context.AlumniDegrees.Include(a => a.Alumni).Include(a => a.Degree);
 
-            // Alumni can only see their own degrees
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -45,12 +43,10 @@ namespace Alumni_Management_System.Controllers
                     return View(new List<AlumniDegree>());
                 }
             }
-            // Admin can see all degrees
 
             return View(await query.ToListAsync());
         }
 
-        // GET: AlumniDegrees/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -67,7 +63,6 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
-            // Check if Alumni user is trying to view another alumni's degree
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
             if (roles.Contains(Constants.AlumniRole))
@@ -83,13 +78,11 @@ namespace Alumni_Management_System.Controllers
             return View(alumniDegree);
         }
 
-        // GET: AlumniDegrees/Create
         public async Task<IActionResult> Create()
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
 
-            // For Alumni users, auto-select their own AlumniId
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -104,12 +97,11 @@ namespace Alumni_Management_System.Controllers
             }
             else
             {
-                // Admin can select any alumni
+
                 ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName");
                 ViewData["UserRole"] = "Admin";
             }
 
-            //ViewData["DegreeId"] = new SelectList(_context.DegreePrograms, "DegreeId", "DegreeType");
             ViewData["DegreeId"] = new SelectList( _context.DegreePrograms .Select(d => new
             {
                 d.DegreeId,
@@ -124,7 +116,6 @@ namespace Alumni_Management_System.Controllers
             return View();
         }
 
-        // POST: AlumniDegrees/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("AlumniDegreeId,AlumniId,DegreeId,DateConferred,YearsToCompleteDegree,Gpa,EmploymentWhileStudying,DegreeSpecificJob,ParticipatedInResearch,JobSecuredUponGraduation,AttendedOrPlansGradSchool")] AlumniDegree alumniDegree)
@@ -132,7 +123,6 @@ namespace Alumni_Management_System.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
 
-            // Validate: Alumni can only create degrees for themselves
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -143,13 +133,11 @@ namespace Alumni_Management_System.Controllers
                 }
             }
 
-            // Validation 1: DateConferred cannot be in future
             if (alumniDegree.DateConferred > DateOnly.FromDateTime(DateTime.Now))
             {
                 ModelState.AddModelError("DateConferred", "Date Conferred cannot be in the future.");
             }
 
-            // Validation 2: YearsToCompleteDegree cannot be negative or more than 10
             if (alumniDegree.YearsToCompleteDegree.HasValue)
             {
                 if (alumniDegree.YearsToCompleteDegree < 0)
@@ -162,7 +150,6 @@ namespace Alumni_Management_System.Controllers
                 }
             }
 
-            // Validation 3: GPA must be between 0 and 4.00
             if (alumniDegree.Gpa.HasValue)
             {
                 if (alumniDegree.Gpa < 0 || alumniDegree.Gpa > 4.00m)
@@ -171,7 +158,6 @@ namespace Alumni_Management_System.Controllers
                 }
             }
 
-            // Validation 4: Check for duplicate degree (same alumni + same degree)
             var duplicateExists = await _context.AlumniDegrees
                 .AnyAsync(ad => ad.AlumniId == alumniDegree.AlumniId &&
                                ad.DegreeId == alumniDegree.DegreeId);
@@ -188,7 +174,6 @@ namespace Alumni_Management_System.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Repopulate dropdowns
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -203,7 +188,6 @@ namespace Alumni_Management_System.Controllers
             return View(alumniDegree);
         }
 
-        // GET: AlumniDegrees/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -217,7 +201,6 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
-            // Check if Alumni user is trying to edit another alumni's degree
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
             if (roles.Contains(Constants.AlumniRole))
@@ -240,7 +223,6 @@ namespace Alumni_Management_System.Controllers
             return View(alumniDegree);
         }
 
-        // POST: AlumniDegrees/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("AlumniDegreeId,AlumniId,DegreeId,DateConferred,YearsToCompleteDegree,Gpa,EmploymentWhileStudying,DegreeSpecificJob,ParticipatedInResearch,JobSecuredUponGraduation,AttendedOrPlansGradSchool")] AlumniDegree alumniDegree)
@@ -253,7 +235,6 @@ namespace Alumni_Management_System.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
 
-            // Validate: Alumni can only edit their own degrees
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -264,13 +245,11 @@ namespace Alumni_Management_System.Controllers
                 }
             }
 
-            // Validation 1: DateConferred cannot be in future
             if (alumniDegree.DateConferred > DateOnly.FromDateTime(DateTime.Now))
             {
                 ModelState.AddModelError("DateConferred", "Date Conferred cannot be in the future.");
             }
 
-            // Validation 2: YearsToCompleteDegree cannot be negative or more than 10
             if (alumniDegree.YearsToCompleteDegree.HasValue)
             {
                 if (alumniDegree.YearsToCompleteDegree < 0)
@@ -283,7 +262,6 @@ namespace Alumni_Management_System.Controllers
                 }
             }
 
-            // Validation 3: GPA must be between 0 and 4.00
             if (alumniDegree.Gpa.HasValue)
             {
                 if (alumniDegree.Gpa < 0 || alumniDegree.Gpa > 4.00m)
@@ -292,7 +270,6 @@ namespace Alumni_Management_System.Controllers
                 }
             }
 
-            // Validation 4: Check for duplicate degree (same alumni + same degree, excluding current record)
             var duplicateExists = await _context.AlumniDegrees
                 .AnyAsync(ad => ad.AlumniId == alumniDegree.AlumniId &&
                                ad.DegreeId == alumniDegree.DegreeId &&
@@ -324,7 +301,6 @@ namespace Alumni_Management_System.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Repopulate dropdowns
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -339,7 +315,7 @@ namespace Alumni_Management_System.Controllers
             return View(alumniDegree);
         }
 
-        // GET: AlumniDegrees/Delete/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -356,7 +332,6 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
-            // Check if Alumni user is trying to delete another alumni's degree
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
             if (roles.Contains(Constants.AlumniRole))
@@ -372,15 +347,15 @@ namespace Alumni_Management_System.Controllers
             return View(alumniDegree);
         }
 
-        // POST: AlumniDegrees/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var alumniDegree = await _context.AlumniDegrees.FindAsync(id);
             if (alumniDegree != null)
             {
-                // Check if Alumni user is trying to delete another alumni's degree
+
                 var currentUser = await _userManager.GetUserAsync(User);
                 var roles = await _userManager.GetRolesAsync(currentUser);
                 if (roles.Contains(Constants.AlumniRole))
@@ -407,4 +382,3 @@ namespace Alumni_Management_System.Controllers
         }
     }
 }
-

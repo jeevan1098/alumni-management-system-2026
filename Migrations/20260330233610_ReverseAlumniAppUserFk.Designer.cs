@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Alumni_Management_System.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260215003554_ChangeSolicitationCodeToBool")]
-    partial class ChangeSolicitationCodeToBool
+    [Migration("20260330233610_ReverseAlumniAppUserFk")]
+    partial class ReverseAlumniAppUserFk
     {
 
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -39,6 +39,10 @@ namespace Alumni_Management_System.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("address");
 
+                    b.Property<int?>("AgeAtGraduation")
+                        .HasColumnType("int")
+                        .HasColumnName("age_at_graduation");
+
                     b.Property<string>("City")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)")
@@ -48,10 +52,6 @@ namespace Alumni_Management_System.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("country");
-
-                    b.Property<DateOnly?>("DateOfBirth")
-                        .HasColumnType("date")
-                        .HasColumnName("date_of_birth");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -143,19 +143,11 @@ namespace Alumni_Management_System.Migrations
                         .HasColumnType("nvarchar(150)")
                         .HasColumnName("student_email");
 
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)")
-                        .HasColumnName("user_id");
-
                     b.HasKey("AlumniId")
                         .HasName("PK__Alumni__BB1DF35C3C7BFE94");
 
                     b.HasIndex("JagId")
                         .IsUnique();
-
-                    b.HasIndex("UserId")
-                        .IsUnique()
-                        .HasFilter("[user_id] IS NOT NULL");
 
                     b.HasIndex(new[] { "JagId" }, "UQ__Alumni__FBF400ED6AB71E0A")
                         .IsUnique();
@@ -394,25 +386,11 @@ namespace Alumni_Management_System.Migrations
                         .HasColumnType("bit")
                         .HasColumnName("account_created");
 
-                    b.Property<string>("DegreeProgram")
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasColumnName("degree_program");
-
-                    b.Property<string>("EmailOnRecord")
-                        .HasMaxLength(150)
-                        .HasColumnType("nvarchar(150)")
-                        .HasColumnName("email_on_record");
-
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("first_name");
-
-                    b.Property<int?>("GraduationYear")
-                        .HasColumnType("int")
-                        .HasColumnName("graduation_year");
 
                     b.Property<string>("JagId")
                         .IsRequired()
@@ -458,6 +436,10 @@ namespace Alumni_Management_System.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<bool>("IsFirstLogin")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_first_login");
+
                     b.Property<string>("JagId")
                         .IsRequired()
                         .HasMaxLength(20)
@@ -497,6 +479,9 @@ namespace Alumni_Management_System.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("JagId")
+                        .IsUnique();
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -777,15 +762,6 @@ namespace Alumni_Management_System.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("Alumni_Management_System.Models.Alumni", b =>
-                {
-                    b.HasOne("Alumni_Management_System.Models.AppUser", "User")
-                        .WithOne("Alumni")
-                        .HasForeignKey("Alumni_Management_System.Models.Alumni", "UserId");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Alumni_Management_System.Models.AlumniDegree", b =>
                 {
                     b.HasOne("Alumni_Management_System.Models.Alumni", "Alumni")
@@ -890,6 +866,16 @@ namespace Alumni_Management_System.Migrations
                     b.Navigation("OrganizationType");
                 });
 
+            modelBuilder.Entity("Alumni_Management_System.Models.AppUser", b =>
+                {
+                    b.HasOne("Alumni_Management_System.Models.Alumni", "Alumni")
+                        .WithOne("User")
+                        .HasForeignKey("Alumni_Management_System.Models.AppUser", "JagId")
+                        .HasPrincipalKey("Alumni_Management_System.Models.Alumni", "JagId");
+
+                    b.Navigation("Alumni");
+                });
+
             modelBuilder.Entity("Alumni_Management_System.Models.Message", b =>
                 {
                     b.HasOne("Alumni_Management_System.Models.AppUser", "CreatedByNavigation")
@@ -961,12 +947,12 @@ namespace Alumni_Management_System.Migrations
                     b.Navigation("AlumniMessages");
 
                     b.Navigation("AlumniOrganizations");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Alumni_Management_System.Models.AppUser", b =>
                 {
-                    b.Navigation("Alumni");
-
                     b.Navigation("Messages");
                 });
 

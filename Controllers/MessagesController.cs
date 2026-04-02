@@ -12,7 +12,7 @@ using Alumni_Management_System.Models;
 
 namespace Alumni_Management_System.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin,Staff")]
     public class MessagesController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -24,14 +24,12 @@ namespace Alumni_Management_System.Controllers
             _userManager = userManager;
         }
 
-        // GET: Messages
         public async Task<IActionResult> Index()
         {
             var applicationDbContext = _context.Messages.Include(m => m.CreatedByNavigation);
             return View(await applicationDbContext.ToListAsync());
         }
 
-        // GET: Messages/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -50,19 +48,19 @@ namespace Alumni_Management_System.Controllers
             return View(message);
         }
 
-        // GET: Messages/Create
+        [Authorize(Roles = "Admin")]
         public IActionResult Create()
         {
-            // No dropdown needed - CreatedBy will be auto-assigned to current admin
+
             return View();
         }
 
-        // POST: Messages/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([Bind("MessageId,Title,MessageBody,MessageType")] Message message)
         {
-            // Auto-assign CreatedBy to current admin user
+
             var currentUser = await _userManager.GetUserAsync(User);
             message.CreatedBy = currentUser.Id;
             message.CreatedAt = DateTime.Now;
@@ -77,7 +75,7 @@ namespace Alumni_Management_System.Controllers
             return View(message);
         }
 
-        // GET: Messages/Edit/5
+        [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -90,13 +88,13 @@ namespace Alumni_Management_System.Controllers
             {
                 return NotFound();
             }
-            // No dropdown needed - CreatedBy cannot be edited
+
             return View(message);
         }
 
-        // POST: Messages/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> Edit(int id, [Bind("MessageId,Title,MessageBody,MessageType")] Message message)
         {
             if (id != message.MessageId)
@@ -104,7 +102,6 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
-            // Preserve original CreatedBy and CreatedAt
             var originalMessage = await _context.Messages.AsNoTracking().FirstOrDefaultAsync(m => m.MessageId == id);
             if (originalMessage == null)
             {
@@ -138,7 +135,6 @@ namespace Alumni_Management_System.Controllers
             return View(message);
         }
 
-        // GET: Messages/Delete/5
         [Authorize(Roles = "Admin")] // Only Admin can delete messages
         public async Task<IActionResult> Delete(int? id)
         {
@@ -158,7 +154,6 @@ namespace Alumni_Management_System.Controllers
             return View(message);
         }
 
-        // POST: Messages/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")] // Only Admin can delete messages

@@ -5,8 +5,15 @@
     var userRole = ViewData["UserRole"]?.ToString();
     var currentAlumniId = ViewData["CurrentAlumniId"] as int?;
     var isAdmin = userRole == "Admin";
+    var isStaff = userRole == "Staff";
+    var isAdminOrStaff = User.Identity.IsAuthenticated && (User.IsInRole("Admin") || User.IsInRole("Staff"));
+    var roleLabel = !string.IsNullOrEmpty(userRole)
+        ? userRole
+        : User.IsInRole("Admin") ? "Admin"
+        : User.IsInRole("Staff") ? "Staff"
+        : User.IsInRole("Alumni") ? "Alumni"
+        : "Guest";
 }
-
 
 <!DOCTYPE html>
 <html>
@@ -97,8 +104,6 @@
             color: #60a5fa;
         }
 
-        /* ================= PRO FOOTER ================= */
-
         .footer-pro {
             background: linear-gradient(180deg, #ffffff, #f8fafc);
             border-top: 1px solid #e5e7eb;
@@ -152,7 +157,6 @@
             color: #6b7280;
         }
 
-        /* DARK MODE */
         body.dark .footer-pro {
             background: linear-gradient(180deg, #1f1f1f, #121212);
             border-top: 1px solid #333;
@@ -179,8 +183,6 @@
             color: #e5e7eb;
         }
 
-
-        /* ================= SIDEBAR ================= */
         .sidebar {
             width: 240px;
             background: linear-gradient(180deg,#1f3c88,#3f7cac);
@@ -246,7 +248,6 @@
                 transition: .2s;
             }
 
-                /* RESTORED HOVER COLOR */
                 .sidebar a:hover {
                     background: rgba(255,255,255,0.18);
                     transform: translateX(3px);
@@ -257,7 +258,6 @@
             text-align: center;
         }
 
-        /* ================= MAIN ================= */
         .main {
             flex: 1;
             display: flex;
@@ -275,7 +275,6 @@
             border-bottom: 1px solid #333;
         }
 
-        /* LOGOUT BUTTON STYLE (RESTORED COLOR) */
         .logout-btn {
             background: #dc3545;
             color: white !important;
@@ -306,9 +305,9 @@
 </head>
 <body>
 
-    @if (User.Identity.IsAuthenticated && User.IsInRole("Admin"))
+    @if (isAdminOrStaff)
     {
-        <!-- ================= ADMIN ================= -->
+        <!-- ================= ADMIN/STAFF ================= -->
         <div class="layout">
 
             <!-- SIDEBAR -->
@@ -317,16 +316,19 @@
                     <i class="bi bi-list"></i>
                 </button>
 
-                <h5 class="mb-4 sidebar-text">Admin</h5>
+                <h5 class="mb-4 sidebar-text">Admin/Staff</h5>
 
                 <a asp-controller="Home" asp-action="Dashboard">
                     <i class="bi bi-speedometer2"></i>
                     <span class="sidebar-text">Dashboard</span>
                 </a>
-                <a asp-controller="AdminUsers" asp-action="Index">
-                    <i class="bi bi-person-gear"></i>
-                    <span class="sidebar-text">User Management</span>
-                </a>
+                @if (isAdmin)
+                {
+                    <a asp-controller="AdminUsers" asp-action="Index">
+                        <i class="bi bi-person-gear"></i>
+                        <span class="sidebar-text">User Management</span>
+                    </a>
+                }
 
                 <!-- Admin Accessible Entities -->
                 <div class="sidebar-section-title">ADMIN ENTITIES</div>
@@ -382,7 +384,7 @@
                 <a asp-controller="Home" asp-action="Privacy">
                     <i class="bi bi-shield-lock"></i>
                     <span class="sidebar-text">Privacy</span>
-                    
+
                 </a>
                 <a asp-controller="Help" asp-action="Index">
                     <i class="bi bi-question-circle"></i>
@@ -398,26 +400,6 @@
 
                     <strong>Alumni Management System</strong>
 
-                    @* <div class="d-flex align-items-center gap-3"> *@
-
-                    @*     <!-- Dark Mode --> *@
-                    @*     <button class="btn btn-sm btn-outline-secondary" onclick="toggleDark()"> *@
-                    @*         <i class="bi bi-moon-stars"></i> *@
-                    @*     </button> *@
-
-                    @*     <span>Hello @User.Identity?.Name</span> *@
-
-                    @*     <!-- LOGOUT --> *@
-                    @*     <form asp-area="Identity" *@
-                    @*           asp-page="/Account/Logout" *@
-                    @*           asp-route-returnUrl="@Url.Content("~/")" *@
-                    @*           method="post"> *@
-                    @*         <button type="submit" class="logout-btn"> *@
-                    @*             <i class="bi bi-box-arrow-right"></i> Logout *@
-                    @*         </button> *@
-                    @*     </form> *@
-
-                    @* </div> *@
                     <div class="d-flex align-items-center gap-3">
 
                         <!-- Dark Mode -->
@@ -450,6 +432,11 @@
                                     </a>
                                 </li>
 
+                                <li>
+                                    <span class="dropdown-item text-muted">
+                                        <i class="bi bi-person-badge"></i> Role: @roleLabel
+                                    </span>
+                                </li>
                                 <li>
                                     <a class="dropdown-item"
                                        asp-controller="Home"
@@ -528,103 +515,9 @@
                     </div>
                 </footer>
 
-
             </div>
         </div>
     }
-    @* else if (User.Identity.IsAuthenticated && User.IsInRole("Alumni")) *@
-    @* { *@
-    @*     <!-- ================= ALUMNI (NO SIDEBAR) ================= --> *@
-    @*     <div class="main"> *@
-
-    @*         <div class="navbar-custom d-flex justify-content-between align-items-center"> *@
-
-    @*             <strong>Alumni Portal</strong> *@
-
-    @*             <div class="d-flex align-items-center gap-3"> *@
-
-    @*                 <button class="btn btn-sm btn-outline-secondary" onclick="toggleDark()"> *@
-    @*                     <i class="bi bi-moon-stars"></i> *@
-    @*                 </button> *@
-
-    @*                 <span>Hello @User.Identity?.Name</span> *@
-
-    @*                 <!-- LOGOUT --> *@
-    @*                 <form asp-area="Identity" *@
-    @*                       asp-page="/Account/Logout" *@
-    @*                       asp-route-returnUrl="@Url.Content("~/")" *@
-    @*                       method="post"> *@
-    @*                     <button type="submit" class="logout-btn"> *@
-    @*                         <i class="bi bi-box-arrow-right"></i> Logout *@
-    @*                     </button> *@
-    @*                 </form> *@
-
-    @*             </div> *@
-    @*         </div> *@
-
-    @*         <div class="p-4"> *@
-    @*             @RenderBody() *@
-    @*         </div> *@
-
-    @*         <footer class="footer-pro"> *@
-    @*             <div class="container-fluid"> *@
-
-    @*                 <div class="row align-items-center gy-2"> *@
-
-    @*                     <!-- LEFT : BRAND --> *@
-    @*                     <div class="col-md-4 text-md-start text-center"> *@
-    @*                         <div class="footer-brand"> *@
-    @*                             <i class="bi bi-mortarboard-fill"></i> *@
-    @*                             Alumni Management System *@
-    @*                         </div> *@
-    @*                         <div class="footer-tagline"> *@
-    @*                             Connecting Alumni • Building Futures *@
-    @*                         </div> *@
-    @*                     </div> *@
-
-    @*                     <!-- CENTER : FOOTER --> *@
-    @*                     <div class="col-md-4 text-center footer-links"> *@
-    @*                         @if (isAdmin) *@
-    @*                         { *@
-    @*                             <a asp-controller="Home" asp-action="Dashboard"> *@
-    @*                                 <i class="bi bi-speedometer2"></i> Dashboard *@
-    @*                             </a> *@
-    @*                             <span>•</span> *@
-    @*                         } *@
-    @*                         else *@
-    @*                         { *@
-    @*                             <a asp-controller="Home" asp-action="AlumniPortal"> *@
-    @*                                 <i class="bi bi-speedometer2"></i> Dashboard *@
-    @*                             </a> *@
-    @*                             <span>•</span> *@
-    @*                         } *@
-    @*                         <a asp-controller="Home" asp-action="Privacy"> *@
-    @*                             <i class="bi bi-shield-lock"></i> Privacy *@
-    @*                         </a> *@
-    @*                         <span>•</span> *@
-    @*                         <a asp-controller="Help" asp-action="Index"> *@
-    @*                             <i class="bi bi-question-circle"></i> Help *@
-    @*                         </a> *@
-    @*                     </div> *@
-
-    @*                     <!-- RIGHT : META --> *@
-    @*                     <div class="col-md-4 text-md-end text-center"> *@
-    @*                         <div class="footer-meta"> *@
-    @*                             © @DateTime.Now.Year AMS *@
-    @*                         </div> *@
-    @*                         <div class="footer-version"> *@
-    @*                             Version 1.0 • Secure Portal *@
-    @*                         </div> *@
-    @*                     </div> *@
-
-    @*                 </div> *@
-
-    @*             </div> *@
-    @*         </footer> *@
-
-
-    @*     </div> *@
-    @* } *@
 
     else if (User.Identity.IsAuthenticated && User.IsInRole("Alumni"))
     {
@@ -692,7 +585,6 @@
 
             </div>
 
-
             <!-- MAIN -->
             <div class="main">
 
@@ -704,43 +596,7 @@
                     @{
                         var currentUser = await UserManager.GetUserAsync(User);
                     }
-                    
 
-                    @* <div class="dropdown"> *@
-                    @*     <button class="btn btn-sm btn-outline-secondary" onclick="toggleDark()"> *@
-                    @*         <i class="bi bi-moon-stars"></i> *@
-                    @*     </button> *@
-                    @*     <button class="btn btn-light dropdown-toggle" *@
-                    @*             data-bs-toggle="dropdown"> *@
-                    @*         <i class="bi bi-person-circle"></i> *@
-                    @*         @currentUser?.UserName *@
-                    @*     </button> *@
-
-                    @*     <ul class="dropdown-menu dropdown-menu-end"> *@
-
-                    @*         <li> *@
-                    @*             <a class="dropdown-item" *@
-                    @*                asp-area="Identity" *@
-                    @*                asp-page="/Account/Manage/Index"> *@
-                    @*                 Profile *@
-                    @*             </a> *@
-                    @*         </li> *@
-
-                    @*         <li><hr /></li> *@
-
-                    @*         <li> *@
-                    @*             <form asp-area="Identity" *@
-                    @*                   asp-page="/Account/Logout" *@
-                    @*                   asp-route-returnUrl="@Url.Content("~/")" *@
-                    @*                   method="post"> *@
-                    @*                 <button class="dropdown-item text-danger"> *@
-                    @*                     Logout *@
-                    @*                 </button> *@
-                    @*             </form> *@
-                    @*         </li> *@
-
-                    @*     </ul> *@
-                    @* </div> *@
                     <div class="dropdown d-flex align-items-center gap-2">
 
                         <!-- DARK MODE -->
@@ -820,8 +676,7 @@
         </div>
     }
         <!-- BEFORE LOGIN -->
-        @* <div class="p-4">
-        </div> *@
+
             @RenderBody()
     <script>
         function toggleDark() {
@@ -839,17 +694,12 @@
             localStorage.setItem('sidebarCollapsed', sidebar.classList.contains('collapsed'));
         }
 
-        // Restore sidebar state on page load
         if (localStorage.getItem('sidebarCollapsed') === 'true') {
             document.getElementById('sidebar')?.classList.add('collapsed');
         }
     </script>
 
     @RenderSection("Scripts", required: false)
-    @* @if (!IsSectionDefined("BodyRendered")) *@
-    @* { *@
-    @*     @RenderBody() *@
-    @* } *@
+
 </body>
 </html> 
-

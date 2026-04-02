@@ -12,7 +12,7 @@ using Alumni_Management_System.Models;
 
 namespace Alumni_Management_System.Controllers
 {
-    [Authorize(Roles = "Alumni,Admin")]
+    [Authorize(Roles = "Alumni,Admin,Staff")]
     public class AlumniInternshipsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -24,7 +24,6 @@ namespace Alumni_Management_System.Controllers
             _userManager = userManager;
         }
 
-        // GET: AlumniInternships
         public async Task<IActionResult> Index()
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -32,7 +31,6 @@ namespace Alumni_Management_System.Controllers
 
             IQueryable<AlumniInternship> query = _context.AlumniInternships.Include(a => a.Alumni).Include(a => a.Employer);
 
-            // Alumni can only see their own internships
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -45,12 +43,10 @@ namespace Alumni_Management_System.Controllers
                     return View(new List<AlumniInternship>());
                 }
             }
-            // Admin can see all internships
 
             return View(await query.ToListAsync());
         }
 
-        // GET: AlumniInternships/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -67,7 +63,6 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
-            // Check if Alumni user is trying to view another alumni's internship
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
             if (roles.Contains(Constants.AlumniRole))
@@ -83,13 +78,11 @@ namespace Alumni_Management_System.Controllers
             return View(alumniInternship);
         }
 
-        // GET: AlumniInternships/Create
         public async Task<IActionResult> Create()
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
 
-            // For Alumni users, auto-select their own AlumniId
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -104,12 +97,11 @@ namespace Alumni_Management_System.Controllers
             }
             else
             {
-                // Admin can select any alumni
+
                 ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName");
                 ViewData["UserRole"] = "Admin";
             }
 
-            // Add "Other" option to employers list
             var employers = await _context.Employers.OrderBy(e => e.EmployerName).ToListAsync();
             var employerList = new List<SelectListItem>
             {
@@ -122,7 +114,6 @@ namespace Alumni_Management_System.Controllers
             return View();
         }
 
-        // POST: AlumniInternships/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("AlumniInternshipId,AlumniId,EmployerId,InternshipType,Title,StartDate,EndDate")] AlumniInternship alumniInternship, string OtherEmployerName)
@@ -130,7 +121,6 @@ namespace Alumni_Management_System.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
 
-            // Validate: Alumni can only create internships for themselves
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -141,21 +131,20 @@ namespace Alumni_Management_System.Controllers
                 }
             }
 
-            // Handle "Other" employer - create new employer if needed
             if (alumniInternship.EmployerId == 0 && !string.IsNullOrWhiteSpace(OtherEmployerName))
             {
-                // Check if employer already exists (case-insensitive)
+
                 var existingEmployer = await _context.Employers
                     .FirstOrDefaultAsync(e => e.EmployerName.ToLower() == OtherEmployerName.Trim().ToLower());
 
                 if (existingEmployer != null)
                 {
-                    // Use existing employer
+
                     alumniInternship.EmployerId = existingEmployer.EmployerId;
                 }
                 else
                 {
-                    // Create new employer
+
                     var newEmployer = new Employer
                     {
                         EmployerName = OtherEmployerName.Trim()
@@ -166,13 +155,11 @@ namespace Alumni_Management_System.Controllers
                 }
             }
 
-            // Validation 1: StartDate cannot be in future
             if (alumniInternship.StartDate > DateOnly.FromDateTime(DateTime.Now))
             {
                 ModelState.AddModelError("StartDate", "Start Date cannot be in the future.");
             }
 
-            // Validation 2: EndDate cannot be before StartDate
             if (alumniInternship.EndDate < alumniInternship.StartDate)
             {
                 ModelState.AddModelError("EndDate", "End Date cannot be before Start Date.");
@@ -186,7 +173,6 @@ namespace Alumni_Management_System.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Repopulate dropdowns
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -212,7 +198,6 @@ namespace Alumni_Management_System.Controllers
             return View(alumniInternship);
         }
 
-        // GET: AlumniInternships/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -226,7 +211,6 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
-            // Check if Alumni user is trying to edit another alumni's internship
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
             if (roles.Contains(Constants.AlumniRole))
@@ -247,7 +231,6 @@ namespace Alumni_Management_System.Controllers
                 ViewData["UserRole"] = "Admin";
             }
 
-            // Add "Other" option to employers list
             var employers = await _context.Employers.OrderBy(e => e.EmployerName).ToListAsync();
             var employerList = new List<SelectListItem>
             {
@@ -260,7 +243,6 @@ namespace Alumni_Management_System.Controllers
             return View(alumniInternship);
         }
 
-        // POST: AlumniInternships/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("AlumniInternshipId,AlumniId,EmployerId,InternshipType,Title,StartDate,EndDate")] AlumniInternship alumniInternship, string OtherEmployerName)
@@ -273,7 +255,6 @@ namespace Alumni_Management_System.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
 
-            // Validate: Alumni can only edit their own internships
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -284,21 +265,20 @@ namespace Alumni_Management_System.Controllers
                 }
             }
 
-            // Handle "Other" employer - create new employer if needed
             if (alumniInternship.EmployerId == 0 && !string.IsNullOrWhiteSpace(OtherEmployerName))
             {
-                // Check if employer already exists (case-insensitive)
+
                 var existingEmployer = await _context.Employers
                     .FirstOrDefaultAsync(e => e.EmployerName.ToLower() == OtherEmployerName.Trim().ToLower());
 
                 if (existingEmployer != null)
                 {
-                    // Use existing employer
+
                     alumniInternship.EmployerId = existingEmployer.EmployerId;
                 }
                 else
                 {
-                    // Create new employer
+
                     var newEmployer = new Employer
                     {
                         EmployerName = OtherEmployerName.Trim()
@@ -309,13 +289,11 @@ namespace Alumni_Management_System.Controllers
                 }
             }
 
-            // Validation 1: StartDate cannot be in future
             if (alumniInternship.StartDate > DateOnly.FromDateTime(DateTime.Now))
             {
                 ModelState.AddModelError("StartDate", "Start Date cannot be in the future.");
             }
 
-            // Validation 2: EndDate cannot be before StartDate
             if (alumniInternship.EndDate < alumniInternship.StartDate)
             {
                 ModelState.AddModelError("EndDate", "End Date cannot be before Start Date.");
@@ -343,7 +321,6 @@ namespace Alumni_Management_System.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Repopulate dropdowns
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -369,7 +346,7 @@ namespace Alumni_Management_System.Controllers
             return View(alumniInternship);
         }
 
-        // GET: AlumniInternships/Delete/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -386,7 +363,6 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
-            // Check if Alumni user is trying to delete another alumni's internship
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
             if (roles.Contains(Constants.AlumniRole))
@@ -402,15 +378,15 @@ namespace Alumni_Management_System.Controllers
             return View(alumniInternship);
         }
 
-        // POST: AlumniInternships/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var alumniInternship = await _context.AlumniInternships.FindAsync(id);
             if (alumniInternship != null)
             {
-                // Check if Alumni user is trying to delete another alumni's internship
+
                 var currentUser = await _userManager.GetUserAsync(User);
                 var roles = await _userManager.GetRolesAsync(currentUser);
                 if (roles.Contains(Constants.AlumniRole))

@@ -184,12 +184,10 @@
         const currentEmployerCheckbox = document.getElementById("isCurrentEmployerCheckbox");
         const endDateField = document.getElementById("endDateField");
 
-        // Show textbox if "Other" selected (value 0 = Other)
         employerDropdown.addEventListener("change", function () {
             otherDiv.style.display = this.value == "0" ? "block" : "none";
         });
 
-        // Disable EndDate if Current Employer is checked
         currentEmployerCheckbox.addEventListener("change", function () {
             endDateField.disabled = this.checked;
             if (this.checked) endDateField.value = "";

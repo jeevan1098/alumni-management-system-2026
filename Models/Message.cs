@@ -42,6 +42,6 @@ public partial class Message
     public virtual ICollection<AlumniMessage> AlumniMessages { get; set; } = new List<AlumniMessage>();
 
     [ForeignKey("CreatedBy")]
-    //[InverseProperty("Messages")]
+
     public virtual AppUser CreatedByNavigation { get; set; }
 }

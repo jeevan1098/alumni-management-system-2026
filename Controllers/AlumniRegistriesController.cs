@@ -24,13 +24,11 @@ namespace Alumni_Management_System.Controllers
             _context = context;
         }
 
-        // GET: AlumniRegistries
         public async Task<IActionResult> Index()
         {
             return View(await _context.AlumniRegistries.ToListAsync());
         }
 
-        // GET: AlumniRegistries/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -48,16 +46,12 @@ namespace Alumni_Management_System.Controllers
             return View(alumniRegistry);
         }
 
-        // GET: AlumniRegistries/Create
         [Authorize(Roles = "Admin")] // Only Admin can create
         public IActionResult Create()
         {
             return View();
         }
 
-        // POST: AlumniRegistries/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")] // Only Admin can create
@@ -73,7 +67,6 @@ namespace Alumni_Management_System.Controllers
             return View(alumniRegistry);
         }
 
-        // GET: AlumniRegistries/Edit/5
         [Authorize(Roles = "Admin")] // Only Admin can edit
         public async Task<IActionResult> Edit(int? id)
         {
@@ -90,9 +83,6 @@ namespace Alumni_Management_System.Controllers
             return View(alumniRegistry);
         }
 
-        // POST: AlumniRegistries/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")] // Only Admin can edit
@@ -127,7 +117,6 @@ namespace Alumni_Management_System.Controllers
             return View(alumniRegistry);
         }
 
-        // GET: AlumniRegistries/Delete/5
         [Authorize(Roles = "Admin")] // Only Admin can delete
         public async Task<IActionResult> Delete(int? id)
         {
@@ -146,7 +135,6 @@ namespace Alumni_Management_System.Controllers
             return View(alumniRegistry);
         }
 
-        // POST: AlumniRegistries/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")] // Only Admin can delete
@@ -168,14 +156,12 @@ namespace Alumni_Management_System.Controllers
             return _context.AlumniRegistries.Any(e => e.RegistryId == id);
         }
 
-        // GET: AlumniRegistries/BulkImport
         [Authorize(Roles = "Admin")] // Only Admin can bulk import
         public IActionResult BulkImport()
         {
             return View();
         }
 
-        // POST: AlumniRegistries/BulkImport
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")] // Only Admin can bulk import
@@ -200,7 +186,7 @@ namespace Alumni_Management_System.Controllers
                 {
                     using (var reader = new StreamReader(file.OpenReadStream()))
                     {
-                        // Skip header
+
                         var header = await reader.ReadLineAsync();
 
                         while (!reader.EndOfStream)
@@ -227,7 +213,6 @@ namespace Alumni_Management_System.Controllers
                                     AccountCreated = false
                                 };
 
-                                // Validate JAG ID format
                                 if (!System.Text.RegularExpressions.Regex.IsMatch(registry.JagId, @"^J00\d+$"))
                                 {
                                     errors.Add($"Invalid JAG ID format '{registry.JagId}' - must start with J00");
@@ -235,7 +220,6 @@ namespace Alumni_Management_System.Controllers
                                     continue;
                                 }
 
-                                // Check for duplicate JAG ID
                                 if (await _context.AlumniRegistries.AnyAsync(a => a.JagId == registry.JagId))
                                 {
                                     errors.Add($"Duplicate JAG ID: {registry.JagId}");
@@ -266,7 +250,6 @@ namespace Alumni_Management_System.Controllers
                             var worksheet = package.Workbook.Worksheets[0];
                             var rowCount = worksheet.Dimension?.Rows ?? 0;
 
-                            // Start from row 2 (skip header)
                             for (int row = 2; row <= rowCount; row++)
                             {
                                 try
@@ -290,7 +273,6 @@ namespace Alumni_Management_System.Controllers
                                         AccountCreated = false
                                     };
 
-                                    // Validate JAG ID format
                                     if (!System.Text.RegularExpressions.Regex.IsMatch(registry.JagId, @"^J00\d+$"))
                                     {
                                         errors.Add($"Row {row}: Invalid JAG ID format '{registry.JagId}' - must start with J00");
@@ -298,7 +280,6 @@ namespace Alumni_Management_System.Controllers
                                         continue;
                                     }
 
-                                    // Check for duplicate JAG ID
                                     if (await _context.AlumniRegistries.AnyAsync(a => a.JagId == registry.JagId))
                                     {
                                         errors.Add($"Row {row}: Duplicate JAG ID: {registry.JagId}");

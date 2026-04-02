@@ -1,41 +1,6 @@
-﻿@* @{ *@
-@*     ViewData["Title"] = "Alumni Portal"; *@
-@* } *@
+﻿
 
-@* <div class="banner"> *@
-@*     <h3>My Alumni Portal</h3> *@
-@*     <p>Welcome back, @User.Identity.Name</p> *@
-@* </div> *@
-
-@* @if (ViewData["ProfileCompletion"] != null) *@
-@* { *@
-@*     <div class="card-soft mb-3"> *@
-@*         <h6>Profile Completion</h6> *@
-
-@*         <div class="progress"> *@
-@*             <div class="progress-bar bg-success" *@
-@*                  style="width:@ViewData["ProfileCompletion"]%"> *@
-@*                 @ViewData["ProfileCompletion"]% *@
-@*             </div> *@
-@*         </div> *@
-@*     </div> *@
-@* } *@
-
-@* <div class="row g-3"> *@
-
-@*     <div class="col-md-4"> *@
-@*         <a asp-controller="Alumni" asp-action="MyProfile" class="btn btn-primary w-100">My Profile</a> *@
-@*     </div> *@
-
-@*     <div class="col-md-4"> *@
-@*         <a asp-controller="Messages" asp-action="Index" class="btn btn-info w-100">Messages</a> *@
-@*     </div> *@
-
-@*     <div class="col-md-4"> *@
-@*         <a asp-controller="AlumniDegrees" asp-action="Index" class="btn btn-warning w-100">My Degrees</a> *@
-@*     </div> *@
-
-@* </div> *@
+@model Alumni_Management_System.Models.Alumni
 
 @{
     ViewData["Title"] = "Dashboard";
@@ -58,7 +23,35 @@
 
     </div>
 
+    <div class="card mb-4 p-3">
+        <h5>Alumni Profile</h5>
+        @if (Model == null)
+        {
+            <p class="text-warning">Your alumni profile is not yet linked. Please contact admin.</p>
+        }
+        else
+        {
+            <dl class="row">
+                <dt class="col-sm-3">Name</dt>
+                <dd class="col-sm-9">@Model.FirstName @Model.LastName</dd>
 
+                <dt class="col-sm-3">JAG ID</dt>
+                <dd class="col-sm-9">@Model.JagId</dd>
+
+                <dt class="col-sm-3">Email</dt>
+                <dd class="col-sm-9">@Model.PermanentEmail</dd>
+
+                <dt class="col-sm-3">Graduation Year</dt>
+                <dd class="col-sm-9">@Model.GraduationYear</dd>
+
+                <dt class="col-sm-3">Phone</dt>
+                <dd class="col-sm-9">@Model.Phone</dd>
+
+                <dt class="col-sm-3">Address</dt>
+                <dd class="col-sm-9">@Model.Address, @Model.City, @Model.State, @Model.Postcode</dd>
+            </dl>
+        }
+    </div>
 
     <!-- ================= PROFILE STATUS ================= -->
     <div class="card shadow-sm mb-4 border-0">
@@ -77,8 +70,6 @@
 
         </div>
     </div>
-
-
 
     <!-- ================= QUICK ACTIONS ================= -->
     <h5 class="mb-3">Quick Actions</h5>
@@ -110,8 +101,6 @@
         </div>
 
     </div>
-
-
 
     <!-- ================= ALUMNI INFO ================= -->
     <div class="card shadow-sm border-0 mt-5">

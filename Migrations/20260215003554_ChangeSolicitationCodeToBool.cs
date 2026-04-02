@@ -4,10 +4,10 @@
 
 namespace Alumni_Management_System.Migrations
 {
-    /// <inheritdoc />
+
     public partial class ChangeSolicitationCodeToBool : Migration
     {
-        /// <inheritdoc />
+
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<bool>(
@@ -22,7 +22,6 @@ namespace Alumni_Management_System.Migrations
                 oldNullable: true);
         }
 
-        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<string>(

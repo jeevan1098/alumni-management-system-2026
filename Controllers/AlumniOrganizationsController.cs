@@ -12,7 +12,7 @@ using Alumni_Management_System.Models;
 
 namespace Alumni_Management_System.Controllers
 {
-    [Authorize(Roles = "Alumni,Admin")]
+    [Authorize(Roles = "Alumni,Admin,Staff")]
     public class AlumniOrganizationsController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -24,7 +24,6 @@ namespace Alumni_Management_System.Controllers
             _userManager = userManager;
         }
 
-        // GET: AlumniOrganizations
         public async Task<IActionResult> Index()
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -32,7 +31,6 @@ namespace Alumni_Management_System.Controllers
 
             IQueryable<AlumniOrganization> query = _context.AlumniOrganizations.Include(a => a.Alumni).Include(a => a.OrganizationType);
 
-            // Alumni can only see their own organization records
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -49,7 +47,6 @@ namespace Alumni_Management_System.Controllers
             return View(await query.ToListAsync());
         }
 
-        // GET: AlumniOrganizations/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -66,7 +63,6 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
-            // Check if Alumni user is trying to view another alumni's organization
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
             if (roles.Contains(Constants.AlumniRole))
@@ -82,13 +78,11 @@ namespace Alumni_Management_System.Controllers
             return View(alumniOrganization);
         }
 
-        // GET: AlumniOrganizations/Create
         public async Task<IActionResult> Create()
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
 
-            // For Alumni users, auto-select their own AlumniId
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -103,7 +97,7 @@ namespace Alumni_Management_System.Controllers
             }
             else
             {
-                // Admin can select any alumni
+
                 ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName");
                 ViewData["UserRole"] = "Admin";
             }
@@ -112,7 +106,6 @@ namespace Alumni_Management_System.Controllers
             return View();
         }
 
-        // POST: AlumniOrganizations/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("AlumniOrganizationId,AlumniId,OrganizationTypeId,OfficerRoles")] AlumniOrganization alumniOrganization)
@@ -120,7 +113,6 @@ namespace Alumni_Management_System.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
 
-            // Validate: Alumni can only create organizations for themselves
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -139,7 +131,6 @@ namespace Alumni_Management_System.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Repopulate dropdowns
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -154,7 +145,6 @@ namespace Alumni_Management_System.Controllers
             return View(alumniOrganization);
         }
 
-        // GET: AlumniOrganizations/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -168,7 +158,6 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
-            // Check if Alumni user is trying to edit another alumni's organization
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
             if (roles.Contains(Constants.AlumniRole))
@@ -191,7 +180,6 @@ namespace Alumni_Management_System.Controllers
             return View(alumniOrganization);
         }
 
-        // POST: AlumniOrganizations/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("AlumniOrganizationId,AlumniId,OrganizationTypeId,OfficerRoles")] AlumniOrganization alumniOrganization)
@@ -204,7 +192,6 @@ namespace Alumni_Management_System.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
 
-            // Validate: Alumni can only edit their own organizations
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -237,7 +224,6 @@ namespace Alumni_Management_System.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Repopulate dropdowns
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -252,7 +238,7 @@ namespace Alumni_Management_System.Controllers
             return View(alumniOrganization);
         }
 
-        // GET: AlumniOrganizations/Delete/5
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -269,7 +255,6 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
-            // Check if Alumni user is trying to delete another alumni's organization
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
             if (roles.Contains(Constants.AlumniRole))
@@ -285,15 +270,15 @@ namespace Alumni_Management_System.Controllers
             return View(alumniOrganization);
         }
 
-        // POST: AlumniOrganizations/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var alumniOrganization = await _context.AlumniOrganizations.FindAsync(id);
             if (alumniOrganization != null)
             {
-                // Check if Alumni user is trying to delete another alumni's organization
+
                 var currentUser = await _userManager.GetUserAsync(User);
                 var roles = await _userManager.GetRolesAsync(currentUser);
                 if (roles.Contains(Constants.AlumniRole))

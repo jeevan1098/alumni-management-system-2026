@@ -24,7 +24,6 @@ namespace Alumni_Management_System.Controllers
             _userManager = userManager;
         }
 
-        // GET: Alumni
         public async Task<IActionResult> Index(string searchString)
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -37,15 +36,12 @@ namespace Alumni_Management_System.Controllers
 
             IQueryable<Alumni> alumniQuery = _context.Alumni.Include(a => a.User);
 
-            // Role-based filtering
             if (roles.Contains(Constants.AlumniRole))
             {
-                // Alumni can only see other alumni who have Privacy = false
+
                 alumniQuery = alumniQuery.Where(a => a.Privacy == false);
             }
-            // Admin and Staff can see all alumni (no filtering)
 
-            // Search functionality
             if (!string.IsNullOrEmpty(searchString))
             {
                 alumniQuery = alumniQuery.Where(a =>
@@ -58,14 +54,12 @@ namespace Alumni_Management_System.Controllers
             ViewData["CurrentFilter"] = searchString;
             ViewData["UserRole"] = roles.FirstOrDefault();
 
-            // Pass current user's alumni ID for "My Profile" button
-            var currentAlumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
+            var currentAlumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id || a.JagId == currentUser.JagId);
             ViewData["CurrentAlumniId"] = currentAlumni?.AlumniId;
 
             return View(await alumniQuery.ToListAsync());
         }
 
-        // GET: Alumni/MyProfile - Redirect to current user's profile edit page
         public async Task<IActionResult> MyProfile()
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -74,7 +68,7 @@ namespace Alumni_Management_System.Controllers
                 return RedirectToAction("Login", "Account");
             }
 
-            var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
+            var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == currentUser.Id || a.JagId == currentUser.JagId);
             if (alumni == null)
             {
                 TempData["ErrorMessage"] = "Alumni profile not found.";
@@ -84,7 +78,6 @@ namespace Alumni_Management_System.Controllers
             return RedirectToAction("Edit", new { id = alumni.AlumniId });
         }
 
-        // GET: Alumni/Details/5
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -103,17 +96,13 @@ namespace Alumni_Management_System.Controllers
             return View(alumni);
         }
 
-        // GET: Alumni/Create
         [Authorize(Roles = "Admin")] // Only Admin can create alumni manually
         public IActionResult Create()
         {
-            // No need for IdentityUserId dropdown since we're using JagId now
+
             return View();
         }
 
-        // POST: Alumni/Create
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")] // Only Admin can create alumni manually
@@ -132,7 +121,6 @@ namespace Alumni_Management_System.Controllers
             return View(alumni);
         }
 
-        // GET: Alumni/Edit/5
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -146,7 +134,17 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
-            // Check if user has permission to edit
+            if (!string.IsNullOrEmpty(alumni.JagId) && string.IsNullOrEmpty(alumni.UserId))
+            {
+                var linkedUser = await _userManager.Users.FirstOrDefaultAsync(u => u.JagId == alumni.JagId);
+                if (linkedUser != null)
+                {
+                    alumni.UserId = linkedUser.Id;
+                    _context.Update(alumni);
+                    await _context.SaveChangesAsync();
+                }
+            }
+
             var currentUser = await _userManager.GetUserAsync(User);
             if (currentUser == null)
             {
@@ -157,28 +155,17 @@ namespace Alumni_Management_System.Controllers
 
             if (roles.Contains(Constants.AlumniRole))
             {
-                // Alumni can only edit their own profile
+
                 if (alumni.JagId != currentUser.JagId)
                 {
                     TempData["ErrorMessage"] = "You can only edit your own profile.";
                     return RedirectToAction(nameof(Index));
                 }
             }
-            else if (roles.Contains(Constants.StaffRole))
-            {
-                // Staff cannot edit any profiles
-                TempData["ErrorMessage"] = "Staff members have read-only access.";
-                return RedirectToAction(nameof(Index));
-            }
-            // Admin can edit any profile
 
-            // No need for IdentityUserId since we're using JagId now
             return View(alumni);
         }
 
-        // POST: Alumni/Edit/5
-        // To protect from overposting attacks, enable the specific properties you want to bind to.
-        // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("AlumniId,JagId,Prefix,FirstName,PreferredFirstName,LastName,Gender,AgeAtGraduation,StudentEmail,PermanentEmail,Phone,Address,City,State,Postcode,Country,GraduationYear,SolicitationCode,SocialMediaAccount,Privacy,IsActive,LastUpdated")] Alumni alumni)
@@ -188,7 +175,6 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
-            // Check if user has permission to edit
             var currentUser = await _userManager.GetUserAsync(User);
             if (currentUser == null)
             {
@@ -199,21 +185,13 @@ namespace Alumni_Management_System.Controllers
 
             if (roles.Contains(Constants.AlumniRole))
             {
-                // Alumni can only edit their own profile
+
                 if (alumni.JagId != currentUser.JagId)
                 {
                     TempData["ErrorMessage"] = "You can only edit your own profile.";
                     return RedirectToAction(nameof(Index));
                 }
             }
-            else if (roles.Contains(Constants.StaffRole))
-            {
-                // Staff cannot edit any profiles
-                TempData["ErrorMessage"] = "Staff members have read-only access.";
-                return RedirectToAction(nameof(Index));
-            }
-
-
 
             if (ModelState.IsValid)
             {
@@ -222,7 +200,6 @@ namespace Alumni_Management_System.Controllers
                     alumni.LastUpdated = DateTime.Now;
                     _context.Update(alumni);
 
-                    // Mark first login as complete for Alumni users
                     if (roles.Contains(Constants.AlumniRole) && currentUser.IsFirstLogin)
                     {
                         currentUser.IsFirstLogin = false;
@@ -249,11 +226,10 @@ namespace Alumni_Management_System.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            // No need for ViewData["IdentityUserId"] since we're using JagId now
+
             return View(alumni);
         }
 
-        // GET: Alumni/Delete/5
         [Authorize(Roles = "Admin")] // Only Admin can delete
         public async Task<IActionResult> Delete(int? id)
         {
@@ -273,13 +249,12 @@ namespace Alumni_Management_System.Controllers
             return View(alumni);
         }
 
-        // POST: Alumni/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")] // Only Admin can delete
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            // 1. Fetch the Alumni record and include the associated User
+
             var alumni = await _context.Alumni
                 .Include(a => a.User)
                 .FirstOrDefaultAsync(m => m.AlumniId == id);
@@ -293,15 +268,11 @@ namespace Alumni_Management_System.Controllers
             {
                 try
                 {
-                    // 2. Identify the linked AppUser
+
                     var user = alumni.User;
 
-                    // 3. Remove the Alumni profile first
-                    // This triggers the database CASCADE to history tables (Degrees, etc.)
                     _context.Alumni.Remove(alumni);
 
-                    // 4. Remove the linked Identity User if they have one
-                    // This is the "Reverse Cascade" manual step
                     if (user != null)
                     {
                         var result = await _userManager.DeleteAsync(user);

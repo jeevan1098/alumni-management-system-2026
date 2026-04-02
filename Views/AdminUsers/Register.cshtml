@@ -3,54 +3,106 @@
     var allRoles = ViewBag.AllRoles as List<string>;
 }
 
-<div class="container" style="max-width: 480px; margin-top: 60px;">
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-10 col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-primary text-white py-3">
+                    <h3 class="mb-0"><i class="bi bi-person-plus-fill me-2"></i>Register New User</h3>
+                    <small class="text-light opacity-75">Admins can create users with Admin or Staff roles here.</small>
+                </div>
+                <div class="card-body p-4">
 
-    <h2 class="mb-1">Register</h2>
-    <p class="text-info mb-4">Create a new account.</p>
-
-    @if (TempData["Error"] != null)
-    {
-        <div class="alert alert-danger alert-dismissible fade show" role="alert">
-            @TempData["Error"]
-            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-        </div>
-    }
-
-    <form asp-action="Register" method="post">
-        @Html.AntiForgeryToken()
-
-        <div class="mb-3">
-            <input type="text" name="username" class="form-control" placeholder="Username" required />
-        </div>
-
-        <div class="mb-3">
-            <input type="email" name="email" class="form-control" placeholder="Email" required />
-        </div>
-
-        <div class="mb-3">
-            <input type="password" name="password" class="form-control" placeholder="Password" required />
-        </div>
-
-        <div class="mb-3">
-            <input type="password" name="confirmPassword" class="form-control" placeholder="Confirm Password" required />
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label text-muted small">Select Role</label>
-            <select name="role" class="form-select">
-                @if (allRoles != null)
-                {
-                    foreach (var r in allRoles)
+                    @if (TempData["Success"] != null)
                     {
-                        <option value="@r">@r</option>
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="bi bi-check-circle-fill me-1"></i> @TempData["Success"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
                     }
-                }
-            </select>
-        </div>
 
-        <div class="d-grid gap-2">
-            <button type="submit" class="btn btn-primary">Register</button>
-            <a asp-action="Index" class="btn btn-outline-secondary">Back to Dashboard</a>
+                    @if (TempData["Error"] != null)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> @TempData["Error"]
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <form asp-action="Register" method="post" class="needs-validation" novalidate>
+                        @Html.AntiForgeryToken()
+
+                        <div class="mb-3">
+                            <label for="username" class="form-label">Username</label>
+                            <input type="text" id="username" name="username" class="form-control" placeholder="Enter username" required minlength="4" />
+                            <div class="invalid-feedback">Username is required (min 4 characters).</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" id="email" name="email" class="form-control" placeholder="name@example.com" required />
+                            <div class="invalid-feedback">Please enter a valid email.</div>
+                        </div>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <label for="password" class="form-label">Password</label>
+                                <input type="password" id="password" name="password" class="form-control" placeholder="At least 8 chars" required minlength="8" />
+                                <div class="form-text">Minimum 8 characters, one uppercase, one lowercase, and one number is recommended.</div>
+                                <div class="invalid-feedback">Password must be at least 8 characters.</div>
+                            </div>
+                            <div class="col-md-6">
+                                <label for="confirmPassword" class="form-label">Confirm Password</label>
+                                <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" placeholder="Repeat password" required minlength="8" />
+                                <div class="invalid-feedback">Please re-enter the password.</div>
+                            </div>
+                        </div>
+
+                        <div class="mt-3 mb-4">
+                            <label for="role" class="form-label">Select Role</label>
+                            <select id="role" name="role" class="form-select" required>
+                                <option value="">Choose role</option>
+                                @if (allRoles != null)
+                                {
+                                    foreach (var r in allRoles)
+                                    {
+                                        <option value="@r">@r</option>
+                                    }
+                                }
+                            </select>
+                            <div class="invalid-feedback">Please select a role.</div>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-between">
+                            <button type="submit" class="btn btn-success btn-lg px-4">Create User</button>
+                            <a asp-action="Index" class="btn btn-outline-secondary btn-lg px-4">Back to User Management</a>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="card-footer text-muted small">
+                    Note: JAG ID and email confirmation are set automatically. Alumni role is not allowed from this page.
+                </div>
+            </div>
         </div>
-    </form>
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+
+        (function () {
+            'use strict'
+            var forms = document.querySelectorAll('.needs-validation')
+            Array.prototype.slice.call(forms).forEach(function (form) {
+                form.addEventListener('submit', function (evt) {
+                    if (!form.checkValidity()) {
+                        evt.preventDefault()
+                        evt.stopPropagation()
+                    }
+                    form.classList.add('was-validated')
+                }, false)
+            })
+        })()
+    </script>
+}

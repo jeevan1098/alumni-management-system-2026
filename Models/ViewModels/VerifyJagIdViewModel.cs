@@ -10,4 +10,3 @@ namespace Alumni_Management_System.Models.ViewModels
         public string JagId { get; set; }
     }
 }
-

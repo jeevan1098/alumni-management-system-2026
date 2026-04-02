@@ -1,39 +1,4 @@
-﻿@* @model Alumni_Management_System.Models.AlumniMessage
-
-@{
-    ViewData["Title"] = "Details";
-}
-
-<h1>Details</h1>
-
-<div>
-    <h4>AlumniMessage</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.SentAt)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.SentAt)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Alumni)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Alumni.FirstName)
-        </dd>
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.Message)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.Message.MessageBody)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.AlumniMessageId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div> *@
+﻿
 
 @model Alumni_Management_System.Models.AlumniMessage
 

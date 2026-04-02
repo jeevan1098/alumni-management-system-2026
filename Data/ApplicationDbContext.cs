@@ -11,7 +11,6 @@ namespace Alumni_Management_System.Data
         {
         }
 
-        // --- DbSets ---
         public virtual DbSet<Alumni> Alumni { get; set; }
         public virtual DbSet<Message> Messages { get; set; }
         public virtual DbSet<AlumniDegree> AlumniDegrees { get; set; }
@@ -34,10 +33,9 @@ namespace Alumni_Management_System.Data
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            // CRITICAL: This must be first to configure Identity keys correctly
+
             base.OnModelCreating(modelBuilder);
 
-            // --- Alumni Configurations ---
             modelBuilder.Entity<Alumni>(entity =>
             {
                 entity.HasKey(e => e.AlumniId).HasName("PK__Alumni__BB1DF35C3C7BFE94");
@@ -48,15 +46,17 @@ namespace Alumni_Management_System.Data
 
                 entity.HasIndex(a => a.JagId).IsUnique();
 
-                // Configure One-to-One with AppUser via JagId
                 entity.HasOne(a => a.User)
-                      .WithOne(u => u.Alumni)
-                      .HasForeignKey<Alumni>(a => a.JagId)
-                      .HasPrincipalKey<AppUser>(u => u.JagId)
+                      .WithMany(u => u.Alumni)
+                      .HasForeignKey(a => a.UserId)
+                      .OnDelete(DeleteBehavior.SetNull)
                       .IsRequired(false);
             });
 
-            // --- Other Entity Configurations ---
+            modelBuilder.Entity<AppUser>(entity =>
+            {
+                entity.HasIndex(u => u.JagId).IsUnique(false);
+            });
 
             modelBuilder.Entity<AlumniDegree>(entity =>
             {
@@ -122,8 +122,6 @@ namespace Alumni_Management_System.Data
                 entity.HasKey(e => e.OrganizationTypeId).HasName("PK__Organiza__466C7A244B987C0F");
             });
 
-            //Commented out to prevent conflicting configurations in partial files
-            //OnModelCreatingPartial(modelBuilder);
         }
 
         partial void OnModelCreatingPartial(ModelBuilder modelBuilder);

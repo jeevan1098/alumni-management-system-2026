@@ -11,7 +11,7 @@ public partial class AlumniOrganization
 {
     [Key]
     [Column("alumni_organization_id")]
-    [Display(Name = "Alumni Organization ID")]
+    [Display(Name = "Student Organization ID")]
     public int AlumniOrganizationId { get; set; }
 
     [Column("alumni_id")]
