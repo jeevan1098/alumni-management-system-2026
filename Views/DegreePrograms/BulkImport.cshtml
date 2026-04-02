@@ -1,0 +1,126 @@
+@{
+    ViewData["Title"] = "Bulk Import Degree Programs";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4 mx-auto" style="max-width:900px;">
+        <div class="card-body p-5">
+
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                    <i class="bi bi-upload text-primary fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0">Bulk Import Degree Programs</h3>
+                    <small class="text-info">Upload Excel files for multiple degree program records</small>
+                </div>
+            </div>
+
+            <hr class="mb-4" />
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @Html.Raw(TempData["SuccessMessage"])
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            @if (TempData["ErrorMessages"] != null)
+            {
+                <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                    <strong>Errors:</strong><br />
+                    @Html.Raw(TempData["ErrorMessages"])
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
+            <form asp-action="BulkImport" method="post" enctype="multipart/form-data" novalidate>
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <div class="mb-4">
+                    <label for="file" class="form-label fw-semibold"><span class="text-danger">*</span> Select File</label>
+                    <div class="input-group shadow-sm">
+                        <span class="input-group-text bg-light"><i class="bi bi-file-earmark-arrow-up-fill"></i></span>
+                        <input type="file" class="form-control rounded-end-3" id="file" name="file" accept=".xlsx,.xls" required />
+                    </div>
+                    <div class="form-text">Supported formats: Excel (.xlsx, .xls)</div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
+                        <i class="bi bi-arrow-left me-2"></i>Back
+                    </a>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-upload me-2"></i>Upload and Import
+                    </button>
+                </div>
+            </form>
+
+            <div class="card mt-5 border-0 shadow-sm">
+                <div class="card-header bg-primary bg-opacity-10 fw-bold text-primary">
+                    File Format Instructions
+                </div>
+                <div class="card-body">
+                    <p>The Excel file should have the following columns in order:</p>
+                    <ol>
+                        <li><strong>Institution</strong> (Required) - Name of the educational institution</li>
+                        <li><strong>Degree Type</strong> (Required) - Type of degree (e.g., Bachelor's, Master's, PhD)</li>
+                        <li><strong>Major Field of Study</strong> (Required) - Primary field of study</li>
+                        <li><strong>Department</strong> (Required) - Academic department</li>
+                    </ol>
+
+                    <div class="alert alert-info">
+                        <strong>Note:</strong> The Degree ID field is auto-generated and should not be included in the Excel file.
+                        Duplicate entries (same Institution, Degree Type, Major Field of Study, and Department) will be completely rejected and not inserted, with specific error messages indicating which entries already exist.
+                    </div>
+
+                    <h6 class="mt-3">Excel Example:</h6>
+                    <div class="table-responsive shadow-sm rounded">
+                        <table class="table table-bordered table-sm mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Institution</th>
+                                    <th>Degree Type</th>
+                                    <th>Major Field of Study</th>
+                                    <th>Department</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>University of Example</td>
+                                    <td>Bachelor's</td>
+                                    <td>Computer Science</td>
+                                    <td>Computer Science Department</td>
+                                </tr>
+                                <tr>
+                                    <td>State University</td>
+                                    <td>Master's</td>
+                                    <td>Business Administration</td>
+                                    <td>Business School</td>
+                                </tr>
+                                <tr>
+                                    <td>Tech Institute</td>
+                                    <td>Associate</td>
+                                    <td>Information Technology</td>
+                                    <td>Technology Department</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-3">
+                        <strong>Important:</strong>
+                        <ul>
+                            <li>All fields are required - rows with empty cells will be skipped</li>
+                            <li>Duplicate degree programs will be completely rejected and not inserted into the database</li>
+                            <li>Specific error messages will indicate which entries already exist</li>
+                            <li>The import process continues even if some rows have errors</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

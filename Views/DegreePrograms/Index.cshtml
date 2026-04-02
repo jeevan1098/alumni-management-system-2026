@@ -22,10 +22,22 @@
 
             <hr class="mb-4" />
 
+            <!-- Success / Error Messages -->
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @Html.Raw(TempData["SuccessMessage"])
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+
             <!-- Create Button -->
             <div class="d-flex justify-content-end mb-3">
                 @if (User.IsInRole("Admin"))
                 {
+                    <a asp-action="BulkImport" class="btn btn-success rounded-pill px-4 shadow-sm me-2">
+                        <i class="bi bi-upload me-2"></i>Bulk Import
+                    </a>
                     <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
                         <i class="bi bi-plus-circle-fill me-2"></i>Create New
                     </a>
