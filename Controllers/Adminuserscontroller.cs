@@ -19,30 +19,38 @@ namespace Alumni_Management_System.Controllers
             _userManager = userManager;
             _roleManager = roleManager;
         }
-
         public async Task<IActionResult> Index()
         {
+            // Get all users
             var allUsers = await _userManager.Users.ToListAsync();
 
+            // Prepare a list for users to display
             var userRoles = new List<(AppUser User, string Role)>();
+
             foreach (var user in allUsers)
             {
+                // Get all roles assigned to this user
                 var roles = await _userManager.GetRolesAsync(user);
-                var primaryRole = roles.FirstOrDefault() ?? "No Role";
 
-                if (ExcludedRoles.Contains(primaryRole))
+                // Skip Alumni users entirely
+                if (roles.Any(r => r == Constants.AlumniRole))
                     continue;
+
+                // Pick the first allowed role (Admin, Staff, etc.)
+                var primaryRole = roles.FirstOrDefault(r => r != Constants.AlumniRole) ?? "No Role";
 
                 userRoles.Add((user, primaryRole));
             }
 
-            var allowedRoles = _roleManager.Roles
+            // Get all roles except Alumni for dropdowns
+            var allowedRoles = await _roleManager.Roles
+                .Where(r => r.Name != Constants.AlumniRole)
                 .Select(r => r.Name)
-                .Where(r => !ExcludedRoles.Contains(r))
-                .ToList();
+                .ToListAsync();
 
             ViewBag.AllRoles = allowedRoles;
             ViewBag.UserRoles = userRoles;
+
             return View();
         }
 

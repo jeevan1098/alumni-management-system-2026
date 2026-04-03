@@ -78,7 +78,7 @@ namespace Alumni_Management_System.Controllers
             return View(alumniInternship);
         }
 
-        [Authorize(Roles = "Admin,Staff")]
+        [Authorize(Roles = "Admin, Alumni")]
         public async Task<IActionResult> Create()
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -115,7 +115,7 @@ namespace Alumni_Management_System.Controllers
             return View();
         }
 
-        [Authorize(Roles = "Admin,Staff")]
+        [Authorize(Roles = "Admin, Alumni")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("AlumniInternshipId,AlumniId,EmployerId,InternshipType,Title,StartDate,EndDate")] AlumniInternship alumniInternship, string OtherEmployerName)
@@ -200,7 +200,7 @@ namespace Alumni_Management_System.Controllers
             return View(alumniInternship);
         }
 
-        [Authorize(Roles = "Admin,Staff")]
+        [Authorize(Roles = "Admin, Alumni")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
@@ -247,8 +247,8 @@ namespace Alumni_Management_System.Controllers
             return View(alumniInternship);
         }
 
-        [Authorize(Roles = "Admin,Staff")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, Alumni")]
+   
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("AlumniInternshipId,AlumniId,EmployerId,InternshipType,Title,StartDate,EndDate")] AlumniInternship alumniInternship, string OtherEmployerName)

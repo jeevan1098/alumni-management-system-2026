@@ -24,7 +24,7 @@
 
             <!-- Add New Button -->
             <div class="d-flex justify-content-end mb-3">
-                @if (User.IsInRole("Admin"))
+                @if (User.IsInRole("Admin") || User.IsInRole("Alumni"))
                 {
                     <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
                         <i class="bi bi-plus-circle-fill me-2"></i>Add Organization
@@ -54,11 +54,14 @@
                                     <a asp-action="Details" asp-route-id="@item.AlumniOrganizationId" class="btn btn-sm btn-outline-primary rounded-pill">
                                         <i class="bi bi-eye-fill"></i>
                                     </a>
-                                    @if (User.IsInRole("Admin"))
+                                    @if (User.IsInRole("Admin") || User.IsInRole("Alumni"))
                                     {
                                         <a asp-action="Edit" asp-route-id="@item.AlumniOrganizationId" class="btn btn-sm btn-outline-warning rounded-pill">
                                             <i class="bi bi-pencil-fill"></i>
                                         </a>
+                                    }
+                                    @if (User.IsInRole("Admin"))
+                                    {
                                         <a asp-action="Delete" asp-route-id="@item.AlumniOrganizationId" class="btn btn-sm btn-outline-danger rounded-pill">
                                             <i class="bi bi-trash-fill"></i>
                                         </a>

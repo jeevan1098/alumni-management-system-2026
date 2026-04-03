@@ -170,7 +170,7 @@ namespace Alumni_Management_System.Controllers
                 ViewData["ProfileCompletion"] = (int)((double)done / total * 100);
             }
 
-            return View();   // Views/Home/AlumniPortal.cshtml
+            return View(alumni);   // Views/Home/AlumniPortal.cshtml
         }
 
         public IActionResult Privacy() => View();

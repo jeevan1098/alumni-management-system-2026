@@ -78,7 +78,7 @@ namespace Alumni_Management_System.Controllers
             return View(alumniDegree);
         }
 
-        [Authorize(Roles = "Admin,Staff")]
+        [Authorize(Roles = "Admin, Alumni")] // Only Admin can create degrees
         public async Task<IActionResult> Create()
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -117,7 +117,7 @@ namespace Alumni_Management_System.Controllers
             return View();
         }
 
-        [Authorize(Roles = "Admin,Staff")]
+        [Authorize(Roles = "Admin, Alumni")] // Only Admin can create degrees
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("AlumniDegreeId,AlumniId,DegreeId,DateConferred,YearsToCompleteDegree,Gpa,EmploymentWhileStudying,DegreeSpecificJob,ParticipatedInResearch,JobSecuredUponGraduation,AttendedOrPlansGradSchool")] AlumniDegree alumniDegree)
@@ -190,8 +190,7 @@ namespace Alumni_Management_System.Controllers
             return View(alumniDegree);
         }
 
-        [Authorize(Roles = "Admin,Staff")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, Alumni")] // Only Admin can edit degrees
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -227,8 +226,7 @@ namespace Alumni_Management_System.Controllers
             return View(alumniDegree);
         }
 
-        [Authorize(Roles = "Admin,Staff")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, Alumni")] // Only Admin can edit degrees
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("AlumniDegreeId,AlumniId,DegreeId,DateConferred,YearsToCompleteDegree,Gpa,EmploymentWhileStudying,DegreeSpecificJob,ParticipatedInResearch,JobSecuredUponGraduation,AttendedOrPlansGradSchool")] AlumniDegree alumniDegree)

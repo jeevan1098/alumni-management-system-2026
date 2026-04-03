@@ -78,7 +78,7 @@ namespace Alumni_Management_System.Controllers
             return View(alumniOrganization);
         }
 
-        [Authorize(Roles = "Admin,Staff")]
+        [Authorize(Roles = "Admin, Alumni")]
         public async Task<IActionResult> Create()
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -107,7 +107,7 @@ namespace Alumni_Management_System.Controllers
             return View();
         }
 
-        [Authorize(Roles = "Admin,Staff")]
+        [Authorize(Roles = "Admin, Alumni")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("AlumniOrganizationId,AlumniId,OrganizationTypeId,OfficerRoles")] AlumniOrganization alumniOrganization)
@@ -147,7 +147,7 @@ namespace Alumni_Management_System.Controllers
             return View(alumniOrganization);
         }
 
-        [Authorize(Roles = "Admin,Staff")]
+        [Authorize(Roles = "Admin, Alumni")]
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Edit(int? id)
         {
@@ -184,8 +184,8 @@ namespace Alumni_Management_System.Controllers
             return View(alumniOrganization);
         }
 
-        [Authorize(Roles = "Admin,Staff")]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, Alumni")]
+        
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("AlumniOrganizationId,AlumniId,OrganizationTypeId,OfficerRoles")] AlumniOrganization alumniOrganization)

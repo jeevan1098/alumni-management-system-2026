@@ -12,7 +12,7 @@ using Alumni_Management_System.Models;
 
 namespace Alumni_Management_System.Controllers
 {
-    [Authorize(Roles = "Admin,Staff")]
+    [Authorize(Roles = "Admin,Staff,Alumni")]
     public class AlumniMessagesController : Controller
     {
         private readonly ApplicationDbContext _context;
