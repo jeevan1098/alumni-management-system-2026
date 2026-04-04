@@ -12,6 +12,9 @@ namespace Alumni_Management_System
         {
             var context = services.GetRequiredService<ApplicationDbContext>();
 
+            var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
+            await EnsureRolesAsync(roleManager);
+
             var userManager = services.GetRequiredService<UserManager<AppUser>>();
             await EnsureTestUsersAsync(userManager);
 
@@ -66,7 +69,8 @@ namespace Alumni_Management_System
                     Email = "admin@university.edu",
                     EmailConfirmed = true,
                     JagId = null,
-                    CreatedAt = DateTime.Now
+                    CreatedAt = DateTime.Now,
+                    IsFirstLogin = false
                 };
                 var createAdminResult = await userManager.CreateAsync(admin, "Admin@123");
                 if (!createAdminResult.Succeeded)
@@ -88,7 +92,8 @@ namespace Alumni_Management_System
                     Email = "staff@university.edu",
                     EmailConfirmed = true,
                     JagId = null,
-                    CreatedAt = DateTime.Now
+                    CreatedAt = DateTime.Now,
+                    IsFirstLogin = false
                 };
                 var createStaffResult = await userManager.CreateAsync(staff, "Staff@123");
                 if (!createStaffResult.Succeeded)
@@ -104,11 +109,7 @@ namespace Alumni_Management_System
 
             var alumniUsers = new[]
             {
-                new { Username = "john_doe", Email = "john.doe@email.com", JagId = "J0012345", FirstName = "John", LastName = "Doe" },
-                new { Username = "jane_smith", Email = "jane.smith@email.com", JagId = "J0012346", FirstName = "Jane", LastName = "Smith" },
-                new { Username = "michael.j", Email = "michael.johnson@email.com", JagId = "J0012347", FirstName = "Michael", LastName = "Johnson" },
-                new { Username = "sarah.w", Email = "sarah.williams@email.com", JagId = "J0012348", FirstName = "Sarah", LastName = "Williams" },
-                new { Username = "david_brown", Email = "david.brown@email.com", JagId = "J0012349", FirstName = "David", LastName = "Brown" }
+                new { Username = "alumni", Email = "alumni@university.edu", JagId = "J0012345", FirstName = "Alumni", LastName = "Sample" }
             };
 
             foreach (var alumniData in alumniUsers)
@@ -121,7 +122,8 @@ namespace Alumni_Management_System
                         Email = alumniData.Email,
                         EmailConfirmed = true,
                         JagId = alumniData.JagId,
-                        CreatedAt = DateTime.Now
+                        CreatedAt = DateTime.Now,
+                        IsFirstLogin = false
                     };
                     var createAlumniResult = await userManager.CreateAsync(alumniUser, "Alumni@123");
                     if (!createAlumniResult.Succeeded)
@@ -140,63 +142,11 @@ namespace Alumni_Management_System
         public static async Task EnsureSampleDataAsync(ApplicationDbContext context, UserManager<AppUser> userManager)
         {
 
-            if (!await context.DegreePrograms.AnyAsync())
-            {
-                var degreePrograms = new[]
-                {
-                    new DegreeProgram { Institution = "University", DegreeType = "BS", MajorFieldOfStudy = "Computer Science", Department = "Computer Science" },
-                    new DegreeProgram { Institution = "University", DegreeType = "MS", MajorFieldOfStudy = "Computer Science", Department = "Computer Science" },
-                    new DegreeProgram { Institution = "University", DegreeType = "BBA", MajorFieldOfStudy = "Business Administration", Department = "Business" },
-                    new DegreeProgram { Institution = "University", DegreeType = "MBA", MajorFieldOfStudy = "Business Administration", Department = "Business" },
-                    new DegreeProgram { Institution = "University", DegreeType = "BE", MajorFieldOfStudy = "Engineering", Department = "Engineering" },
-                    new DegreeProgram { Institution = "University", DegreeType = "MS", MajorFieldOfStudy = "Data Science", Department = "Computer Science" },
-                    new DegreeProgram { Institution = "University", DegreeType = "BIT", MajorFieldOfStudy = "Information Technology", Department = "Information Technology" }
-                };
-                await context.DegreePrograms.AddRangeAsync(degreePrograms);
-                await context.SaveChangesAsync();
-            }
-
-            if (!await context.Employers.AnyAsync())
-            {
-                var employers = new[]
-                {
-                    new Employer { EmployerName = "Microsoft Corporation", Industry = "Technology", Location = "Redmond, WA" },
-                    new Employer { EmployerName = "Google LLC", Industry = "Technology", Location = "Mountain View, CA" },
-                    new Employer { EmployerName = "Amazon.com Inc", Industry = "E-commerce/Technology", Location = "Seattle, WA" },
-                    new Employer { EmployerName = "JPMorgan Chase & Co", Industry = "Finance", Location = "New York, NY" },
-                    new Employer { EmployerName = "Deloitte", Industry = "Consulting", Location = "New York, NY" },
-                    new Employer { EmployerName = "IBM", Industry = "Technology", Location = "Armonk, NY" },
-                    new Employer { EmployerName = "Accenture", Industry = "Consulting", Location = "Dublin, Ireland" }
-                };
-                await context.Employers.AddRangeAsync(employers);
-                await context.SaveChangesAsync();
-            }
-
-            if (!await context.OrganizationTypes.AnyAsync())
-            {
-                var orgTypes = new[]
-                {
-                    new OrganizationType { OrganizationName = "Student Government Association" },
-                    new OrganizationType { OrganizationName = "Computer Science Club" },
-                    new OrganizationType { OrganizationName = "Business Leaders Society" },
-                    new OrganizationType { OrganizationName = "Volunteer Corps" },
-                    new OrganizationType { OrganizationName = "Athletics Association" }
-                };
-                await context.OrganizationTypes.AddRangeAsync(orgTypes);
-                await context.SaveChangesAsync();
-            }
-
             if (!await context.AlumniRegistries.AnyAsync())
             {
                 var registries = new[]
                 {
-                    new AlumniRegistry { JagId = "J0012345", FirstName = "John", LastName = "Doe", AccountCreated = true },
-                    new AlumniRegistry { JagId = "J0012346", FirstName = "Jane", LastName = "Smith", AccountCreated = true },
-                    new AlumniRegistry { JagId = "J0012347", FirstName = "Michael", LastName = "Johnson", AccountCreated = true },
-                    new AlumniRegistry { JagId = "J0012348", FirstName = "Sarah", LastName = "Williams", AccountCreated = true },
-                    new AlumniRegistry { JagId = "J0012349", FirstName = "David", LastName = "Brown", AccountCreated = true },
-                    new AlumniRegistry { JagId = "J0012350", FirstName = "Emily", LastName = "Davis", AccountCreated = false },
-                    new AlumniRegistry { JagId = "J0012351", FirstName = "Robert", LastName = "Miller", AccountCreated = false }
+                    new AlumniRegistry { JagId = "J0012345", FirstName = "Alumni", LastName = "Sample", AccountCreated = true }
                 };
                 await context.AlumniRegistries.AddRangeAsync(registries);
                 await context.SaveChangesAsync();
@@ -206,20 +156,18 @@ namespace Alumni_Management_System
             {
                 var alumniSeed = new[]
                 {
-                    new Alumni { JagId = "J0012345", FirstName = "John", LastName = "Doe", PermanentEmail = "john.doe@university.edu", GraduationYear = 2018, IsActive = true, Privacy = true, LastUpdated = DateTime.Now },
-                    new Alumni { JagId = "J0012346", FirstName = "Jane", LastName = "Smith", PermanentEmail = "jane.smith@university.edu", GraduationYear = 2019, IsActive = true, Privacy = true, LastUpdated = DateTime.Now },
-                    new Alumni { JagId = "J0012347", FirstName = "Michael", LastName = "Johnson", PermanentEmail = "michael.johnson@university.edu", GraduationYear = 2017, IsActive = true, Privacy = true, LastUpdated = DateTime.Now }
+                    new Alumni { JagId = "J0012345", FirstName = "Sample", LastName = "Alumni", PermanentEmail = "alumni@university.edu", GraduationYear = 2018, IsActive = true, Privacy = false, LastUpdated = DateTime.Now }
                 };
                 await context.Alumni.AddRangeAsync(alumniSeed);
                 await context.SaveChangesAsync();
             }
 
-            var johnUser = await userManager.FindByNameAsync("john_doe");
-            var johnAlumni = await context.Alumni.FirstOrDefaultAsync(a => a.JagId == "J0012345");
-            if (johnUser != null && johnAlumni != null)
+            var alumniUser = await userManager.FindByNameAsync("alumni");
+            var sampleAlumni = await context.Alumni.FirstOrDefaultAsync(a => a.JagId == "J0012345");
+            if (alumniUser != null && sampleAlumni != null)
             {
-                johnAlumni.UserId = johnUser.Id;
-                context.Alumni.Update(johnAlumni);
+                sampleAlumni.UserId = alumniUser.Id;
+                context.Alumni.Update(sampleAlumni);
                 await context.SaveChangesAsync();
             }
 
