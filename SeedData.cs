@@ -47,7 +47,8 @@ namespace Alumni_Management_System
                     Email = "admin@university.edu",
                     EmailConfirmed = true,
                     JagId = "J0010000", // required
-                    CreatedAt = DateTime.Now
+                    CreatedAt = DateTime.Now,
+                    IsFirstLogin = false
                 };
                 var createAdmin = await userManager.CreateAsync(admin, "Admin@123");
                 if (!createAdmin.Succeeded)
@@ -66,7 +67,8 @@ namespace Alumni_Management_System
                     Email = "staff@university.edu",
                     EmailConfirmed = true,
                     JagId = "J0010001",
-                    CreatedAt = DateTime.Now
+                    CreatedAt = DateTime.Now,
+                    IsFirstLogin = false
                 };
                 var createStaff = await userManager.CreateAsync(staff, "Staff@123");
                 if (!createStaff.Succeeded)
@@ -85,7 +87,8 @@ namespace Alumni_Management_System
                     Email = "alumni@university.edu",
                     EmailConfirmed = true,
                     JagId = "J0010002",
-                    CreatedAt = DateTime.Now
+                    CreatedAt = DateTime.Now,
+                    IsFirstLogin = false
                 };
                 var createAlumni = await userManager.CreateAsync(alumniUser, "Alumni@123");
                 if (!createAlumni.Succeeded)
