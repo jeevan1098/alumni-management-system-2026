@@ -93,87 +93,7 @@ namespace Alumni_Management_System.Controllers
             return View(model);
         }
 
-        // POST: Account/RegisterAlumni
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> RegisterAlumni(AlumniRegisterViewModel model)
-        //{
-        //    if (!ModelState.IsValid)
-        //    {
-        //        return View(model);
-        //    }
-
-        //    // Double-check JAG ID exists and account not created
-        //    var registryEntry = await _context.AlumniRegistries
-        //        .FirstOrDefaultAsync(r => r.JagId == model.JagId);
-
-        //    if (registryEntry == null || registryEntry.AccountCreated)
-        //    {
-        //        ModelState.AddModelError("", "Invalid registration attempt. Please start the registration process again.");
-        //        return RedirectToAction(nameof(VerifyJagId));
-        //    }
-
-        //    // Create the user account
-        //    var user = new AppUser
-        //    {
-        //        UserName = model.Email,
-        //        Email = model.Email,
-        //        JagId = model.JagId,
-        //        PhoneNumber = model.PhoneNumber,
-        //        EmailConfirmed = true,
-        //        CreatedAt = DateTime.Now,
-        //        IsFirstLogin = true
-        //    };
-
-        //    var result = await _userManager.CreateAsync(user, model.Password);
-
-        //    if (result.Succeeded)
-        //    {
-        //        _logger.LogInformation("User created a new account with password.");
-
-        //        // Assign Alumni role
-        //        await _userManager.AddToRoleAsync(user, Constants.AlumniRole);
-
-        //        // Create Alumni profile
-        //        var alumni = new Alumni
-        //        {
-        //            UserId = user.Id,
-        //            JagId = model.JagId,
-        //            FirstName = model.FirstName,
-        //            LastName = model.LastName,
-        //            PermanentEmail = model.Email,
-        //            GraduationYear = model.GraduationYear ?? DateTime.Now.Year,
-        //            IsActive = true,
-        //            Privacy = true,
-        //            LastUpdated = DateTime.Now
-        //        };
-
-        //        _context.Alumni.Add(alumni);
-
-        //        // Update Alumni Registry - mark account as created
-        //        registryEntry.AccountCreated = true;
-        //        _context.AlumniRegistries.Update(registryEntry);
-
-        //        await _context.SaveChangesAsync();
-
-        //        // Sign in the user
-        //        await _signInManager.SignInAsync(user, isPersistent: false);
-
-        //        _logger.LogInformation("User registered successfully and signed in.");
-
-        //        TempData["InfoMessage"] = "Registration successful! Please complete your profile to get started.";
-        //        // Redirect to profile edit page for first-time users
-        //        return RedirectToAction("Edit", "Alumni", new { id = alumni.AlumniId });
-        //    }
-
-        //    // If we got this far, something failed, redisplay form
-        //    foreach (var error in result.Errors)
-        //    {
-        //        ModelState.AddModelError(string.Empty, error.Description);
-        //    }
-
-        //    return View(model);
-        //}
+ 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RegisterAlumni(AlumniRegisterViewModel model)
@@ -199,7 +119,7 @@ namespace Alumni_Management_System.Controllers
 
             if (existingAlumni == null)
             {
-                ModelState.AddModelError("", "Your record was not found in the imported Alumni list. Please contact support.");
+                ModelState.AddModelError("", "Your record was not found in the imported Alumni list. Please contact admin support.");
                 return View(model);
             }
 
