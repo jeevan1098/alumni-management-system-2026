@@ -287,8 +287,8 @@ namespace Alumni_Management_System.Controllers
         }
         private async Task SendEmailAsync(List<string> emails, string subject, string body)
         {
-            var fromAddress = new MailAddress("soccapstone@southalabama.edu", "Capstone Project System");
-            const string fromPassword = "pgpuujdeysoyedmc";
+            var fromAddress = new MailAddress("socalumnimanagement@southalabama.edu", "Alumni Management System");
+            const string fromPassword = "lmspheqscoortfol";
 
             var smtp = new SmtpClient
             {
@@ -316,7 +316,7 @@ namespace Alumni_Management_System.Controllers
                     <p>Hello,</p>
                     <p>{body}</p>
                     <br/>
-                    <p>Thanks,<br/>Capstone Project System</p>",
+                    <p>Thanks,<br/>Alumni Management System,<br/>University of South Alabama</p>",
                         IsBodyHtml = true
                     })
                     {
