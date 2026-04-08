@@ -1,6 +1,4 @@
-﻿
-
-@model IEnumerable<Alumni_Management_System.Models.AlumniRegistry>
+﻿@model IEnumerable<Alumni_Management_System.Models.AlumniRegistry>
 
 @{
     ViewData["Title"] = "Alumni Registry";
@@ -41,18 +39,18 @@
                 </div>
             }
 
-            <!-- Buttons -->
-            <div class="d-flex justify-content-end mb-3 gap-2">
-                @if (User.IsInRole("Admin"))
-                {
+            <!-- Buttons — Admin only -->
+            @if (User.IsInRole("Admin"))
+            {
+                <div class="d-flex justify-content-end mb-3 gap-2">
                     <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
                         <i class="bi bi-plus-circle-fill me-2"></i>Create New
                     </a>
-                }
-                <a asp-action="BulkImport" class="btn btn-success rounded-pill px-4 shadow-sm">
-                    <i class="bi bi-upload me-2"></i>Bulk Import
-                </a>
-            </div>
+                    <a asp-action="BulkImport" class="btn btn-success rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-upload me-2"></i>Bulk Import
+                    </a>
+                </div>
+            }
 
             <!-- Table -->
             <div class="table-responsive">
@@ -88,15 +86,18 @@
                                     }
                                 </td>
                                 <td>
-                                    <a asp-action="Details" asp-route-id="@item.RegistryId" class="btn btn-sm btn-outline-primary rounded-pill">
+                                    <a asp-action="Details" asp-route-id="@item.RegistryId"
+                                       class="btn btn-sm btn-outline-primary rounded-pill">
                                         <i class="bi bi-eye-fill"></i>
                                     </a>
                                     @if (User.IsInRole("Admin"))
                                     {
-                                        <a asp-action="Edit" asp-route-id="@item.RegistryId" class="btn btn-sm btn-outline-warning rounded-pill">
+                                        <a asp-action="Edit" asp-route-id="@item.RegistryId"
+                                           class="btn btn-sm btn-outline-warning rounded-pill">
                                             <i class="bi bi-pencil-fill"></i>
                                         </a>
-                                        <a asp-action="Delete" asp-route-id="@item.RegistryId" class="btn btn-sm btn-outline-danger rounded-pill">
+                                        <a asp-action="Delete" asp-route-id="@item.RegistryId"
+                                           class="btn btn-sm btn-outline-danger rounded-pill">
                                             <i class="bi bi-trash-fill"></i>
                                         </a>
                                     }
@@ -106,9 +107,9 @@
                     </tbody>
                 </table>
 
-                <!-- Footer -->
                 <div class="d-flex justify-content-between mt-5">
-                    <a asp-action="Index" asp-controller="Home" class="btn btn-outline-secondary rounded-pill px-4">
+                    <a asp-action="Index" asp-controller="Home"
+                       class="btn btn-outline-secondary rounded-pill px-4">
                         <i class="bi bi-house-fill me-2"></i>Home
                     </a>
                 </div>

@@ -19,30 +19,23 @@ namespace Alumni_Management_System.Controllers
             _userManager = userManager;
             _roleManager = roleManager;
         }
+
         public async Task<IActionResult> Index()
         {
-            // Get all users
             var allUsers = await _userManager.Users.ToListAsync();
-
-            // Prepare a list for users to display
             var userRoles = new List<(AppUser User, string Role)>();
 
             foreach (var user in allUsers)
             {
-                // Get all roles assigned to this user
                 var roles = await _userManager.GetRolesAsync(user);
 
-                // Skip Alumni users entirely
                 if (roles.Any(r => r == Constants.AlumniRole))
                     continue;
 
-                // Pick the first allowed role (Admin, Staff, etc.)
                 var primaryRole = roles.FirstOrDefault(r => r != Constants.AlumniRole) ?? "No Role";
-
                 userRoles.Add((user, primaryRole));
             }
 
-            // Get all roles except Alumni for dropdowns
             var allowedRoles = await _roleManager.Roles
                 .Where(r => r.Name != Constants.AlumniRole)
                 .Select(r => r.Name)
@@ -161,6 +154,11 @@ namespace Alumni_Management_System.Controllers
                 .Where(r => !ExcludedRoles.Contains(r))
                 .ToList();
 
+            // Preserve form values on every failed return View()
+            ViewBag.FormUsername = username;
+            ViewBag.FormEmail = email;
+            ViewBag.FormRole = role;
+
             if (string.IsNullOrWhiteSpace(username) || string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
             {
                 TempData["Error"] = "Username, email and password are all required.";
@@ -193,17 +191,26 @@ namespace Alumni_Management_System.Controllers
                 return View();
             }
 
-            var allJagIds = await _userManager.Users
-                .Where(u => u.JagId != null && u.JagId.StartsWith("J00"))
-                .Select(u => u.JagId)
-                .ToListAsync();
+            // Get only Admin/Staff users (non-Alumni) to calculate next JagId
+            // This keeps the Admin/Staff JagId sequence separate from Alumni JagIds
+            var allUsers = await _userManager.Users.ToListAsync();
+            var staffAdminJagIds = new List<string>();
 
-            int maxNumber = allJagIds
-                .Select(id => int.TryParse(id.Substring(3), out int n) ? n : 0)
+            foreach (var u in allUsers)
+            {
+                var roles = await _userManager.GetRolesAsync(u);
+                if (!roles.Contains(Constants.AlumniRole) && !string.IsNullOrEmpty(u.JagId))
+                    staffAdminJagIds.Add(u.JagId);
+            }
+
+            // Parse numeric part after "J", default to 0 if no staff/admin users yet
+            int maxNumber = staffAdminJagIds
+                .Select(id => id.StartsWith("J") && int.TryParse(id.Substring(1), out int n) ? n : 0)
                 .DefaultIfEmpty(0)
                 .Max();
 
-            string nextJagId = $"J00{(maxNumber + 1):D4}";
+            // Produces J0000001, J0000002, J0000003, ...
+            string nextJagId = $"J{(maxNumber + 1):D7}";
 
             var newUser = new AppUser
             {
