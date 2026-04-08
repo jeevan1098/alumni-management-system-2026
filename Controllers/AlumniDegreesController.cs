@@ -29,19 +29,17 @@ namespace Alumni_Management_System.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
 
-            IQueryable<AlumniDegree> query = _context.AlumniDegrees.Include(a => a.Alumni).Include(a => a.Degree);
+            IQueryable<AlumniDegree> query = _context.AlumniDegrees
+                .Include(a => a.Alumni)
+                .Include(a => a.Degree);
 
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni != null)
-                {
                     query = query.Where(ad => ad.AlumniId == alumni.AlumniId);
-                }
                 else
-                {
                     return View(new List<AlumniDegree>());
-                }
             }
 
             return View(await query.ToListAsync());
@@ -49,19 +47,13 @@ namespace Alumni_Management_System.Controllers
 
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var alumniDegree = await _context.AlumniDegrees
                 .Include(a => a.Alumni)
                 .Include(a => a.Degree)
                 .FirstOrDefaultAsync(m => m.AlumniDegreeId == id);
-            if (alumniDegree == null)
-            {
-                return NotFound();
-            }
+            if (alumniDegree == null) return NotFound();
 
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
@@ -78,7 +70,34 @@ namespace Alumni_Management_System.Controllers
             return View(alumniDegree);
         }
 
-        [Authorize(Roles = "Admin, Alumni")] // Only Admin can create degrees
+        private async Task PopulateAlumniDropdown(object selectedId = null)
+        {
+            // Build SelectList with JAG ID — First Last format
+            var alumniList = await _context.Alumni
+                .OrderBy(a => a.LastName)
+                .ToListAsync();
+
+            ViewData["AlumniId"] = new SelectList(
+                alumniList.Select(a => new SelectListItem
+                {
+                    Value = a.AlumniId.ToString(),
+                    Text = $"{a.JagId} — {a.FirstName} {a.LastName}"
+                }),
+                "Value", "Text", selectedId?.ToString());
+        }
+
+        private void PopulateDegreeDropdown(object selectedId = null)
+        {
+            ViewData["DegreeId"] = new SelectList(
+                _context.DegreePrograms.Select(d => new SelectListItem
+                {
+                    Value = d.DegreeId.ToString(),
+                    Text = $"{d.DegreeType}, {d.Institution}, {d.MajorFieldOfStudy}, {d.Department}"
+                }),
+                "Value", "Text", selectedId?.ToString());
+        }
+
+        [Authorize(Roles = "Admin, Alumni")]
         public async Task<IActionResult> Create()
         {
             var currentUser = await _userManager.GetUserAsync(User);
@@ -93,31 +112,27 @@ namespace Alumni_Management_System.Controllers
                     return RedirectToAction("Index", "Home");
                 }
                 ViewData["CurrentAlumniId"] = alumni.AlumniId;
-                ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumni.AlumniId);
+                ViewData["AlumniId"] = new SelectList(new[]
+                {
+                    new SelectListItem
+                    {
+                        Value = alumni.AlumniId.ToString(),
+                        Text  = $"{alumni.JagId} — {alumni.FirstName} {alumni.LastName}"
+                    }
+                }, "Value", "Text", alumni.AlumniId);
                 ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
             {
-
-                ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName");
+                await PopulateAlumniDropdown();
                 ViewData["UserRole"] = "Admin";
             }
 
-            ViewData["DegreeId"] = new SelectList( _context.DegreePrograms .Select(d => new
-            {
-                d.DegreeId,
-                DisplayText = d.DegreeType + ", " +
-                              d.Institution + ", " +
-                              d.MajorFieldOfStudy + ", " +
-                              d.Department
-            }),
-                "DegreeId",
-                "DisplayText");
-
+            PopulateDegreeDropdown();
             return View();
         }
 
-        [Authorize(Roles = "Admin, Alumni")] // Only Admin can create degrees
+        [Authorize(Roles = "Admin, Alumni")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("AlumniDegreeId,AlumniId,DegreeId,DateConferred,YearsToCompleteDegree,Gpa,EmploymentWhileStudying,DegreeSpecificJob,ParticipatedInResearch,JobSecuredUponGraduation,AttendedOrPlansGradSchool")] AlumniDegree alumniDegree)
@@ -136,37 +151,23 @@ namespace Alumni_Management_System.Controllers
             }
 
             if (alumniDegree.DateConferred > DateOnly.FromDateTime(DateTime.Now))
-            {
                 ModelState.AddModelError("DateConferred", "Date Conferred cannot be in the future.");
-            }
 
             if (alumniDegree.YearsToCompleteDegree.HasValue)
             {
                 if (alumniDegree.YearsToCompleteDegree < 0)
-                {
-                    ModelState.AddModelError("YearsToCompleteDegree", "Years to complete degree cannot be negative.");
-                }
+                    ModelState.AddModelError("YearsToCompleteDegree", "Cannot be negative.");
                 else if (alumniDegree.YearsToCompleteDegree > 10)
-                {
-                    ModelState.AddModelError("YearsToCompleteDegree", "Years to complete degree cannot exceed 10 years. Please contact administrator.");
-                }
+                    ModelState.AddModelError("YearsToCompleteDegree", "Cannot exceed 10 years.");
             }
 
-            if (alumniDegree.Gpa.HasValue)
-            {
-                if (alumniDegree.Gpa < 0 || alumniDegree.Gpa > 4.00m)
-                {
-                    ModelState.AddModelError("Gpa", "GPA must be between 0.00 and 4.00.");
-                }
-            }
+            if (alumniDegree.Gpa.HasValue && (alumniDegree.Gpa < 0 || alumniDegree.Gpa > 4.00m))
+                ModelState.AddModelError("Gpa", "GPA must be between 0.00 and 4.00.");
 
-            var duplicateExists = await _context.AlumniDegrees
-                .AnyAsync(ad => ad.AlumniId == alumniDegree.AlumniId &&
-                               ad.DegreeId == alumniDegree.DegreeId);
-            if (duplicateExists)
-            {
-                ModelState.AddModelError("DegreeId", "You already have this degree recorded.");
-            }
+            if (await _context.AlumniDegrees.AnyAsync(ad =>
+                    ad.AlumniId == alumniDegree.AlumniId &&
+                    ad.DegreeId == alumniDegree.DegreeId))
+                ModelState.AddModelError("DegreeId", "This alumni already has this degree recorded.");
 
             if (ModelState.IsValid)
             {
@@ -176,36 +177,42 @@ namespace Alumni_Management_System.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            // Repopulate on failure
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 ViewData["CurrentAlumniId"] = alumni?.AlumniId;
-                ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniDegree.AlumniId);
+                ViewData["AlumniId"] = new SelectList(new[]
+                {
+                    new SelectListItem
+                    {
+                        Value = alumni?.AlumniId.ToString(),
+                        Text  = $"{alumni?.JagId} — {alumni?.FirstName} {alumni?.LastName}"
+                    }
+                }, "Value", "Text", alumniDegree.AlumniId);
+                ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
             {
-                ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniDegree.AlumniId);
+                await PopulateAlumniDropdown(alumniDegree.AlumniId);
+                ViewData["UserRole"] = "Admin";
             }
-            ViewData["DegreeId"] = new SelectList(_context.DegreePrograms, "DegreeId", "DegreeType", alumniDegree.DegreeId);
+
+            PopulateDegreeDropdown(alumniDegree.DegreeId);
             return View(alumniDegree);
         }
 
-        [Authorize(Roles = "Admin, Alumni")] // Only Admin can edit degrees
+        [Authorize(Roles = "Admin, Alumni")]
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var alumniDegree = await _context.AlumniDegrees.FindAsync(id);
-            if (alumniDegree == null)
-            {
-                return NotFound();
-            }
+            if (alumniDegree == null) return NotFound();
 
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
+
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -215,26 +222,30 @@ namespace Alumni_Management_System.Controllers
                     return RedirectToAction(nameof(Index));
                 }
                 ViewData["CurrentAlumniId"] = alumni.AlumniId;
-                ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniDegree.AlumniId);
+                ViewData["AlumniId"] = new SelectList(new[]
+                {
+                    new SelectListItem
+                    {
+                        Value = alumni.AlumniId.ToString(),
+                        Text  = $"{alumni.JagId} — {alumni.FirstName} {alumni.LastName}"
+                    }
+                }, "Value", "Text", alumniDegree.AlumniId);
             }
             else
             {
-                ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniDegree.AlumniId);
+                await PopulateAlumniDropdown(alumniDegree.AlumniId);
             }
 
-            ViewData["DegreeId"] = new SelectList(_context.DegreePrograms, "DegreeId", "DegreeType", alumniDegree.DegreeId);
+            PopulateDegreeDropdown(alumniDegree.DegreeId);
             return View(alumniDegree);
         }
 
-        [Authorize(Roles = "Admin, Alumni")] // Only Admin can edit degrees
+        [Authorize(Roles = "Admin, Alumni")]
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("AlumniDegreeId,AlumniId,DegreeId,DateConferred,YearsToCompleteDegree,Gpa,EmploymentWhileStudying,DegreeSpecificJob,ParticipatedInResearch,JobSecuredUponGraduation,AttendedOrPlansGradSchool")] AlumniDegree alumniDegree)
         {
-            if (id != alumniDegree.AlumniDegreeId)
-            {
-                return NotFound();
-            }
+            if (id != alumniDegree.AlumniDegreeId) return NotFound();
 
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
@@ -250,38 +261,24 @@ namespace Alumni_Management_System.Controllers
             }
 
             if (alumniDegree.DateConferred > DateOnly.FromDateTime(DateTime.Now))
-            {
                 ModelState.AddModelError("DateConferred", "Date Conferred cannot be in the future.");
-            }
 
             if (alumniDegree.YearsToCompleteDegree.HasValue)
             {
                 if (alumniDegree.YearsToCompleteDegree < 0)
-                {
-                    ModelState.AddModelError("YearsToCompleteDegree", "Years to complete degree cannot be negative.");
-                }
+                    ModelState.AddModelError("YearsToCompleteDegree", "Cannot be negative.");
                 else if (alumniDegree.YearsToCompleteDegree > 10)
-                {
-                    ModelState.AddModelError("YearsToCompleteDegree", "Years to complete degree cannot exceed 10 years. Please contact administrator.");
-                }
+                    ModelState.AddModelError("YearsToCompleteDegree", "Cannot exceed 10 years.");
             }
 
-            if (alumniDegree.Gpa.HasValue)
-            {
-                if (alumniDegree.Gpa < 0 || alumniDegree.Gpa > 4.00m)
-                {
-                    ModelState.AddModelError("Gpa", "GPA must be between 0.00 and 4.00.");
-                }
-            }
+            if (alumniDegree.Gpa.HasValue && (alumniDegree.Gpa < 0 || alumniDegree.Gpa > 4.00m))
+                ModelState.AddModelError("Gpa", "GPA must be between 0.00 and 4.00.");
 
-            var duplicateExists = await _context.AlumniDegrees
-                .AnyAsync(ad => ad.AlumniId == alumniDegree.AlumniId &&
-                               ad.DegreeId == alumniDegree.DegreeId &&
-                               ad.AlumniDegreeId != alumniDegree.AlumniDegreeId);
-            if (duplicateExists)
-            {
-                ModelState.AddModelError("DegreeId", "You already have this degree recorded.");
-            }
+            if (await _context.AlumniDegrees.AnyAsync(ad =>
+                    ad.AlumniId == alumniDegree.AlumniId &&
+                    ad.DegreeId == alumniDegree.DegreeId &&
+                    ad.AlumniDegreeId != alumniDegree.AlumniDegreeId))
+                ModelState.AddModelError("DegreeId", "This alumniDegree already has this degree recorded.");
 
             if (ModelState.IsValid)
             {
@@ -293,14 +290,8 @@ namespace Alumni_Management_System.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!AlumniDegreeExists(alumniDegree.AlumniDegreeId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!AlumniDegreeExists(alumniDegree.AlumniDegreeId)) return NotFound();
+                    else throw;
                 }
                 return RedirectToAction(nameof(Index));
             }
@@ -309,32 +300,34 @@ namespace Alumni_Management_System.Controllers
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 ViewData["CurrentAlumniId"] = alumni?.AlumniId;
-                ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniDegree.AlumniId);
+                ViewData["AlumniId"] = new SelectList(new[]
+                {
+                    new SelectListItem
+                    {
+                        Value = alumni?.AlumniId.ToString(),
+                        Text  = $"{alumni?.JagId} — {alumni?.FirstName} {alumni?.LastName}"
+                    }
+                }, "Value", "Text", alumniDegree.AlumniId);
             }
             else
             {
-                ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniDegree.AlumniId);
+                await PopulateAlumniDropdown(alumniDegree.AlumniId);
             }
-            ViewData["DegreeId"] = new SelectList(_context.DegreePrograms, "DegreeId", "DegreeType", alumniDegree.DegreeId);
+
+            PopulateDegreeDropdown(alumniDegree.DegreeId);
             return View(alumniDegree);
         }
 
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var alumniDegree = await _context.AlumniDegrees
                 .Include(a => a.Alumni)
                 .Include(a => a.Degree)
                 .FirstOrDefaultAsync(m => m.AlumniDegreeId == id);
-            if (alumniDegree == null)
-            {
-                return NotFound();
-            }
+            if (alumniDegree == null) return NotFound();
 
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
@@ -359,7 +352,6 @@ namespace Alumni_Management_System.Controllers
             var alumniDegree = await _context.AlumniDegrees.FindAsync(id);
             if (alumniDegree != null)
             {
-
                 var currentUser = await _userManager.GetUserAsync(User);
                 var roles = await _userManager.GetRolesAsync(currentUser);
                 if (roles.Contains(Constants.AlumniRole))
@@ -381,8 +373,6 @@ namespace Alumni_Management_System.Controllers
         }
 
         private bool AlumniDegreeExists(int id)
-        {
-            return _context.AlumniDegrees.Any(e => e.AlumniDegreeId == id);
-        }
+            => _context.AlumniDegrees.Any(e => e.AlumniDegreeId == id);
     }
 }

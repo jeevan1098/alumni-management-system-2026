@@ -4,13 +4,54 @@
     ViewData["Title"] = "Create Internship";
     var userRole = ViewData["UserRole"]?.ToString();
     bool isAdmin = userRole == "Admin";
-    bool isAlumni = userRole == "Alumni";
     int? currentAlumniId = ViewData["CurrentAlumniId"] as int?;
 }
 
-<div class="container mt-5">
+<style>
+    .autocomplete-wrapper {
+        position: relative;
+    }
 
-    <!-- Header -->
+    .autocomplete-list {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        max-height: 220px;
+        overflow-y: auto;
+        background: white;
+        border: 1px solid #ced4da;
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        display: none;
+    }
+
+    .ac-item {
+        padding: 10px 14px;
+        cursor: pointer;
+        font-size: 14px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+        .ac-item:hover {
+            background: #e8f0fe;
+            color: #1a56db;
+        }
+
+        .ac-item:last-child {
+            border-bottom: none;
+        }
+
+    .ac-no-results {
+        padding: 10px 14px;
+        color: #6c757d;
+        font-size: 14px;
+    }
+</style>
+
+<div class="container mt-5">
     <div class="d-flex align-items-center mb-4">
         <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
             <i class="bi bi-mortarboard-fill fs-3 text-primary"></i>
@@ -21,59 +62,62 @@
         </div>
     </div>
 
-    <!-- Card -->
     <div class="card shadow-lg border-0 rounded-4 mx-auto" style="max-width: 700px;">
         <div class="card-body p-4">
-
             <form asp-action="Create">
                 <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-                <!-- Alumni Name -->
+                <!-- Alumni -->
                 <div class="mb-3">
-                    <label asp-for="AlumniId" class="form-label fw-semibold">Alumni Name</label>
+                    <label class="form-label fw-semibold"><span class="text-danger">*</span> Alumni</label>
                     @if (isAdmin)
                     {
-                        <select asp-for="AlumniId" class="form-select rounded-3" asp-items="ViewBag.AlumniId">
-                            <option value="">-- Select an Alumni --</option>
-                        </select>
+                        <input type="hidden" asp-for="AlumniId" id="alumniIdHidden" />
+                        <div class="autocomplete-wrapper">
+                            <div class="input-group shadow-sm">
+                                <span class="input-group-text bg-light"><i class="bi bi-person-search"></i></span>
+                                <input type="text" id="alumniSearchInput" class="form-control rounded-end-3"
+                                       placeholder="Type JAG ID or name to search..." autocomplete="off" />
+                            </div>
+                            <div class="autocomplete-list" id="alumniDropdownList"></div>
+                        </div>
+                        <small class="text-muted mt-1 d-block"><i class="bi bi-info-circle me-1"></i>Start typing to find an alumni</small>
                     }
                     else
                     {
-                        <select asp-for="AlumniId" class="form-select rounded-3" asp-items="ViewBag.AlumniId" disabled>
-                        </select>
-                        <input type="hidden" asp-for="AlumniId" value="@currentAlumniId" />
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light"><i class="bi bi-person-fill"></i></span>
+                            <select asp-for="AlumniId" class="form-select rounded-end-3" asp-items="ViewBag.AlumniId" disabled></select>
+                            <input type="hidden" asp-for="AlumniId" value="@currentAlumniId" />
+                        </div>
                     }
+                    <span asp-validation-for="AlumniId" class="text-danger"></span>
                 </div>
 
                 <!-- Employer -->
                 <div class="mb-3">
                     <label asp-for="EmployerId" class="form-label fw-semibold">Employer Name</label>
-                    <select asp-for="EmployerId"
-                            class="form-select rounded-3"
-                            asp-items="ViewBag.EmployerId"
-                            id="employerDropdown">
-
-                    </select>
+                    <div class="input-group shadow-sm">
+                        <span class="input-group-text bg-light"><i class="bi bi-building"></i></span>
+                        <select asp-for="EmployerId" class="form-select rounded-end-3"
+                                asp-items="ViewBag.EmployerId" id="employerDropdown"></select>
+                    </div>
                 </div>
 
-                <!-- Other Employer -->
                 <div class="mb-3" id="otherEmployerDiv" style="display:none;">
                     <label class="form-label fw-semibold">Enter Employer Name</label>
-                    <input type="text"
-                           name="OtherEmployerName"
-                           class="form-control rounded-3"
-                           placeholder="Enter employer name" />
+                    <div class="input-group shadow-sm">
+                        <span class="input-group-text bg-light"><i class="bi bi-building-add"></i></span>
+                        <input type="text" name="OtherEmployerName" class="form-control rounded-end-3" placeholder="Enter employer name" />
+                    </div>
                 </div>
 
                 <div class="row g-3">
-                    <!-- Internship Type -->
                     <div class="col-md-6">
                         <label asp-for="InternshipType" class="form-label fw-semibold"></label>
                         <input asp-for="InternshipType" class="form-control rounded-3" placeholder="e.g., Summer Internship" />
                         <span asp-validation-for="InternshipType" class="text-danger"></span>
                     </div>
-
-                    <!-- Title -->
                     <div class="col-md-6">
                         <label asp-for="Title" class="form-label fw-semibold"></label>
                         <input asp-for="Title" class="form-control rounded-3" placeholder="Enter job title" />
@@ -82,14 +126,11 @@
                 </div>
 
                 <div class="row g-3 mt-3">
-                    <!-- Start Date -->
                     <div class="col-md-6">
                         <label asp-for="StartDate" class="form-label fw-semibold"></label>
                         <input asp-for="StartDate" type="date" class="form-control rounded-3" />
                         <span asp-validation-for="StartDate" class="text-danger"></span>
                     </div>
-
-                    <!-- End Date -->
                     <div class="col-md-6">
                         <label asp-for="EndDate" class="form-label fw-semibold"></label>
                         <input asp-for="EndDate" type="date" class="form-control rounded-3" id="endDateField" />
@@ -97,15 +138,11 @@
                     </div>
                 </div>
 
-                <!-- Current Internship Checkbox -->
                 <div class="form-check mt-3 mb-4">
                     <input type="checkbox" class="form-check-input" id="isCurrentInternshipCheckbox">
-                    <label class="form-check-label fw-semibold" for="isCurrentInternshipCheckbox">
-                        Current Internship
-                    </label>
+                    <label class="form-check-label fw-semibold" for="isCurrentInternshipCheckbox">Current Internship</label>
                 </div>
 
-                <!-- Buttons -->
                 <div class="d-flex justify-content-between">
                     <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
                         <i class="bi bi-arrow-left me-2"></i>Back
@@ -115,7 +152,6 @@
                     </button>
                 </div>
             </form>
-
         </div>
     </div>
 </div>
@@ -124,20 +160,43 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
-
     <script>
-        const employerDropdown = document.getElementById("employerDropdown");
-        const otherDiv = document.getElementById("otherEmployerDiv");
-        const currentInternshipCheckbox = document.getElementById("isCurrentInternshipCheckbox");
-        const endDateField = document.getElementById("endDateField");
-
-        employerDropdown.addEventListener("change", function () {
-            otherDiv.style.display = this.value == "0" ? "block" : "none";
+        document.getElementById('employerDropdown').addEventListener('change', function () {
+            document.getElementById('otherEmployerDiv').style.display = this.value === '0' ? 'block' : 'none';
         });
-
-        currentInternshipCheckbox.addEventListener("change", function () {
-            endDateField.disabled = this.checked;
-            if (this.checked) endDateField.value = "";
+        document.getElementById('isCurrentInternshipCheckbox').addEventListener('change', function () {
+            const f = document.getElementById('endDateField');
+            f.disabled = this.checked;
+            if (this.checked) f.value = '';
         });
     </script>
+    @if (isAdmin)
+    {
+        <script>
+            const alumniData = [
+            @if (ViewBag.AlumniId != null)
+            {
+                foreach (var item in ViewBag.AlumniId as IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>())
+                {
+                    if (!string.IsNullOrEmpty(item.Value))
+                    {
+                        @:{ id: '@item.Value', text: '@Html.Raw(item.Text?.Replace("'", "\\'"))' },
+                    }
+                }
+            }
+            ];
+            const input = document.getElementById('alumniSearchInput');
+            const hidden = document.getElementById('alumniIdHidden');
+            const dropdown = document.getElementById('alumniDropdownList');
+            function renderList(items) {
+                dropdown.innerHTML = '';
+                if (!items.length) { dropdown.innerHTML = '<div class="ac-no-results">No alumni found</div>'; }
+                else { items.forEach(a => { const d = document.createElement('div'); d.className = 'ac-item'; d.textContent = a.text; d.addEventListener('mousedown', () => { input.value = a.text; hidden.value = a.id; dropdown.style.display = 'none'; }); dropdown.appendChild(d); }); }
+                dropdown.style.display = 'block';
+            }
+            input.addEventListener('focus', () => { if (!input.value.trim()) renderList(alumniData); });
+            input.addEventListener('input', function () { hidden.value = ''; const q = this.value.toLowerCase().trim(); renderList(q ? alumniData.filter(a => a.text.toLowerCase().includes(q)) : alumniData); });
+            document.addEventListener('click', e => { if (!input.contains(e.target) && !dropdown.contains(e.target)) dropdown.style.display = 'none'; });
+        </script>
+    }
 }

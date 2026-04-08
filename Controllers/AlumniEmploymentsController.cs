@@ -29,19 +29,17 @@ namespace Alumni_Management_System.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
 
-            IQueryable<AlumniEmployment> query = _context.AlumniEmployments.Include(a => a.Alumni).Include(a => a.Employer);
+            IQueryable<AlumniEmployment> query = _context.AlumniEmployments
+                .Include(a => a.Alumni)
+                .Include(a => a.Employer);
 
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni != null)
-                {
                     query = query.Where(ae => ae.AlumniId == alumni.AlumniId);
-                }
                 else
-                {
                     return View(new List<AlumniEmployment>());
-                }
             }
 
             return View(await query.ToListAsync());
@@ -49,19 +47,13 @@ namespace Alumni_Management_System.Controllers
 
         public async Task<IActionResult> Details(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var alumniEmployment = await _context.AlumniEmployments
                 .Include(a => a.Alumni)
                 .Include(a => a.Employer)
                 .FirstOrDefaultAsync(m => m.AlumniEmploymentId == id);
-            if (alumniEmployment == null)
-            {
-                return NotFound();
-            }
+            if (alumniEmployment == null) return NotFound();
 
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
@@ -76,6 +68,35 @@ namespace Alumni_Management_System.Controllers
             }
 
             return View(alumniEmployment);
+        }
+
+        private async Task PopulateAlumniDropdown(object selectedId = null)
+        {
+            var alumniList = await _context.Alumni.OrderBy(a => a.LastName).ToListAsync();
+            ViewData["AlumniId"] = new SelectList(
+                alumniList.Select(a => new SelectListItem
+                {
+                    Value = a.AlumniId.ToString(),
+                    Text = $"{a.JagId} — {a.FirstName} {a.LastName}"
+                }),
+                "Value", "Text", selectedId?.ToString());
+        }
+
+        private async Task PopulateEmployerDropdown(object selectedId = null)
+        {
+            var employers = await _context.Employers.OrderBy(e => e.EmployerName).ToListAsync();
+            var employerList = new List<SelectListItem>
+            {
+                new SelectListItem { Value = "", Text = "-- Select Employer --" },
+                new SelectListItem { Value = "0", Text = "Other (Add New)" }
+            };
+            employerList.AddRange(employers.Select(e => new SelectListItem
+            {
+                Value = e.EmployerId.ToString(),
+                Text = e.EmployerName,
+                Selected = selectedId != null && e.EmployerId.ToString() == selectedId.ToString()
+            }));
+            ViewData["EmployerId"] = employerList;
         }
 
         [Authorize(Roles = "Admin, Alumni")]
@@ -93,25 +114,23 @@ namespace Alumni_Management_System.Controllers
                     return RedirectToAction("Index", "Home");
                 }
                 ViewData["CurrentAlumniId"] = alumni.AlumniId;
-                ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumni.AlumniId);
+                ViewData["AlumniId"] = new SelectList(new[]
+                {
+                    new SelectListItem
+                    {
+                        Value = alumni.AlumniId.ToString(),
+                        Text  = $"{alumni.JagId} — {alumni.FirstName} {alumni.LastName}"
+                    }
+                }, "Value", "Text", alumni.AlumniId);
                 ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
             {
-
-                ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName");
+                await PopulateAlumniDropdown();
                 ViewData["UserRole"] = "Admin";
             }
 
-            var employers = await _context.Employers.OrderBy(e => e.EmployerName).ToListAsync();
-            var employerList = new List<SelectListItem>
-            {
-                new SelectListItem { Value = "", Text = "-- Select Employer --" },
-                new SelectListItem { Value = "0", Text = "Other (Add New)" }
-            };
-            employerList.AddRange(employers.Select(e => new SelectListItem { Value = e.EmployerId.ToString(), Text = e.EmployerName }));
-            ViewData["EmployerId"] = employerList;
-
+            await PopulateEmployerDropdown();
             return View();
         }
 
@@ -135,22 +154,14 @@ namespace Alumni_Management_System.Controllers
 
             if (alumniEmployment.EmployerId == 0 && !string.IsNullOrWhiteSpace(OtherEmployerName))
             {
-
                 var existingEmployer = await _context.Employers
                     .FirstOrDefaultAsync(e => e.EmployerName.ToLower() == OtherEmployerName.Trim().ToLower());
 
                 if (existingEmployer != null)
-                {
-
                     alumniEmployment.EmployerId = existingEmployer.EmployerId;
-                }
                 else
                 {
-
-                    var newEmployer = new Employer
-                    {
-                        EmployerName = OtherEmployerName.Trim()
-                    };
+                    var newEmployer = new Employer { EmployerName = OtherEmployerName.Trim() };
                     _context.Employers.Add(newEmployer);
                     await _context.SaveChangesAsync();
                     alumniEmployment.EmployerId = newEmployer.EmployerId;
@@ -158,14 +169,10 @@ namespace Alumni_Management_System.Controllers
             }
 
             if (alumniEmployment.StartDate > DateOnly.FromDateTime(DateTime.Now))
-            {
                 ModelState.AddModelError("StartDate", "Start Date cannot be in the future.");
-            }
 
             if (alumniEmployment.EndDate.HasValue && alumniEmployment.EndDate < alumniEmployment.StartDate)
-            {
                 ModelState.AddModelError("EndDate", "End Date cannot be before Start Date.");
-            }
 
             if (ModelState.IsValid)
             {
@@ -179,44 +186,37 @@ namespace Alumni_Management_System.Controllers
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 ViewData["CurrentAlumniId"] = alumni?.AlumniId;
-                ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniEmployment.AlumniId);
+                ViewData["AlumniId"] = new SelectList(new[]
+                {
+                    new SelectListItem
+                    {
+                        Value = alumni?.AlumniId.ToString(),
+                        Text  = $"{alumni?.JagId} — {alumni?.FirstName} {alumni?.LastName}"
+                    }
+                }, "Value", "Text", alumniEmployment.AlumniId);
                 ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
             {
-                ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniEmployment.AlumniId);
+                await PopulateAlumniDropdown(alumniEmployment.AlumniId);
                 ViewData["UserRole"] = "Admin";
             }
 
-            var employers = await _context.Employers.OrderBy(e => e.EmployerName).ToListAsync();
-            var employerList = new List<SelectListItem>
-            {
-                new SelectListItem { Value = "", Text = "-- Select Employer --" },
-                new SelectListItem { Value = "0", Text = "Other (Add New)" }
-            };
-            employerList.AddRange(employers.Select(e => new SelectListItem { Value = e.EmployerId.ToString(), Text = e.EmployerName }));
-            ViewData["EmployerId"] = employerList;
-
+            await PopulateEmployerDropdown(alumniEmployment.EmployerId);
             return View(alumniEmployment);
         }
 
         [Authorize(Roles = "Admin, Alumni")]
-       
         public async Task<IActionResult> Edit(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var alumniEmployment = await _context.AlumniEmployments.FindAsync(id);
-            if (alumniEmployment == null)
-            {
-                return NotFound();
-            }
+            if (alumniEmployment == null) return NotFound();
 
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
+
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -226,24 +226,23 @@ namespace Alumni_Management_System.Controllers
                     return RedirectToAction(nameof(Index));
                 }
                 ViewData["CurrentAlumniId"] = alumni.AlumniId;
-                ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniEmployment.AlumniId);
+                ViewData["AlumniId"] = new SelectList(new[]
+                {
+                    new SelectListItem
+                    {
+                        Value = alumni.AlumniId.ToString(),
+                        Text  = $"{alumni.JagId} — {alumni.FirstName} {alumni.LastName}"
+                    }
+                }, "Value", "Text", alumniEmployment.AlumniId);
                 ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
             {
-                ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniEmployment.AlumniId);
+                await PopulateAlumniDropdown(alumniEmployment.AlumniId);
                 ViewData["UserRole"] = "Admin";
             }
 
-            var employers = await _context.Employers.OrderBy(e => e.EmployerName).ToListAsync();
-            var employerList = new List<SelectListItem>
-            {
-                new SelectListItem { Value = "", Text = "-- Select Employer --" },
-                new SelectListItem { Value = "0", Text = "Other (Add New)" }
-            };
-            employerList.AddRange(employers.Select(e => new SelectListItem { Value = e.EmployerId.ToString(), Text = e.EmployerName }));
-            ViewData["EmployerId"] = employerList;
-
+            await PopulateEmployerDropdown(alumniEmployment.EmployerId);
             return View(alumniEmployment);
         }
 
@@ -252,10 +251,7 @@ namespace Alumni_Management_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("AlumniEmploymentId,AlumniId,EmployerId,JobTitle,StartDate,EndDate,SalaryRange")] AlumniEmployment alumniEmployment, string OtherEmployerName)
         {
-            if (id != alumniEmployment.AlumniEmploymentId)
-            {
-                return NotFound();
-            }
+            if (id != alumniEmployment.AlumniEmploymentId) return NotFound();
 
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
@@ -272,22 +268,14 @@ namespace Alumni_Management_System.Controllers
 
             if (alumniEmployment.EmployerId == 0 && !string.IsNullOrWhiteSpace(OtherEmployerName))
             {
-
                 var existingEmployer = await _context.Employers
                     .FirstOrDefaultAsync(e => e.EmployerName.ToLower() == OtherEmployerName.Trim().ToLower());
 
                 if (existingEmployer != null)
-                {
-
                     alumniEmployment.EmployerId = existingEmployer.EmployerId;
-                }
                 else
                 {
-
-                    var newEmployer = new Employer
-                    {
-                        EmployerName = OtherEmployerName.Trim()
-                    };
+                    var newEmployer = new Employer { EmployerName = OtherEmployerName.Trim() };
                     _context.Employers.Add(newEmployer);
                     await _context.SaveChangesAsync();
                     alumniEmployment.EmployerId = newEmployer.EmployerId;
@@ -295,14 +283,10 @@ namespace Alumni_Management_System.Controllers
             }
 
             if (alumniEmployment.StartDate > DateOnly.FromDateTime(DateTime.Now))
-            {
                 ModelState.AddModelError("StartDate", "Start Date cannot be in the future.");
-            }
 
             if (alumniEmployment.EndDate.HasValue && alumniEmployment.EndDate < alumniEmployment.StartDate)
-            {
                 ModelState.AddModelError("EndDate", "End Date cannot be before Start Date.");
-            }
 
             if (ModelState.IsValid)
             {
@@ -314,14 +298,8 @@ namespace Alumni_Management_System.Controllers
                 }
                 catch (DbUpdateConcurrencyException)
                 {
-                    if (!AlumniEmploymentExists(alumniEmployment.AlumniEmploymentId))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    if (!AlumniEmploymentExists(alumniEmployment.AlumniEmploymentId)) return NotFound();
+                    else throw;
                 }
                 return RedirectToAction(nameof(Index));
             }
@@ -330,43 +308,36 @@ namespace Alumni_Management_System.Controllers
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 ViewData["CurrentAlumniId"] = alumni?.AlumniId;
-                ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniEmployment.AlumniId);
+                ViewData["AlumniId"] = new SelectList(new[]
+                {
+                    new SelectListItem
+                    {
+                        Value = alumni?.AlumniId.ToString(),
+                        Text  = $"{alumni?.JagId} — {alumni?.FirstName} {alumni?.LastName}"
+                    }
+                }, "Value", "Text", alumniEmployment.AlumniId);
                 ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
             {
-                ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniEmployment.AlumniId);
+                await PopulateAlumniDropdown(alumniEmployment.AlumniId);
                 ViewData["UserRole"] = "Admin";
             }
 
-            var employers = await _context.Employers.OrderBy(e => e.EmployerName).ToListAsync();
-            var employerList = new List<SelectListItem>
-            {
-                new SelectListItem { Value = "", Text = "-- Select Employer --" },
-                new SelectListItem { Value = "0", Text = "Other (Add New)" }
-            };
-            employerList.AddRange(employers.Select(e => new SelectListItem { Value = e.EmployerId.ToString(), Text = e.EmployerName }));
-            ViewData["EmployerId"] = employerList;
-
+            await PopulateEmployerDropdown(alumniEmployment.EmployerId);
             return View(alumniEmployment);
         }
 
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Delete(int? id)
         {
-            if (id == null)
-            {
-                return NotFound();
-            }
+            if (id == null) return NotFound();
 
             var alumniEmployment = await _context.AlumniEmployments
                 .Include(a => a.Alumni)
                 .Include(a => a.Employer)
                 .FirstOrDefaultAsync(m => m.AlumniEmploymentId == id);
-            if (alumniEmployment == null)
-            {
-                return NotFound();
-            }
+            if (alumniEmployment == null) return NotFound();
 
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
@@ -391,7 +362,6 @@ namespace Alumni_Management_System.Controllers
             var alumniEmployment = await _context.AlumniEmployments.FindAsync(id);
             if (alumniEmployment != null)
             {
-
                 var currentUser = await _userManager.GetUserAsync(User);
                 var roles = await _userManager.GetRolesAsync(currentUser);
                 if (roles.Contains(Constants.AlumniRole))
@@ -413,8 +383,6 @@ namespace Alumni_Management_System.Controllers
         }
 
         private bool AlumniEmploymentExists(int id)
-        {
-            return _context.AlumniEmployments.Any(e => e.AlumniEmploymentId == id);
-        }
+            => _context.AlumniEmployments.Any(e => e.AlumniEmploymentId == id);
     }
 }

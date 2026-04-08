@@ -1,6 +1,4 @@
-﻿
-
-@model Alumni_Management_System.Models.AlumniDegree
+﻿@model Alumni_Management_System.Models.AlumniDegree
 
 @{
     ViewData["Title"] = "Add Alumni Degree";
@@ -10,11 +8,55 @@
     int? currentAlumniId = ViewData["CurrentAlumniId"] as int?;
 }
 
+<style>
+    .autocomplete-wrapper {
+        position: relative;
+    }
+
+    .autocomplete-list {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        max-height: 220px;
+        overflow-y: auto;
+        background: white;
+        border: 1px solid #ced4da;
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        display: none;
+    }
+
+        .autocomplete-list .ac-item {
+            padding: 10px 14px;
+            cursor: pointer;
+            font-size: 14px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+            .autocomplete-list .ac-item:hover,
+            .autocomplete-list .ac-item.active {
+                background: #e8f0fe;
+                color: #1a56db;
+            }
+
+            .autocomplete-list .ac-item:last-child {
+                border-bottom: none;
+            }
+
+    .ac-no-results {
+        padding: 10px 14px;
+        color: #6c757d;
+        font-size: 14px;
+    }
+</style>
+
 <div class="container mt-5 mb-5">
     <div class="card shadow-lg border-0 rounded-4">
         <div class="card-body p-5">
 
-            <!-- Header -->
             <div class="d-flex align-items-center mb-4">
                 <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
                     <i class="bi bi-mortarboard-fill text-primary fs-3"></i>
@@ -30,33 +72,50 @@
             <form asp-action="Create" novalidate>
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
-                <!-- Alumni & Degree Section -->
                 <h5 class="fw-bold text-dark mb-3">
                     <i class="bi bi-person-badge-fill me-2"></i>Alumni & Degree Information
                 </h5>
 
                 <div class="row mb-4">
-                     <div class="col-md-6">
+                    <div class="col-md-6">
                         <label class="form-label fw-semibold">
-                            <span class="text-danger">*</span> Alumni Name
+                            <span class="text-danger">*</span> Alumni
                         </label>
-                        <div class="input-group shadow-sm">
-                            <span class="input-group-text bg-light">
-                                <i class="bi bi-person-fill"></i>
-                            </span>
-                            @if (isAdmin)
-                            {
-                                <select asp-for="AlumniId" class="form-select rounded-end-3" asp-items="ViewBag.AlumniId">
-                                    <option value="">-- Select an Alumni --</option>
-                                </select>
-                            }
-                            else
-                            {
-                                <select asp-for="AlumniId" class="form-select rounded-end-3" asp-items="ViewBag.AlumniId" disabled>
+
+                        @if (isAdmin)
+                        {
+                            <!-- Hidden real field submitted with form -->
+                            <input type="hidden" asp-for="AlumniId" id="alumniIdHidden" />
+
+                            <!-- Autocomplete input -->
+                            <div class="autocomplete-wrapper">
+                                <div class="input-group shadow-sm">
+                                    <span class="input-group-text bg-light">
+                                        <i class="bi bi-person-search"></i>
+                                    </span>
+                                    <input type="text" id="alumniSearchInput"
+                                           class="form-control rounded-end-3"
+                                           placeholder="Type JAG ID or name to search..."
+                                           autocomplete="off" />
+                                </div>
+                                <div class="autocomplete-list" id="alumniDropdown"></div>
+                            </div>
+                            <small class="text-muted mt-1 d-block">
+                                <i class="bi bi-info-circle me-1"></i>Start typing to find an alumni
+                            </small>
+                        }
+                        else
+                        {
+                            <div class="input-group shadow-sm">
+                                <span class="input-group-text bg-light">
+                                    <i class="bi bi-person-fill"></i>
+                                </span>
+                                <select asp-for="AlumniId" class="form-select rounded-end-3"
+                                        asp-items="ViewBag.AlumniId" disabled>
                                 </select>
                                 <input type="hidden" asp-for="AlumniId" value="@currentAlumniId" />
-                            }
-                        </div>
+                            </div>
+                        }
                         <span asp-validation-for="AlumniId" class="text-danger"></span>
                     </div>
 
@@ -68,8 +127,7 @@
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-book-fill"></i>
                             </span>
-                            <select asp-for="DegreeId"
-                                    class="form-select rounded-end-3"
+                            <select asp-for="DegreeId" class="form-select rounded-end-3"
                                     asp-items="ViewBag.DegreeId">
                                 <option value="">-- Select a Degree Program --</option>
                             </select>
@@ -80,7 +138,6 @@
 
                 <hr class="my-4" />
 
-                <!-- Academic Details -->
                 <h5 class="fw-bold text-dark mb-3">
                     <i class="bi bi-journal-check me-2"></i>Academic Details
                 </h5>
@@ -94,7 +151,7 @@
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-calendar-event-fill"></i>
                             </span>
-                            <input asp-for="DateConferred" type="date" class="form-control rounded-end-3" readonly/>
+                            <input asp-for="DateConferred" type="date" class="form-control rounded-end-3" />
                         </div>
                         <span asp-validation-for="DateConferred" class="text-danger"></span>
                     </div>
@@ -105,7 +162,8 @@
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-clock-fill"></i>
                             </span>
-                            <input asp-for="YearsToCompleteDegree" type="number" min="0" max="10" placeholder="e.g. 4" class="form-control rounded-end-3" />
+                            <input asp-for="YearsToCompleteDegree" type="number" min="0" max="10"
+                                   placeholder="e.g. 4" class="form-control rounded-end-3" />
                         </div>
                         <span asp-validation-for="YearsToCompleteDegree" class="text-danger"></span>
                     </div>
@@ -116,7 +174,8 @@
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-bar-chart-fill"></i>
                             </span>
-                            <input asp-for="Gpa" type="number" step="0.01" min="0" max="4.00" placeholder="e.g. 3.75" class="form-control rounded-end-3" />
+                            <input asp-for="Gpa" type="number" step="0.01" min="0" max="4.00"
+                                   placeholder="e.g. 3.75" class="form-control rounded-end-3" />
                         </div>
                         <span asp-validation-for="Gpa" class="text-danger"></span>
                     </div>
@@ -124,7 +183,6 @@
 
                 <hr class="my-4" />
 
-                <!-- Career & Experience -->
                 <h5 class="fw-bold text-dark mb-3">
                     <i class="bi bi-briefcase-fill me-2"></i>Career & Experience
                 </h5>
@@ -133,25 +191,21 @@
                     <div class="col-md-6 mb-3">
                         <label asp-for="EmploymentWhileStudying" class="form-label fw-semibold"></label>
                         <div class="input-group shadow-sm">
-                            <span class="input-group-text bg-light">
-                                <i class="bi bi-building"></i>
-                            </span>
-                            <input asp-for="EmploymentWhileStudying" placeholder="Eg: Part-time software developer at XYZ Corp" class="form-control rounded-end-3" />
+                            <span class="input-group-text bg-light"><i class="bi bi-building"></i></span>
+                            <input asp-for="EmploymentWhileStudying"
+                                   placeholder="Eg: Part-time software developer at XYZ Corp"
+                                   class="form-control rounded-end-3" />
                         </div>
                         <span asp-validation-for="EmploymentWhileStudying" class="text-danger"></span>
                     </div>
-
                     <div class="col-md-6 mb-3">
                         <label asp-for="DegreeSpecificJob" class="form-label fw-semibold"></label>
                         <div class="input-group shadow-sm">
-                            <span class="input-group-text bg-light">
-                                <i class="bi bi-briefcase"></i>
-                            </span>
+                            <span class="input-group-text bg-light"><i class="bi bi-briefcase"></i></span>
                             <select asp-for="DegreeSpecificJob" class="form-select rounded-end-3">
                                 <option value="">-- Select an Option --</option>
                                 <option value="true">Yes</option>
                                 <option value="false">No</option>
-
                             </select>
                         </div>
                         <span asp-validation-for="DegreeSpecificJob" class="text-danger"></span>
@@ -162,58 +216,45 @@
                     <div class="col-md-4 mb-3">
                         <label asp-for="ParticipatedInResearch" class="form-label fw-semibold"></label>
                         <div class="input-group shadow-sm">
-                            <span class="input-group-text bg-light">
-                                <i class="bi bi-search"></i>
-                            </span>
+                            <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
                             <select asp-for="ParticipatedInResearch" class="form-select rounded-end-3">
                                 <option value="">-- Select an Option --</option>
                                 <option value="true">Yes</option>
                                 <option value="false">No</option>
-
                             </select>
                         </div>
                         <span asp-validation-for="ParticipatedInResearch" class="text-danger"></span>
                     </div>
-
                     <div class="col-md-4 mb-3">
                         <label asp-for="JobSecuredUponGraduation" class="form-label fw-semibold"></label>
                         <div class="input-group shadow-sm">
-                            <span class="input-group-text bg-light">
-                                <i class="bi bi-award-fill"></i>
-                            </span>
+                            <span class="input-group-text bg-light"><i class="bi bi-award-fill"></i></span>
                             <select asp-for="JobSecuredUponGraduation" class="form-select rounded-end-3">
                                 <option value="">-- Select an Option --</option>
                                 <option value="true">Yes</option>
                                 <option value="false">No</option>
-
                             </select>
                         </div>
                         <span asp-validation-for="JobSecuredUponGraduation" class="text-danger"></span>
                     </div>
-
                     <div class="col-md-4 mb-3">
                         <label asp-for="AttendedOrPlansGradSchool" class="form-label fw-semibold"></label>
                         <div class="input-group shadow-sm">
-                            <span class="input-group-text bg-light">
-                                <i class="bi bi-mortarboard"></i>
-                            </span>
+                            <span class="input-group-text bg-light"><i class="bi bi-mortarboard"></i></span>
                             <select asp-for="AttendedOrPlansGradSchool" class="form-select rounded-end-3">
                                 <option value="">-- Select an Option --</option>
                                 <option value="true">Yes</option>
                                 <option value="false">No</option>
-
                             </select>
                         </div>
                         <span asp-validation-for="AttendedOrPlansGradSchool" class="text-danger"></span>
                     </div>
                 </div>
 
-                <!-- Buttons -->
                 <div class="d-flex justify-content-between mt-5">
                     <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
                         <i class="bi bi-arrow-left me-2"></i>Back
                     </a>
-
                     <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
                         <i class="bi bi-check-circle-fill me-2"></i>Save Degree
                     </button>
@@ -226,5 +267,72 @@
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+
+    @if (isAdmin)
+    {
+        <script>
+            // Build alumni data from server-rendered SelectList
+            const alumniData = [
+            @if (ViewBag.AlumniId != null)
+            {
+                foreach (var item in ViewBag.AlumniId as IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>())
+                {
+                    if (!string.IsNullOrEmpty(item.Value))
+                    {
+                        @:{ id: '@item.Value', text: '@Html.Raw(item.Text?.Replace("'", "\\'"))' },
+                    }
+                }
+            }
+            ];
+
+            const input    = document.getElementById('alumniSearchInput');
+            const hidden   = document.getElementById('alumniIdHidden');
+            const dropdown = document.getElementById('alumniDropdown');
+
+            function renderList(items) {
+                dropdown.innerHTML = '';
+                if (items.length === 0) {
+                    dropdown.innerHTML = '<div class="ac-no-results">No alumni found</div>';
+                } else {
+                    items.forEach(a => {
+                        const div = document.createElement('div');
+                        div.className = 'ac-item';
+                        div.textContent = a.text;
+                        div.addEventListener('mousedown', () => {
+                            input.value  = a.text;
+                            hidden.value = a.id;
+                            dropdown.style.display = 'none';
+                        });
+                        dropdown.appendChild(div);
+                    });
+                }
+                dropdown.style.display = 'block';
+            }
+
+            input.addEventListener('focus', function () {
+                // Show all on focus if empty
+                if (this.value.trim() === '') {
+                    renderList(alumniData);
+                }
+            });
+
+            input.addEventListener('input', function () {
+                const q = this.value.toLowerCase().trim();
+                hidden.value = ''; // clear selection when typing
+                if (q === '') {
+                    renderList(alumniData);
+                } else {
+                    renderList(alumniData.filter(a => a.text.toLowerCase().includes(q)));
+                }
+            });
+
+            // Close when clicking outside
+            document.addEventListener('click', function (e) {
+                if (!input.contains(e.target) && !dropdown.contains(e.target)) {
+                    dropdown.style.display = 'none';
+                }
+            });
+        </script>
     }
 }
