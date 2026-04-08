@@ -209,8 +209,27 @@ namespace Alumni_Management_System.Controllers
             try
             {
                 var user = alumni.User;
+
+                // ?? Delete all related alumni records first ??
+                var degrees = _context.AlumniDegrees.Where(d => d.AlumniId == id);
+                _context.AlumniDegrees.RemoveRange(degrees);
+
+                var employments = _context.AlumniEmployments.Where(e => e.AlumniId == id);
+                _context.AlumniEmployments.RemoveRange(employments);
+
+                var internships = _context.AlumniInternships.Where(i => i.AlumniId == id);
+                _context.AlumniInternships.RemoveRange(internships);
+
+                var organizations = _context.AlumniOrganizations.Where(o => o.AlumniId == id);
+                _context.AlumniOrganizations.RemoveRange(organizations);
+
+                var messages = _context.AlumniMessages.Where(m => m.AlumniId == id);
+                _context.AlumniMessages.RemoveRange(messages);
+
+                // ?? Delete Alumni (NOT registry — kept for re-import) ??
                 _context.Alumni.Remove(alumni);
 
+                // ?? Delete associated user account if exists ??
                 if (user != null)
                 {
                     var result = await _userManager.DeleteAsync(user);
@@ -220,7 +239,7 @@ namespace Alumni_Management_System.Controllers
 
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
-                TempData["SuccessMessage"] = "Alumni and associated user account deleted successfully!";
+                TempData["SuccessMessage"] = $"Alumni '{alumni.FirstName} {alumni.LastName}' and all related records deleted successfully. Registry entry kept for re-import.";
             }
             catch (Exception ex)
             {
@@ -247,6 +266,7 @@ namespace Alumni_Management_System.Controllers
 
             var importErrors = new List<string>();
             var successCount = 0;
+            var updatedCount = 0;
 
             try
             {
@@ -277,27 +297,19 @@ namespace Alumni_Management_System.Controllers
                         headerMap[header] = col;
                 }
 
-                // Safe cell reader — handles numeric cells that EPPlus returns as double/int
                 string GetCell(int row, string colName)
                 {
                     if (!headerMap.TryGetValue(colName, out var colIndex))
                         return string.Empty;
-
                     var cellValue = worksheet.Cells[row, colIndex].Value;
                     if (cellValue == null) return string.Empty;
-
-                    // If EPPlus gives us a double (numeric cell), convert cleanly
-                    if (cellValue is double d)
-                        return ((long)d).ToString();
-
+                    if (cellValue is double d) return ((long)d).ToString();
                     return cellValue.ToString()?.Trim() ?? string.Empty;
                 }
 
-                // GPA needs decimal precision so handle separately
                 decimal? GetGpa(int row, string colName)
                 {
-                    if (!headerMap.TryGetValue(colName, out var colIndex))
-                        return null;
+                    if (!headerMap.TryGetValue(colName, out var colIndex)) return null;
                     var cellValue = worksheet.Cells[row, colIndex].Value;
                     if (cellValue == null) return null;
                     if (cellValue is double d) return (decimal)d;
@@ -327,7 +339,7 @@ namespace Alumni_Management_System.Controllers
                         var zip = GetCell(row, "Zip");
                         var gpa = GetGpa(row, "Inst GPA");
 
-                        // Skip blank rows and legend rows
+                        // Skip blank or legend rows
                         if (string.IsNullOrWhiteSpace(jagId) && string.IsNullOrWhiteSpace(firstName))
                             continue;
                         if (jagId == "X" || firstName == "X")
@@ -359,42 +371,46 @@ namespace Alumni_Management_System.Controllers
                             continue;
                         }
 
-                        // Duplicate checks
-                        if (await _context.AlumniRegistries.AnyAsync(r => r.JagId == jagId))
-                        {
-                            importErrors.Add($"Row {row}: '{jagId}' already in Registry — skipped.");
-                            continue;
-                        }
-
-                        if (await _context.Alumni.AnyAsync(a => a.JagId == jagId))
-                        {
-                            importErrors.Add($"Row {row}: '{jagId}' already in Alumni — skipped.");
-                            continue;
-                        }
-
-                        // Parse age
+                        // Parse common fields
                         int age = 0;
                         if (!string.IsNullOrEmpty(ageText))
                             int.TryParse(ageText, out age);
 
-                        // Parse graduation year from 6-digit term code e.g. 202610 ? 2026
                         int graduationYear = 0;
                         if (!string.IsNullOrEmpty(gradText) && gradText.Length >= 4)
                             int.TryParse(gradText.Substring(0, 4), out graduationYear);
 
-                        // Email fallback
                         var finalEmail = !string.IsNullOrEmpty(permEmail)
                             ? permEmail
                             : (!string.IsNullOrEmpty(studentEmail)
                                 ? studentEmail
                                 : $"{jagId.ToLower()}@placeholder.com");
 
-                        // Address
                         var fullAddress = string.IsNullOrEmpty(street2)
                             ? street1
                             : $"{street1}, {street2}";
 
-                        // Create Alumni
+                        // ?? Check if Alumni already exists ??
+                        var alumniExists = await _context.Alumni.AnyAsync(a => a.JagId == jagId);
+
+                        // ?? Check if Registry entry exists ??
+                        var registryEntry = await _context.AlumniRegistries.FirstOrDefaultAsync(r => r.JagId == jagId);
+
+                        if (alumniExists)
+                        {
+                            // Alumni already in DB — skip alumni insert but update registry if needed
+                            if (registryEntry != null)
+                            {
+                                registryEntry.FirstName = firstName;
+                                registryEntry.LastName = lastName;
+                                _context.AlumniRegistries.Update(registryEntry);
+                                await _context.SaveChangesAsync();
+                                importErrors.Add($"Row {row}: '{jagId}' already exists in Alumni — skipped. Registry updated.");
+                            }
+                            continue;
+                        }
+
+                        // ?? Alumni does NOT exist — create it (re-import after delete) ??
                         var alumniEntity = new Alumni
                         {
                             JagId = jagId,
@@ -419,19 +435,30 @@ namespace Alumni_Management_System.Controllers
 
                         _context.Alumni.Add(alumniEntity);
 
-                        // Create Registry
-                        _context.AlumniRegistries.Add(new AlumniRegistry
+                        // ?? Registry: update if exists, create if not ??
+                        if (registryEntry != null)
                         {
-                            JagId = jagId,
-                            FirstName = firstName,
-                            LastName = lastName,
-                            AccountCreated = false
-                        });
+                            // Update existing registry entry with latest name
+                            registryEntry.FirstName = firstName;
+                            registryEntry.LastName = lastName;
+                            _context.AlumniRegistries.Update(registryEntry);
+                        }
+                        else
+                        {
+                            // Create new registry entry
+                            _context.AlumniRegistries.Add(new AlumniRegistry
+                            {
+                                JagId = jagId,
+                                FirstName = firstName,
+                                LastName = lastName,
+                                AccountCreated = false
+                            });
+                        }
 
                         // Save to get AlumniId
                         await _context.SaveChangesAsync();
 
-                        // Find or create DegreeProgram
+                        // ?? Find or create DegreeProgram ??
                         if (!string.IsNullOrEmpty(major))
                         {
                             var degreeProgram = await _context.DegreePrograms.FirstOrDefaultAsync(dp =>
@@ -451,7 +478,6 @@ namespace Alumni_Management_System.Controllers
                                 await _context.SaveChangesAsync();
                             }
 
-                            // Create AlumniDegree
                             bool degreeExists = await _context.AlumniDegrees.AnyAsync(ad =>
                                 ad.AlumniId == alumniEntity.AlumniId &&
                                 ad.DegreeId == degreeProgram.DegreeId);
@@ -478,14 +504,16 @@ namespace Alumni_Management_System.Controllers
                             }
                         }
 
-                        successCount++;
+                        if (registryEntry != null)
+                            updatedCount++; // was re-imported after delete
+                        else
+                            successCount++; // brand new import
                     }
                     catch (Exception rowEx)
                     {
                         var msg = rowEx.InnerException?.Message ?? rowEx.Message;
                         importErrors.Add($"Row {row}: Error — {msg}");
 
-                        // Detach failed tracked entities so EF stays clean for next row
                         foreach (var entry in _context.ChangeTracker.Entries()
                             .Where(e => e.State == Microsoft.EntityFrameworkCore.EntityState.Added)
                             .ToList())
@@ -504,9 +532,13 @@ namespace Alumni_Management_System.Controllers
             if (importErrors.Any())
                 TempData["ErrorMessages"] = string.Join("<br/>", importErrors);
 
-            TempData["SuccessMessage"] = successCount > 0
-                ? $"Bulk import completed. {successCount} alumni imported successfully."
-                : "No alumni were imported. Check errors above.";
+            var summary = new List<string>();
+            if (successCount > 0) summary.Add($"{successCount} new alumni imported");
+            if (updatedCount > 0) summary.Add($"{updatedCount} previously deleted alumni re-imported");
+
+            TempData["SuccessMessage"] = summary.Any()
+                ? $"Bulk import completed. {string.Join(", ", summary)}."
+                : "No new alumni were imported.";
 
             return RedirectToAction(nameof(Index));
         }
