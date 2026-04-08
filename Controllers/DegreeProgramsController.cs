@@ -96,7 +96,7 @@ namespace Alumni_Management_System.Controllers
             var alumniCount = await _context.AlumniDegrees.CountAsync(ad => ad.DegreeId == id);
             if (alumniCount > 0)
             {
-                TempData["ErrorMessage"] = $"Cannot delete this degree program — {alumniCount} alumni are assigned to it. Remove their degree records first.";
+                TempData["ErrorMessage"] = $"Cannot delete this degree program — {alumniCount} alumni(s) are assigned to it. Remove their degree records first.";
                 return RedirectToAction(nameof(Index));
             }
 

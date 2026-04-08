@@ -48,14 +48,14 @@ namespace Alumni_Management_System.Controllers
 
             if (registryEntry == null)
             {
-                ModelState.AddModelError("JagId", "JAG ID not found in the Alumni Registry. Please email the administrator for assistance.");
+                ModelState.AddModelError("JagId", "JAG ID not found. Please contact the administrator for assistance.");
                 return View(model);
             }
 
 
             if (registryEntry.AccountCreated)
             {
-                ModelState.AddModelError("JagId", "Account already exists associated with this JAG ID. Please email administrator for help.");
+                ModelState.AddModelError("JagId", "Account already exists associated with this JAG ID. Please contact the administrator for help.");
                 return View(model);
             }
 
@@ -110,7 +110,7 @@ namespace Alumni_Management_System.Controllers
 
             if (existingAlumni == null)
             {
-                ModelState.AddModelError("", "Your record was not found in the imported Alumni list. Please contact admin support.");
+                ModelState.AddModelError("", "Record not found. Please contact admin support.");
                 return View(model);
             }
 
