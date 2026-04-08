@@ -7,13 +7,15 @@ using Microsoft.EntityFrameworkCore;
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
+
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
 builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
 {
-    options.SignIn.RequireConfirmedAccount = false; // Disable email confirmation for now
+    options.SignIn.RequireConfirmedAccount = false;
     options.Password.RequireDigit = true;
     options.Password.RequireLowercase = true;
     options.Password.RequireUppercase = true;
@@ -33,7 +35,6 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.Configure<Microsoft.AspNetCore.Routing.RouteOptions>(options =>
 {
-
 });
 
 builder.Services.AddControllersWithViews();
@@ -56,12 +57,13 @@ using (var scope = app.Services.CreateScope())
 
 if (app.Environment.IsDevelopment())
 {
+    // ? Shows full exception details in browser instead of crashing the debugger
+    app.UseDeveloperExceptionPage();
     app.UseMigrationsEndPoint();
 }
 else
 {
     app.UseExceptionHandler("/Home/Error");
-
     app.UseHsts();
 }
 
@@ -85,20 +87,16 @@ app.Use(async (context, next) =>
 {
     if (context.User.Identity?.IsAuthenticated == true)
     {
-
         var path = context.Request.Path.Value?.ToLower() ?? "";
         var skipPaths = new[] { "/alumni/edit", "/identity/account/logout", "/account/logout", "/identity/account/manage" };
-
         if (!skipPaths.Any(p => path.StartsWith(p)))
         {
             var userManager = context.RequestServices.GetRequiredService<UserManager<AppUser>>();
             var user = await userManager.GetUserAsync(context.User);
-
             if (user != null && user.IsFirstLogin && context.User.IsInRole(Constants.AlumniRole))
             {
                 var dbContext = context.RequestServices.GetRequiredService<ApplicationDbContext>();
                 var alumni = await dbContext.Alumni.FirstOrDefaultAsync(a => a.UserId == user.Id || a.JagId == user.JagId);
-
                 if (alumni != null)
                 {
                     context.Response.Redirect($"/Alumni/Edit/{alumni.AlumniId}");
@@ -120,4 +118,4 @@ app.MapControllerRoute(
 app.MapRazorPages()
    .WithStaticAssets();
 
- app.Run();
+app.Run();

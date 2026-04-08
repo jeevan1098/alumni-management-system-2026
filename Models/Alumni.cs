@@ -18,7 +18,7 @@ public partial class Alumni
     [Required]
     [Column("jag_id")]
     [StringLength(20)]
-    [RegularExpression(@"^J00\d+$", ErrorMessage = "JAG ID must start with 'J00' followed by numbers only.")]
+    [RegularExpression(@"^J\d+$", ErrorMessage = "JAG ID must start with 'J' followed by numbers only (e.g. J09999999).")]
     [Display(Name = "JAG ID")]
     public string JagId { get; set; }
 
@@ -65,7 +65,7 @@ public partial class Alumni
     [Display(Name = "Student Email")]
     public string StudentEmail { get; set; }
 
-    [Required]
+    // Not Required — OTH Email may be empty in Excel
     [Column("permanent_email")]
     [StringLength(150)]
     [Display(Name = "Permanent Email")]
@@ -133,5 +133,4 @@ public partial class Alumni
 
     [InverseProperty("Alumni")]
     public virtual ICollection<AlumniOrganization> AlumniOrganizations { get; set; } = new List<AlumniOrganization>();
-
 }

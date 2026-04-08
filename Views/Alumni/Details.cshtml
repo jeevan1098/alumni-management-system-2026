@@ -11,7 +11,7 @@
             <!-- Header Section -->
             <div class="row align-items-center mb-4">
                 <div class="col-md-3 text-center">
-                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center"
+                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto"
                          style="width:120px;height:120px;font-size:40px;">
                         @Model.FirstName.Substring(0, 1)@Model.LastName.Substring(0, 1)
                     </div>
@@ -67,9 +67,7 @@
 
                     @if (Model.AgeAtGraduation.HasValue)
                     {
-                        <p class="mb-1">
-                            🎓 Age at Graduation: @Model.AgeAtGraduation years
-                        </p>
+                        <p class="mb-1">🎓 Age at Graduation: @Model.AgeAtGraduation years</p>
                     }
 
                     @if (!string.IsNullOrEmpty(Model.Address))
@@ -81,9 +79,7 @@
                     {
                         <p class="mb-1">
                             🌐 Social Media:
-                            <a href="@Model.SocialMediaAccount" target="_blank">
-                                View Profile
-                            </a>
+                            <a href="@Model.SocialMediaAccount" target="_blank">View Profile</a>
                         </p>
                     }
                 </div>
@@ -99,16 +95,11 @@
                     <div class="col-md-6">
                         <p class="mb-1">
                             📩 Solicitation Code:
-                            <span class="badge bg-info text-dark">
-                                @Model.SolicitationCode
-                            </span>
+                            <span class="badge bg-info text-dark">@Model.SolicitationCode</span>
                         </p>
-
                         <p class="mb-1">
                             🔒 Privacy Level:
-                            <span class="badge bg-secondary">
-                                @Model.Privacy
-                            </span>
+                            <span class="badge bg-secondary">@Model.Privacy</span>
                         </p>
                     </div>
 
@@ -123,10 +114,8 @@
                                 <span class="badge bg-danger">Inactive</span>
                             }
                         </p>
-
                         <p class="mb-1">
-                            🕒 Last Updated:
-                            @Model.LastUpdated.ToString("MMMM dd, yyyy hh:mm tt")
+                            🕒 Last Updated: @Model.LastUpdated.ToString("MMMM dd, yyyy hh:mm tt")
                         </p>
                     </div>
                 </div>
@@ -134,15 +123,21 @@
 
         </div>
 
-        <!-- Footer -->
+        <!-- Footer — Edit Profile hidden from Staff -->
         <div class="card-footer bg-light d-flex justify-content-between rounded-bottom-4">
-            <a asp-action="Edit" asp-route-id="@Model?.AlumniId"
-               class="btn btn-primary rounded-pill px-4">
-                Edit Profile
-            </a>
+            @if (User.IsInRole("Admin") || User.IsInRole("Alumni"))
+            {
+                <a asp-action="Edit" asp-route-id="@Model?.AlumniId"
+                   class="btn btn-primary rounded-pill px-4">
+                    Edit Profile
+                </a>
+            }
+            else
+            {
+                <span></span>
+            }
 
-            <a asp-action="Index"
-               class="btn btn-outline-secondary rounded-pill px-4">
+            <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
                 Back to List
             </a>
         </div>
