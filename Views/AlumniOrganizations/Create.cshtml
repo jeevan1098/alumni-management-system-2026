@@ -1,5 +1,4 @@
-﻿
-@model Alumni_Management_System.Models.AlumniOrganization
+﻿@model Alumni_Management_System.Models.AlumniOrganization
 
 @{
     ViewData["Title"] = "Add Student Organization";
@@ -8,10 +7,53 @@
     var isAdmin = userRole == "Admin";
 }
 
+<style>
+    .autocomplete-wrapper {
+        position: relative;
+    }
+
+    .autocomplete-list {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        max-height: 220px;
+        overflow-y: auto;
+        background: white;
+        border: 1px solid #ced4da;
+        border-top: none;
+        border-radius: 0 0 8px 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        display: none;
+    }
+
+    .ac-item {
+        padding: 10px 14px;
+        cursor: pointer;
+        font-size: 14px;
+        border-bottom: 1px solid #f0f0f0;
+    }
+
+        .ac-item:hover {
+            background: #e8f0fe;
+            color: #1a56db;
+        }
+
+        .ac-item:last-child {
+            border-bottom: none;
+        }
+
+    .ac-no-results {
+        padding: 10px 14px;
+        color: #6c757d;
+        font-size: 14px;
+    }
+</style>
+
 <div class="container mt-5 mb-5">
     <div class="card shadow-lg border-0 rounded-4 mx-auto" style="max-width:700px;">
         <div class="card-body p-5">
-
             <div class="d-flex align-items-center mb-4">
                 <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
                     <i class="bi bi-building text-primary fs-3"></i>
@@ -21,29 +63,35 @@
                     <small class="text-info">Enter organization and role information for alumni</small>
                 </div>
             </div>
-
             <hr class="mb-4" />
 
             <form asp-action="Create" novalidate>
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
 
-                <!-- Alumni & Organization -->
+                <!-- Alumni -->
                 <div class="mb-4">
                     <label class="form-label fw-semibold"><span class="text-danger">*</span> Alumni</label>
-                    <div class="input-group shadow-sm mb-3">
-                        <span class="input-group-text bg-light"><i class="bi bi-person-fill"></i></span>
-                        @if (isAdmin)
-                        {
-                            <select asp-for="AlumniId" class="form-select rounded-end-3" asp-items="ViewBag.AlumniId">
-                                <option value="">-- Select an Alumni --</option>
-                            </select>
-                        }
-                        else
-                        {
+                    @if (isAdmin)
+                    {
+                        <input type="hidden" asp-for="AlumniId" id="alumniIdHidden" />
+                        <div class="autocomplete-wrapper mb-3">
+                            <div class="input-group shadow-sm">
+                                <span class="input-group-text bg-light"><i class="bi bi-person-search"></i></span>
+                                <input type="text" id="alumniSearchInput" class="form-control rounded-end-3"
+                                       placeholder="Type JAG ID or name to search..." autocomplete="off" />
+                            </div>
+                            <div class="autocomplete-list" id="alumniDropdownList"></div>
+                        </div>
+                        <small class="text-muted d-block mb-3"><i class="bi bi-info-circle me-1"></i>Start typing to find an alumni</small>
+                    }
+                    else
+                    {
+                        <div class="input-group shadow-sm mb-3">
+                            <span class="input-group-text bg-light"><i class="bi bi-person-fill"></i></span>
                             <select asp-for="AlumniId" class="form-select rounded-end-3" asp-items="ViewBag.AlumniId" disabled></select>
                             <input type="hidden" asp-for="AlumniId" value="@currentAlumniId" />
-                        }
-                    </div>
+                        </div>
+                    }
                     <span asp-validation-for="AlumniId" class="text-danger"></span>
 
                     <label class="form-label fw-semibold"><span class="text-danger">*</span> Organization Type</label>
@@ -74,10 +122,8 @@
                         <small class="form-text text-info">Select the highest-ranking officer role held.</small>
                         <span asp-validation-for="OfficerRoles" class="text-danger"></span>
                     </div>
-
                 </div>
 
-                <!-- Buttons -->
                 <div class="d-flex justify-content-between mt-4">
                     <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
                         <i class="bi bi-arrow-left me-2"></i>Back
@@ -94,5 +140,34 @@
 @section Scripts {
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+    @if (isAdmin)
+    {
+        <script>
+            const alumniData = [
+            @if (ViewBag.AlumniId != null)
+            {
+                foreach (var item in ViewBag.AlumniId as IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>())
+                {
+                    if (!string.IsNullOrEmpty(item.Value))
+                    {
+                        @:{ id: '@item.Value', text: '@Html.Raw(item.Text?.Replace("'", "\\'"))' },
+                    }
+                }
+            }
+            ];
+            const input = document.getElementById('alumniSearchInput');
+            const hidden = document.getElementById('alumniIdHidden');
+            const dropdown = document.getElementById('alumniDropdownList');
+            function renderList(items) {
+                dropdown.innerHTML = '';
+                if (!items.length) { dropdown.innerHTML = '<div class="ac-no-results">No alumni found</div>'; }
+                else { items.forEach(a => { const d = document.createElement('div'); d.className = 'ac-item'; d.textContent = a.text; d.addEventListener('mousedown', () => { input.value = a.text; hidden.value = a.id; dropdown.style.display = 'none'; }); dropdown.appendChild(d); }); }
+                dropdown.style.display = 'block';
+            }
+            input.addEventListener('focus', () => { if (!input.value.trim()) renderList(alumniData); });
+            input.addEventListener('input', function () { hidden.value = ''; const q = this.value.toLowerCase().trim(); renderList(q ? alumniData.filter(a => a.text.toLowerCase().includes(q)) : alumniData); });
+            document.addEventListener('click', e => { if (!input.contains(e.target) && !dropdown.contains(e.target)) dropdown.style.display = 'none'; });
+        </script>
     }
 }

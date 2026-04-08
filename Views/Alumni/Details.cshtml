@@ -53,26 +53,30 @@
 
                     @if (!string.IsNullOrEmpty(Model.PermanentEmail))
                     {
-                        <p class="mb-1">📧 Personal Email: @Model.PermanentEmail</p>
+                        <p class="mb-1">📧 Current Email: @Model.PermanentEmail</p>
                     }
-
-                    @if (!string.IsNullOrEmpty(Model.Phone))
+                    @if (User.IsInRole("Admin"))
                     {
-                        <p class="mb-1">📱 Phone: @Model.Phone</p>
+                        @if (!string.IsNullOrEmpty(Model.Phone))
+                        {
+                            <p class="mb-1">📱 Phone: @Model.Phone</p>
+                        }
                     }
                 </div>
-
                 <div class="col-md-6 mb-3">
                     <h5 class="fw-bold">Personal Details</h5>
 
-                    @if (Model.AgeAtGraduation.HasValue)
-                    {
-                        <p class="mb-1">🎓 Age at Graduation: @Model.AgeAtGraduation years</p>
-                    }
+                @if (User.IsInRole("Admin"))
+                {
+                        @if (Model.AgeAtGraduation.HasValue)
+                        {
+                            <p class="mb-1">🎓 Age at Graduation: @Model.AgeAtGraduation years</p>
+                        }
 
-                    @if (!string.IsNullOrEmpty(Model.Address))
-                    {
-                        <p class="mb-1">🏠 Address: @Model.Address</p>
+                        @if (!string.IsNullOrEmpty(Model.Address))
+                        {
+                            <p class="mb-1">🏠 Address: @Model.Address</p>
+                        }
                     }
 
                     @if (!string.IsNullOrEmpty(Model.SocialMediaAccount))
@@ -85,56 +89,54 @@
                 </div>
             </div>
 
-            <hr />
+            @if (User.IsInRole("Admin"))
+            {
+                <hr />
+                <!-- Settings & Status Section -->
+                <div class="mt-4">
+                    <h5 class="fw-bold mb-3">Profile Settings & Status</h5>
 
-            <!-- Settings & Status Section -->
-            <div class="mt-4">
-                <h5 class="fw-bold mb-3">Profile Settings & Status</h5>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1">
+                                📩 Solicitation Code:
+                                <span class="badge bg-info text-dark">@Model.SolicitationCode</span>
+                            </p>
+                            <p class="mb-1">
+                                🔒 Privacy Level:
+                                <span class="badge bg-secondary">@Model.Privacy</span>
+                            </p>
+                        </div>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <p class="mb-1">
-                            📩 Solicitation Code:
-                            <span class="badge bg-info text-dark">@Model.SolicitationCode</span>
-                        </p>
-                        <p class="mb-1">
-                            🔒 Privacy Level:
-                            <span class="badge bg-secondary">@Model.Privacy</span>
-                        </p>
-                    </div>
-
-                    <div class="col-md-6">
-                        <p class="mb-1">
-                            @if (Model.IsActive)
-                            {
-                                <span class="badge bg-success">Active</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-danger">Inactive</span>
-                            }
-                        </p>
-                        <p class="mb-1">
-                            🕒 Last Updated: @Model.LastUpdated.ToString("MMMM dd, yyyy hh:mm tt")
-                        </p>
+                        <div class="col-md-6">
+                            <p class="mb-1">
+                                @if (Model.IsActive)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Inactive</span>
+                                }
+                            </p>
+                            <p class="mb-1">
+                                🕒 Last Updated: @Model.LastUpdated.ToString("MMMM dd, yyyy hh:mm tt")
+                            </p>
+                        </div>
                     </div>
                 </div>
-            </div>
+            }
 
         </div>
 
         <!-- Footer — Edit Profile hidden from Staff -->
         <div class="card-footer bg-light d-flex justify-content-between rounded-bottom-4">
-            @if (User.IsInRole("Admin") || User.IsInRole("Alumni"))
+            @if (User.IsInRole("Admin"))
             {
                 <a asp-action="Edit" asp-route-id="@Model?.AlumniId"
                    class="btn btn-primary rounded-pill px-4">
                     Edit Profile
                 </a>
-            }
-            else
-            {
-                <span></span>
             }
 
             <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">

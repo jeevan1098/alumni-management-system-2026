@@ -107,7 +107,7 @@
                             <label asp-for="FirstName" class="form-label"></label>
                             <input asp-for="FirstName" class="form-control" readonly />
                             <span asp-validation-for="FirstName" class="text-danger"></span>
-                            <small class="form-text text-info"><i class="bi bi-lock"></i> From Registry</small>
+                            <small class="form-text text-info"><i class="bi bi-lock"></i> From Records</small>
                         </div>
                         <div class="col-md-4 mb-3">
                             <label asp-for="PreferredFirstName" class="form-label"></label>
@@ -118,7 +118,7 @@
                             <label asp-for="LastName" class="form-label"></label>
                             <input asp-for="LastName" class="form-control" readonly />
                             <span asp-validation-for="LastName" class="text-danger"></span>
-                            <small class="form-text text-info"><i class="bi bi-lock"></i> From Registry</small>
+                            <small class="form-text text-info"><i class="bi bi-lock"></i> From Records</small>
                         </div>
                     </div>
                     <div class="row">
@@ -145,7 +145,7 @@
                             <label asp-for="GraduationYear" class="form-label"></label>
                             <input asp-for="GraduationYear" class="form-control" type="number" readonly />
                             <span asp-validation-for="GraduationYear" class="text-danger"></span>
-                            <small class="form-text text-info"><i class="bi bi-lock"></i> From Registry</small>
+                            <small class="form-text text-info"><i class="bi bi-lock"></i> From Records</small>
                         </div>
                     </div>
                 </div>
@@ -164,7 +164,7 @@
                             <span asp-validation-for="StudentEmail" class="text-danger"></span>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label asp-for="PermanentEmail" class="form-label"></label>
+                            <label asp-for="PermanentEmail" class="form-label">Current Email</label>
                             <input asp-for="PermanentEmail" class="form-control" type="email" />
                             <span asp-validation-for="PermanentEmail" class="text-danger"></span>
                         </div>
@@ -258,7 +258,7 @@
                                 <label asp-for="Privacy" class="form-check-label fw-semibold"></label>
                             </div>
                             <div class="form-text">
-                                Allow other alumni to see your profile in the directory.
+                                DO NOT allow other alumni to see your basic information.
                             </div>
                             <span asp-validation-for="Privacy" class="text-danger"></span>
                         </div>

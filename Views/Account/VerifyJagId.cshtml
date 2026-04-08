@@ -14,7 +14,7 @@
                 <div class="card-body">
                     <h5 class="card-title">Verify Your JAG ID</h5>
                     <p class="text-info">
-                        Please enter your JAG ID to begin the registration process. Your JAG ID must be registered in our Alumni Registry.
+                        Please enter your JAG ID and Last Name to begin the registration process. And last name must match the one used at the time of graduation.
                     </p>
 
                     <form asp-action="VerifyJagId" method="post">
@@ -22,16 +22,24 @@
 
                         <div class="mb-3">
                             <label asp-for="JagId" class="form-label"></label>
-                            <input asp-for="JagId" class="form-control form-control-lg" placeholder="J0012345" autofocus />
+                            <input asp-for="JagId" class="form-control form-control-lg" autofocus  />
                             <span asp-validation-for="JagId" class="text-danger"></span>
                             <div class="form-text">
-                                <i class="bi bi-info-circle"></i> JAG ID must start with 'J00' followed by numbers (e.g., J0012345)
+                                <i class="bi bi-info-circle"></i> JAG ID must start with 'J' followed by numbers (e.g., J0012345)
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label asp-for="LastName" class="form-label"></label>
+                            <input asp-for="LastName" class="form-control form-control-lg" />
+                            <span asp-validation-for="LastName" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i> Please enter your last name while graduating.
                             </div>
                         </div>
 
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="bi bi-arrow-right-circle"></i> Verify JAG ID
+                                <i class="bi bi-arrow-right-circle"></i> Verify Credentials
                             </button>
                         </div>
                     </form>

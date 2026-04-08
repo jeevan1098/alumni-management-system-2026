@@ -166,7 +166,7 @@ namespace Alumni_Management_System.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")] // Only Admin can bulk import
-        public async Task<IActionResult> BulkImport(Microsoft.AspNetCore.Http.IFormFile file)
+        public IActionResult BulkImport(Microsoft.AspNetCore.Http.IFormFile file)
         {
             return RedirectToAction("BulkImport", "Alumni");
         }

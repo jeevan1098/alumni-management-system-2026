@@ -118,7 +118,7 @@
     <div class="col-md-2">
         <div class="card-soft stat6 text-center">
             <div class="stat-number">@ViewData["PendingApprovals"]</div>
-            Pending
+            Inactive Alumni
         </div>
     </div>
 </div>
@@ -224,7 +224,7 @@
     var labels       = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(chartLabels));
     var alumniData   = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(alumniData));
     var registryData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(registryData));
-
+    console.log(labels, alumniData, registryData);
     if (labels.length > 0) {
         new Chart(document.getElementById('chart'), {
             type: 'line',
