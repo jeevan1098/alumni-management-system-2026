@@ -1,5 +1,4 @@
-﻿
-@model IEnumerable<Alumni_Management_System.Models.Message>
+﻿@model IEnumerable<Alumni_Management_System.Models.Message>
 
 @{
     ViewData["Title"] = "Messages";
@@ -24,12 +23,9 @@
 
             <!-- Add New Button -->
             <div class="d-flex justify-content-end mb-3">
-                @if (User.IsInRole("Admin"))
-                {
-                    <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
-                        <i class="bi bi-plus-circle-fill me-2"></i>Create New
-                    </a>
-                }
+                <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-plus-circle-fill me-2"></i>Create New
+                </a>
             </div>
 
             <!-- Table -->
@@ -59,15 +55,18 @@
                                     <a asp-action="Details" asp-route-id="@item.MessageId" class="btn btn-sm btn-outline-primary rounded-pill me-2">
                                         <i class="bi bi-eye-fill"></i>
                                     </a>
-                                    @if (User.IsInRole("Admin"))
-                                    {
-                                        <a asp-action="Edit" asp-route-id="@item.MessageId" class="btn btn-sm btn-outline-warning rounded-pill me-2">
-                                            <i class="bi bi-pencil-fill"></i>
-                                        </a>
-                                        <a asp-action="Delete" asp-route-id="@item.MessageId" class="btn btn-sm btn-outline-danger rounded-pill">
-                                            <i class="bi bi-trash-fill"></i>
-                                        </a>
-                                    }
+                                    <a asp-action="Edit" asp-route-id="@item.MessageId" class="btn btn-sm btn-outline-warning rounded-pill me-2">
+                                        <i class="bi bi-pencil-fill"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.MessageId" class="btn btn-sm btn-outline-danger rounded-pill">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </a>
+
+                                </td>
+                                <td>
+                                    <a asp-action="Alumnimessagefilter" asp-route-id="@item.MessageId" class="btn btn-sm btn-success rounded-pill">
+                                        <i class="bi bi-send-fill me-1"></i>Send Mail
+                                    </a>
                                 </td>
                             </tr>
                         }

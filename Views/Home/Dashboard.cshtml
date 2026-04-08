@@ -1,8 +1,11 @@
 ﻿@{
     ViewData["Title"] = "Dashboard";
+    var recentActivity = ViewBag.RecentActivity as List<string>;
+    var chartLabels = ViewBag.ChartLabels as int[] ?? new int[0];
+    var alumniData = ViewBag.AlumniData as int[] ?? new int[0];
+    var registryData = ViewBag.RegistryData as int[] ?? new int[0];
 }
 
-<!-- ===== PAGE STYLE (RESTORE COLORS) ===== -->
 <style>
     .banner {
         background: linear-gradient(135deg,#4facfe,#00f2fe);
@@ -60,20 +63,16 @@
         background: #fee2e2;
     }
 
-    body.dark .stat1,
-    body.dark .stat2,
-    body.dark .stat3,
-    body.dark .stat4,
-    body.dark .stat5,
-    body.dark .stat6 {
+    body.dark .stat1, body.dark .stat2, body.dark .stat3,
+    body.dark .stat4, body.dark .stat5, body.dark .stat6 {
         background: #2a2a2a;
     }
 </style>
 
-<!-- ===== HEADER ===== -->
 @{
     var role = ViewData["UserRole"]?.ToString() ?? "Unknown";
 }
+
 <div class="banner">
     <div class="d-flex justify-content-between align-items-center mb-2">
         <div>
@@ -84,72 +83,61 @@
     </div>
 </div>
 
-<!-- ===== STATS ===== -->
+<!-- STATS -->
 <div class="row g-3 mb-4">
-
     <div class="col-md-2">
         <div class="card-soft stat1 text-center">
             <div class="stat-number">@ViewData["TotalAlumni"]</div>
             Alumni
         </div>
     </div>
-
     <div class="col-md-2">
         <div class="card-soft stat2 text-center">
             <div class="stat-number">@ViewData["TotalRegistry"]</div>
             Registry
         </div>
     </div>
-
     <div class="col-md-2">
         <div class="card-soft stat3 text-center">
             <div class="stat-number">@ViewData["TotalUsers"]</div>
             Users
         </div>
     </div>
-
     <div class="col-md-2">
         <div class="card-soft stat4 text-center">
             <div class="stat-number">@ViewData["TotalMessages"]</div>
             Messages
         </div>
     </div>
-
     <div class="col-md-2">
         <div class="card-soft stat5 text-center">
             <div class="stat-number">@ViewData["TotalEmployments"]</div>
             Employments
         </div>
     </div>
-
     <div class="col-md-2">
         <div class="card-soft stat6 text-center">
             <div class="stat-number">@ViewData["PendingApprovals"]</div>
             Pending
         </div>
     </div>
-
 </div>
 
-<!-- ===== CHART + ACTIVITY ===== -->
+<!-- CHART + ACTIVITY -->
 <div class="row g-3 mb-4">
-
-    <!-- Chart -->
     <div class="col-lg-8">
         <div class="card-soft p-3">
             <h6>Alumni Growth</h6>
             <canvas id="chart" height="110"></canvas>
         </div>
     </div>
-
-    <!-- Activity -->
     <div class="col-lg-4">
         <div class="card-soft p-3">
             <h6>Recent Activity</h6>
             <ul class="small mb-0">
-                @if (ViewBag.RecentActivity != null && ViewBag.RecentActivity.Count > 0)
+                @if (recentActivity != null && recentActivity.Count > 0)
                 {
-                    foreach (var item in ViewBag.RecentActivity)
+                    foreach (var item in recentActivity)
                     {
                         <li>@item</li>
                     }
@@ -161,12 +149,10 @@
             </ul>
         </div>
     </div>
-
 </div>
 
-<!-- ===== MODULE GRID ===== -->
+<!-- MODULE GRID -->
 <div class="row g-3">
-
     <div class="col-md-3">
         <a asp-controller="DegreePrograms" asp-action="Index" class="text-decoration-none">
             <div class="card-soft text-center">
@@ -175,7 +161,6 @@
             </div>
         </a>
     </div>
-
     <div class="col-md-3">
         <a asp-controller="AlumniDegrees" asp-action="Index" class="text-decoration-none">
             <div class="card-soft text-center">
@@ -184,7 +169,6 @@
             </div>
         </a>
     </div>
-
     <div class="col-md-3">
         <a asp-controller="AlumniInternships" asp-action="Index" class="text-decoration-none">
             <div class="card-soft text-center">
@@ -193,7 +177,6 @@
             </div>
         </a>
     </div>
-
     <div class="col-md-3">
         <a asp-controller="AlumniOrganizations" asp-action="Index" class="text-decoration-none">
             <div class="card-soft text-center">
@@ -202,7 +185,6 @@
             </div>
         </a>
     </div>
-
     <div class="col-md-3">
         <a asp-controller="Employers" asp-action="Index" class="text-decoration-none">
             <div class="card-soft text-center">
@@ -211,7 +193,6 @@
             </div>
         </a>
     </div>
-
     <div class="col-md-3">
         <a asp-controller="Messages" asp-action="Index" class="text-decoration-none">
             <div class="card-soft text-center">
@@ -220,7 +201,6 @@
             </div>
         </a>
     </div>
-
     <div class="col-md-3">
         <a asp-controller="AlumniRegistries" asp-action="Index" class="text-decoration-none">
             <div class="card-soft text-center">
@@ -229,7 +209,6 @@
             </div>
         </a>
     </div>
-
     <div class="col-md-3">
         <a asp-controller="Alumni" asp-action="Index" class="text-decoration-none">
             <div class="card-soft text-center">
@@ -238,14 +217,13 @@
             </div>
         </a>
     </div>
-
 </div>
 
-<!-- ===== CHART SCRIPT ===== -->
+<!-- CHART SCRIPT — all ViewBag values cast to concrete types at top of file -->
 <script>
-    var labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ChartLabels ?? new List<int>()));
-    var alumniData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.AlumniData ?? new List<int>()));
-    var registryData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.RegistryData ?? new List<int>()));
+    var labels       = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(chartLabels));
+    var alumniData   = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(alumniData));
+    var registryData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(registryData));
 
     if (labels.length > 0) {
         new Chart(document.getElementById('chart'), {
@@ -270,16 +248,11 @@
                 ]
             },
             options: {
-                plugins: {
-                    legend: { display: true }
-                },
+                plugins: { legend: { display: true } },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: {
-                            stepSize: 1,
-                            precision: 0
-                        }
+                        ticks: { stepSize: 1, precision: 0 }
                     }
                 }
             }

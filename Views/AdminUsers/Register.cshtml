@@ -34,27 +34,43 @@
 
                         <div class="mb-3">
                             <label for="username" class="form-label">Username</label>
-                            <input type="text" id="username" name="username" class="form-control" placeholder="Enter username" required minlength="4" />
+                            <input type="text" id="username" name="username" class="form-control"
+                                   value="@ViewBag.FormUsername"
+                                   placeholder="Enter username" required minlength="4" />
                             <div class="invalid-feedback">Username is required (min 4 characters).</div>
                         </div>
 
                         <div class="mb-3">
                             <label for="email" class="form-label">Email Address</label>
-                            <input type="email" id="email" name="email" class="form-control" placeholder="name@example.com" required />
+                            <input type="email" id="email" name="email" class="form-control"
+                                   value="@ViewBag.FormEmail"
+                                   placeholder="name@example.com" required />
                             <div class="invalid-feedback">Please enter a valid email.</div>
                         </div>
 
                         <div class="row g-3">
                             <div class="col-md-6">
                                 <label for="password" class="form-label">Password</label>
-                                <input type="password" id="password" name="password" class="form-control" placeholder="At least 8 chars" required minlength="8" />
+                                <div class="input-group">
+                                    <input type="password" id="password" name="password" class="form-control"
+                                           placeholder="At least 8 chars" required minlength="8" />
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('password', 'eyeIcon1')">
+                                        <i id="eyeIcon1" class="bi bi-eye"></i>
+                                    </button>
+                                    <div class="invalid-feedback">Password must be at least 8 characters.</div>
+                                </div>
                                 <div class="form-text">Minimum 8 characters, one uppercase, one lowercase, and one number is recommended.</div>
-                                <div class="invalid-feedback">Password must be at least 8 characters.</div>
                             </div>
                             <div class="col-md-6">
                                 <label for="confirmPassword" class="form-label">Confirm Password</label>
-                                <input type="password" id="confirmPassword" name="confirmPassword" class="form-control" placeholder="Repeat password" required minlength="8" />
-                                <div class="invalid-feedback">Please re-enter the password.</div>
+                                <div class="input-group">
+                                    <input type="password" id="confirmPassword" name="confirmPassword" class="form-control"
+                                           placeholder="Repeat password" required minlength="8" />
+                                    <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirmPassword', 'eyeIcon2')">
+                                        <i id="eyeIcon2" class="bi bi-eye"></i>
+                                    </button>
+                                    <div class="invalid-feedback">Please re-enter the password.</div>
+                                </div>
                             </div>
                         </div>
 
@@ -66,7 +82,14 @@
                                 {
                                     foreach (var r in allRoles)
                                     {
-                                        <option value="@r">@r</option>
+                                        @if (r == ViewBag.FormRole?.ToString())
+                                        {
+                                            <option value="@r" selected>@r</option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@r">@r</option>
+                                        }
                                     }
                                 }
                             </select>
@@ -90,7 +113,22 @@
 
 @section Scripts {
     <script>
+        // Show/hide password toggle
+        function togglePassword(inputId, iconId) {
+            const input = document.getElementById(inputId);
+            const icon = document.getElementById(iconId);
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.remove('bi-eye');
+                icon.classList.add('bi-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.remove('bi-eye-slash');
+                icon.classList.add('bi-eye');
+            }
+        }
 
+        // Bootstrap form validation
         (function () {
             'use strict'
             var forms = document.querySelectorAll('.needs-validation')

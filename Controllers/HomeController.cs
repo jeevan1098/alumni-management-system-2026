@@ -1,6 +1,4 @@
-﻿//using System.Diagnostics;
-
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Linq;
 using Alumni_Management_System.Data;
 using Alumni_Management_System.Models;
@@ -8,7 +6,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Linq;
 
 namespace Alumni_Management_System.Controllers
 {
@@ -26,21 +23,16 @@ namespace Alumni_Management_System.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> Index()
         {
-
             if (!User.Identity.IsAuthenticated)
                 return View("PublicHome");
 
             var user = await _userManager.GetUserAsync(User);
-
             if (user == null)
                 return View("PublicHome");
 
             var roles = await _userManager.GetRolesAsync(user);
 
-            if (roles.Contains("Admin"))
-                return RedirectToAction("Dashboard");
-
-            if (roles.Contains("Staff"))
+            if (roles.Contains("Admin") || roles.Contains("Staff"))
                 return RedirectToAction("Dashboard");
 
             if (roles.Contains("Alumni"))
@@ -69,24 +61,16 @@ namespace Alumni_Management_System.Controllers
                 .Select(g => new { Year = g.Key, Count = g.Count() })
                 .ToListAsync();
 
-            var alumniYears = alumniChart
-                .Select(x => (int?)x.Year)
-                .Where(x => x.HasValue)
-                .Select(x => x.Value)
-                .ToList();
-
-            var years = alumniYears
+            // Use int[] instead of List<int> to avoid RuntimeBinderException with dynamic ViewBag
+            var years = alumniChart
+                .Select(x => x.Year)
                 .Distinct()
                 .OrderBy(x => x)
-                .ToList();
+                .ToArray();
 
             ViewBag.ChartLabels = years;
-
-            ViewBag.AlumniData = years
-                .Select(y => alumniChart.FirstOrDefault(a => a.Year == y)?.Count ?? 0)
-                .ToList();
-
-            ViewBag.RegistryData = years.Select(y => 0).ToList();
+            ViewBag.AlumniData = years.Select(y => alumniChart.FirstOrDefault(a => a.Year == y)?.Count ?? 0).ToArray();
+            ViewBag.RegistryData = years.Select(y => 0).ToArray();
 
             var activity = new List<string>();
 
@@ -94,33 +78,25 @@ namespace Alumni_Management_System.Controllers
                 .OrderByDescending(a => a.LastUpdated)
                 .Take(3)
                 .ToListAsync();
-
-            activity.AddRange(recentAlumni
-                .Select(a => $"Alumni updated: {a.FirstName} {a.LastName}"));
+            activity.AddRange(recentAlumni.Select(a => $"Alumni updated: {a.FirstName} {a.LastName}"));
 
             var recentRegistry = await _context.AlumniRegistries
                 .OrderByDescending(r => r.RegistryId)
                 .Take(3)
                 .ToListAsync();
-
-            activity.AddRange(recentRegistry
-                .Select(r => $"Registry updated: {r.FirstName} {r.LastName}"));
+            activity.AddRange(recentRegistry.Select(r => $"Registry updated: {r.FirstName} {r.LastName}"));
 
             var recentMessages = await _context.Messages
                 .OrderByDescending(m => m.MessageId)
                 .Take(3)
                 .ToListAsync();
-
-            activity.AddRange(recentMessages
-                .Select(m => $"New message sent"));
+            activity.AddRange(recentMessages.Select(m => "New message sent"));
 
             var recentJobs = await _context.AlumniEmployments
                 .OrderByDescending(e => e.AlumniEmploymentId)
                 .Take(3)
                 .ToListAsync();
-
-            activity.AddRange(recentJobs
-                .Select(e => $"Employment updated"));
+            activity.AddRange(recentJobs.Select(e => "Employment updated"));
 
             ViewBag.RecentActivity = activity.Take(10).ToList();
 
@@ -131,15 +107,14 @@ namespace Alumni_Management_System.Controllers
         public async Task<IActionResult> AlumniPortal()
         {
             var user = await _userManager.GetUserAsync(User);
-
             if (user == null)
                 return RedirectToAction("Index");
 
-            var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.UserId == user.Id || a.JagId == user.JagId);
+            var alumni = await _context.Alumni
+                .FirstOrDefaultAsync(a => a.UserId == user.Id || a.JagId == user.JagId);
 
             if (alumni != null)
             {
-
                 if (string.IsNullOrEmpty(alumni.UserId) || alumni.UserId != user.Id)
                 {
                     alumni.UserId = user.Id;
@@ -148,7 +123,6 @@ namespace Alumni_Management_System.Controllers
                 }
 
                 int total = 18, done = 0;
-
                 if (!string.IsNullOrEmpty(alumni.FirstName)) done++;
                 if (!string.IsNullOrEmpty(alumni.LastName)) done++;
                 if (!string.IsNullOrEmpty(alumni.PermanentEmail)) done++;
@@ -170,7 +144,7 @@ namespace Alumni_Management_System.Controllers
                 ViewData["ProfileCompletion"] = (int)((double)done / total * 100);
             }
 
-            return View(alumni);   // Views/Home/AlumniPortal.cshtml
+            return View(alumni);
         }
 
         public IActionResult Privacy() => View();
