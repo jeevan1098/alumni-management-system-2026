@@ -109,7 +109,7 @@ namespace Alumni_Management_System.Controllers
 
             if (existingAlumni == null)
             {
-                ModelState.AddModelError("", "Your record was not found in the imported Alumni list. Please contact support.");
+                ModelState.AddModelError("", "Your record was not found in the imported Alumni list. Please contact admin support.");
                 return View(model);
             }
 
