@@ -1,5 +1,4 @@
-﻿
-@model IEnumerable<Alumni_Management_System.Models.Employer>
+﻿@model IEnumerable<Alumni_Management_System.Models.Employer>
 
 @{
     ViewData["Title"] = "Employers";
@@ -21,6 +20,22 @@
             </div>
 
             <hr class="mb-4" />
+
+            <!-- Success / Error Messages -->
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle-fill me-1"></i> @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
 
             <!-- Create Button -->
             <div class="d-flex justify-content-end mb-3">
@@ -51,20 +66,17 @@
                                 <td>@item.Location</td>
                                 <td>@item.Industry</td>
                                 <td>
-                                    <a asp-action="Details"
-                                       asp-route-id="@item.EmployerId"
+                                    <a asp-action="Details" asp-route-id="@item.EmployerId"
                                        class="btn btn-sm btn-outline-primary rounded-pill me-2">
                                         <i class="bi bi-eye-fill"></i>
                                     </a>
                                     @if (User.IsInRole("Admin"))
                                     {
-                                        <a asp-action="Edit"
-                                           asp-route-id="@item.EmployerId"
+                                        <a asp-action="Edit" asp-route-id="@item.EmployerId"
                                            class="btn btn-sm btn-outline-warning rounded-pill me-2">
                                             <i class="bi bi-pencil-fill"></i>
                                         </a>
-                                        <a asp-action="Delete"
-                                           asp-route-id="@item.EmployerId"
+                                        <a asp-action="Delete" asp-route-id="@item.EmployerId"
                                            class="btn btn-sm btn-outline-danger rounded-pill">
                                             <i class="bi bi-trash-fill"></i>
                                         </a>
@@ -76,14 +88,12 @@
                 </table>
             </div>
 
-            <!-- Footer -->
             <div class="d-flex justify-content-between mt-5">
                 <a asp-action="Index" asp-controller="Home"
                    class="btn btn-outline-secondary rounded-pill px-4">
                     <i class="bi bi-house-fill me-2"></i>Home
                 </a>
             </div>
-
         </div>
     </div>
 </div>

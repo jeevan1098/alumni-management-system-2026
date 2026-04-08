@@ -1,5 +1,4 @@
-﻿
-@model IEnumerable<Alumni_Management_System.Models.DegreeProgram>
+﻿@model IEnumerable<Alumni_Management_System.Models.DegreeProgram>
 
 @{
     ViewData["Title"] = "Degree Programs";
@@ -26,12 +25,19 @@
             @if (TempData["SuccessMessage"] != null)
             {
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
-                    @Html.Raw(TempData["SuccessMessage"])
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    <i class="bi bi-check-circle-fill me-1"></i> @Html.Raw(TempData["SuccessMessage"])
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i class="bi bi-exclamation-triangle-fill me-1"></i> @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             }
 
-            <!-- Create Button -->
+            <!-- Buttons -->
             <div class="d-flex justify-content-end mb-3">
                 @if (User.IsInRole("Admin"))
                 {
@@ -65,20 +71,17 @@
                                 <td>@item.MajorFieldOfStudy</td>
                                 <td>@item.Department</td>
                                 <td>
-                                    <a asp-action="Details"
-                                       asp-route-id="@item.DegreeId"
+                                    <a asp-action="Details" asp-route-id="@item.DegreeId"
                                        class="btn btn-sm btn-outline-primary rounded-pill me-2">
                                         <i class="bi bi-eye-fill"></i>
                                     </a>
                                     @if (User.IsInRole("Admin"))
                                     {
-                                        <a asp-action="Edit"
-                                           asp-route-id="@item.DegreeId"
+                                        <a asp-action="Edit" asp-route-id="@item.DegreeId"
                                            class="btn btn-sm btn-outline-warning rounded-pill me-2">
                                             <i class="bi bi-pencil-fill"></i>
                                         </a>
-                                        <a asp-action="Delete"
-                                           asp-route-id="@item.DegreeId"
+                                        <a asp-action="Delete" asp-route-id="@item.DegreeId"
                                            class="btn btn-sm btn-outline-danger rounded-pill">
                                             <i class="bi bi-trash-fill"></i>
                                         </a>
@@ -90,14 +93,12 @@
                 </table>
             </div>
 
-            <!-- Footer -->
             <div class="d-flex justify-content-between mt-5">
                 <a asp-action="Index" asp-controller="Home"
                    class="btn btn-outline-secondary rounded-pill px-4">
                     <i class="bi bi-house-fill me-2"></i>Home
                 </a>
             </div>
-
         </div>
     </div>
 </div>
