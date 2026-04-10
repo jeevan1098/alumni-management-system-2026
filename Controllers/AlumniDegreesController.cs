@@ -72,7 +72,6 @@ namespace Alumni_Management_System.Controllers
 
         private async Task PopulateAlumniDropdown(object selectedId = null)
         {
-            // Build SelectList with JAG ID — First Last format
             var alumniList = await _context.Alumni
                 .OrderBy(a => a.LastName)
                 .ToListAsync();
@@ -86,13 +85,29 @@ namespace Alumni_Management_System.Controllers
                 "Value", "Text", selectedId?.ToString());
         }
 
-        private void PopulateDegreeDropdown(object selectedId = null)
+        private async Task PopulateDegreeDropdown(object selectedId = null)
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var roles = await _userManager.GetRolesAsync(currentUser);
+
+            IQueryable<DegreeProgram> degreeQuery = _context.DegreePrograms;
+
+            if (roles.Contains(Constants.AlumniRole))
+            {
+                degreeQuery = degreeQuery.Where(d =>
+                    d.Institution == "Other University" &&
+                    (d.DegreeType == "Bachelors" || d.DegreeType == "Masters" || d.DegreeType == "PhD") &&
+                    d.MajorFieldOfStudy == "Other" &&
+                    d.Department == "Other");
+            }
+
+            var degreeList = await degreeQuery.ToListAsync();
+
             ViewData["DegreeId"] = new SelectList(
-                _context.DegreePrograms.Select(d => new SelectListItem
+                degreeList.Select(d => new SelectListItem
                 {
                     Value = d.DegreeId.ToString(),
-                    Text = $"{d.DegreeType}, {d.Institution}, {d.MajorFieldOfStudy}, {d.Department}"
+                    Text = $"{d.Institution}, {d.DegreeType}, {d.MajorFieldOfStudy}, {d.Department}"
                 }),
                 "Value", "Text", selectedId?.ToString());
         }
@@ -128,7 +143,7 @@ namespace Alumni_Management_System.Controllers
                 ViewData["UserRole"] = "Admin";
             }
 
-            PopulateDegreeDropdown();
+            await PopulateDegreeDropdown();
             return View();
         }
 
@@ -177,7 +192,6 @@ namespace Alumni_Management_System.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            // Repopulate on failure
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -198,7 +212,7 @@ namespace Alumni_Management_System.Controllers
                 ViewData["UserRole"] = "Admin";
             }
 
-            PopulateDegreeDropdown(alumniDegree.DegreeId);
+            await PopulateDegreeDropdown(alumniDegree.DegreeId);
             return View(alumniDegree);
         }
 
@@ -207,7 +221,11 @@ namespace Alumni_Management_System.Controllers
         {
             if (id == null) return NotFound();
 
-            var alumniDegree = await _context.AlumniDegrees.FindAsync(id);
+            // Include Degree to check the Institution type
+            var alumniDegree = await _context.AlumniDegrees
+                .Include(ad => ad.Degree)
+                .FirstOrDefaultAsync(ad => ad.AlumniDegreeId == id);
+
             if (alumniDegree == null) return NotFound();
 
             var currentUser = await _userManager.GetUserAsync(User);
@@ -216,11 +234,21 @@ namespace Alumni_Management_System.Controllers
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
+
+                // 1. Verify Ownership
                 if (alumni == null || alumniDegree.AlumniId != alumni.AlumniId)
                 {
                     TempData["ErrorMessage"] = "You can only edit your own degrees.";
                     return RedirectToAction(nameof(Index));
                 }
+
+                // 2. Verify it is an "Other University" record
+                if (alumniDegree.Degree?.Institution != "Other University")
+                {
+                    TempData["ErrorMessage"] = "You can only edit external degrees. University records are view-only.";
+                    return RedirectToAction(nameof(Index));
+                }
+
                 ViewData["CurrentAlumniId"] = alumni.AlumniId;
                 ViewData["AlumniId"] = new SelectList(new[]
                 {
@@ -236,7 +264,7 @@ namespace Alumni_Management_System.Controllers
                 await PopulateAlumniDropdown(alumniDegree.AlumniId);
             }
 
-            PopulateDegreeDropdown(alumniDegree.DegreeId);
+            await PopulateDegreeDropdown(alumniDegree.DegreeId);
             return View(alumniDegree);
         }
 
@@ -253,9 +281,21 @@ namespace Alumni_Management_System.Controllers
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
-                if (alumni == null || alumniDegree.AlumniId != alumni.AlumniId)
+                var existingRecord = await _context.AlumniDegrees
+                    .Include(ad => ad.Degree)
+                    .AsNoTracking()
+                    .FirstOrDefaultAsync(ad => ad.AlumniDegreeId == id);
+
+                // Re-verify Ownership and Record Type on post to prevent URL manipulation
+                if (alumni == null || existingRecord == null || existingRecord.AlumniId != alumni.AlumniId)
                 {
-                    TempData["ErrorMessage"] = "You can only edit your own degrees.";
+                    TempData["ErrorMessage"] = "Unauthorized edit attempt.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                if (existingRecord.Degree?.Institution != "Other University")
+                {
+                    TempData["ErrorMessage"] = "Only external degrees can be modified.";
                     return RedirectToAction(nameof(Index));
                 }
             }
@@ -296,6 +336,7 @@ namespace Alumni_Management_System.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            // Failure handling
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -314,7 +355,7 @@ namespace Alumni_Management_System.Controllers
                 await PopulateAlumniDropdown(alumniDegree.AlumniId);
             }
 
-            PopulateDegreeDropdown(alumniDegree.DegreeId);
+            await PopulateDegreeDropdown(alumniDegree.DegreeId);
             return View(alumniDegree);
         }
 
@@ -329,18 +370,6 @@ namespace Alumni_Management_System.Controllers
                 .FirstOrDefaultAsync(m => m.AlumniDegreeId == id);
             if (alumniDegree == null) return NotFound();
 
-            var currentUser = await _userManager.GetUserAsync(User);
-            var roles = await _userManager.GetRolesAsync(currentUser);
-            if (roles.Contains(Constants.AlumniRole))
-            {
-                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
-                if (alumni == null || alumniDegree.AlumniId != alumni.AlumniId)
-                {
-                    TempData["ErrorMessage"] = "You can only delete your own degrees.";
-                    return RedirectToAction(nameof(Index));
-                }
-            }
-
             return View(alumniDegree);
         }
 
@@ -352,18 +381,6 @@ namespace Alumni_Management_System.Controllers
             var alumniDegree = await _context.AlumniDegrees.FindAsync(id);
             if (alumniDegree != null)
             {
-                var currentUser = await _userManager.GetUserAsync(User);
-                var roles = await _userManager.GetRolesAsync(currentUser);
-                if (roles.Contains(Constants.AlumniRole))
-                {
-                    var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
-                    if (alumni == null || alumniDegree.AlumniId != alumni.AlumniId)
-                    {
-                        TempData["ErrorMessage"] = "You can only delete your own degrees.";
-                        return RedirectToAction(nameof(Index));
-                    }
-                }
-
                 _context.AlumniDegrees.Remove(alumniDegree);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Degree deleted successfully!";

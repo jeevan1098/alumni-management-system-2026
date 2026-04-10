@@ -1,23 +1,6 @@
 @{
     ViewData["Title"] = "Bulk Import Alumni";
 }
-
-<div class="container mt-5 mb-5">
-    <div class="card shadow-lg border-0 rounded-4 mx-auto" style="max-width:900px;">
-        <div class="card-body p-5">
-
-            <div class="d-flex align-items-center mb-4">
-                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
-                    <i class="bi bi-upload text-primary fs-3"></i>
-                </div>
-                <div>
-                    <h3 class="fw-bold mb-0">Bulk Import Alumni</h3>
-                    <small class="text-info">Upload Excel files to import Alumni + AlumniDegree + AlumniRegistry</small>
-                </div>
-            </div>
-
-            <hr class="mb-4" />
-
             @if (TempData["SuccessMessage"] != null)
             {
                 <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -41,6 +24,23 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             }
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4 mx-auto" style="max-width:900px;">
+        <div class="card-body p-5">
+
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                    <i class="bi bi-upload text-primary fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0">Bulk Import Alumni</h3>
+                    <small class="text-info">Upload Excel files to import Alumni + AlumniDegree + AlumniRegistry</small>
+                </div>
+            </div>
+
+            <hr class="mb-4" />
+
 
             <form asp-action="BulkImport" method="post" enctype="multipart/form-data" novalidate>
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
