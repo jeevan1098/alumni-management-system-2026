@@ -10,7 +10,7 @@
         <h2><i class="bi bi-envelope-fill"></i> My Messages</h2>
         @if (userRole == "Admin")
         {
-            <a asp-action="Create" class="btn btn-primary">
+            <a asp-action="Alumnimessagefilter" asp-controller="Messages" class="btn btn-primary">
                 <i class="bi bi-plus-circle"></i> Send New Message
             </a>
         }

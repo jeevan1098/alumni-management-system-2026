@@ -8,7 +8,7 @@
     var currentUser = await UserManager.GetUserAsync(User);
     var isFirstLogin = currentUser?.IsFirstLogin ?? false;
 
-    int totalFields = 18;
+    int totalFields = 15;
     int completedFields = 0;
 
     if (!string.IsNullOrEmpty(Model.FirstName)) completedFields++;
@@ -23,12 +23,9 @@
     if (!string.IsNullOrEmpty(Model.Postcode)) completedFields++;
     if (!string.IsNullOrEmpty(Model.Country)) completedFields++;
     if (Model.GraduationYear > 0) completedFields++;
-    if (!string.IsNullOrEmpty(Model.PreferredFirstName)) completedFields++;
     if (!string.IsNullOrEmpty(Model.StudentEmail)) completedFields++;
     if (!string.IsNullOrEmpty(Model.SocialMediaAccount)) completedFields++;
     if (!string.IsNullOrEmpty(Model.Prefix)) completedFields++;
-    if (Model.Privacy) completedFields++;
-    if (Model.IsActive) completedFields++;
 
     int completionPercentage = (int)((double)completedFields / totalFields * 100);
 }

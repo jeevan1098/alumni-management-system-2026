@@ -122,7 +122,7 @@ namespace Alumni_Management_System.Controllers
                     await _context.SaveChangesAsync();
                 }
 
-                int total = 18, done = 0;
+                int total = 15, done = 0;
                 if (!string.IsNullOrEmpty(alumni.FirstName)) done++;
                 if (!string.IsNullOrEmpty(alumni.LastName)) done++;
                 if (!string.IsNullOrEmpty(alumni.PermanentEmail)) done++;
@@ -135,11 +135,8 @@ namespace Alumni_Management_System.Controllers
                 if (!string.IsNullOrEmpty(alumni.Country)) done++;
                 if (alumni.GraduationYear > 0) done++;
                 if (!string.IsNullOrEmpty(alumni.StudentEmail)) done++;
-                if (!string.IsNullOrEmpty(alumni.PreferredFirstName)) done++;
                 if (!string.IsNullOrEmpty(alumni.SocialMediaAccount)) done++;
                 if (!string.IsNullOrEmpty(alumni.Prefix)) done++;
-                if (alumni.Privacy) done++;
-                if (alumni.IsActive) done++;
 
                 ViewData["ProfileCompletion"] = (int)((double)done / total * 100);
             }

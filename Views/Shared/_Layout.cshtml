@@ -554,7 +554,12 @@
             <div class="main">
 
                 <div class="navbar-custom d-flex justify-content-between align-items-center">
-                    <strong><h2>Alumni Portal</h2></strong>
+                    <a asp-controller="Home" asp-action="Index" class="text-decoration-none d-flex align-items-center transition-all">
+                        <div class="bg-primary rounded-3 p-2 me-2 d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                            <i class="bi bi-mortarboard-fill text-white fs-5"></i>
+                        </div>
+                        <span class="fs-5 fw-bold text-dark tracking-tight">Alumni Portal</span>
+                    </a>
 
                     @{
                         var alumniCurrentUser = await UserManager.GetUserAsync(User);
