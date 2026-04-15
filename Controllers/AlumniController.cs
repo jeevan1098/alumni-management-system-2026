@@ -454,9 +454,12 @@ namespace Alumni_Management_System.Controllers
                                 ? studentEmail
                                 : $"{jagId.ToLower()}@placeholder.com");
 
-                        var fullAddress = string.IsNullOrEmpty(street2)
-                            ? street1
-                            : $"{street1}, {street2}";
+                        /* var fullAddress = string.IsNullOrEmpty(street2)
+                             ? street1
+                             : $"{street1}, {street2}"; */
+
+                        var fullAddress = string.Join(", ", new[] { street1, street2 }
+                                .Where(s => !string.IsNullOrWhiteSpace(s)));
 
                         // Check whether alumni and registry records already exist
                         var alumniExists = await _context.Alumni.AnyAsync(a => a.JagId == jagId);
@@ -550,22 +553,32 @@ namespace Alumni_Management_System.Controllers
                         var alumniEntity = new Alumni
                         {
                             JagId = jagId,
-                            Prefix = string.IsNullOrEmpty(prefix) ? null : prefix,
+
+                            Prefix = NormalizePrefix(prefix),
+
                             FirstName = firstName,
                             LastName = lastName,
-                            Gender = string.IsNullOrEmpty(gender) ? null : gender,
+
+                            Gender = NormalizeGender(gender),
+
                             AgeAtGraduation = age > 0 ? age : null,
-                            StudentEmail = string.IsNullOrEmpty(studentEmail) ? null : studentEmail,
+
+                            StudentEmail = string.IsNullOrWhiteSpace(studentEmail) ? null : studentEmail,
+
                             PermanentEmail = finalEmail,
-                            Address = string.IsNullOrEmpty(fullAddress) ? null : fullAddress,
-                            City = string.IsNullOrEmpty(city) ? null : city,
-                            State = string.IsNullOrEmpty(state) ? null : state,
-                            Postcode = string.IsNullOrEmpty(zip) ? null : zip,
+
+                            Address = string.IsNullOrWhiteSpace(fullAddress) ? null : fullAddress,
+                            City = string.IsNullOrWhiteSpace(city) ? null : city,
+                            State = string.IsNullOrWhiteSpace(state) ? null : state,
+                            Postcode = string.IsNullOrWhiteSpace(zip) ? null : zip,
+
                             Country = "USA",
                             GraduationYear = graduationYear,
+
                             SolicitationCode = true,
                             Privacy = false,
                             IsActive = true,
+
                             LastUpdated = DateTime.Now
                         };
 
@@ -690,5 +703,35 @@ namespace Alumni_Management_System.Controllers
         }
 
         private bool AlumniExists(int id) => _context.Alumni.Any(e => e.AlumniId == id);
+
+        private string NormalizePrefix(string prefix)
+        {
+            if (string.IsNullOrWhiteSpace(prefix))
+                return null;
+
+            return prefix.Trim().ToUpper().Replace(".", "") switch
+            {
+                "MR" => "Mr.",
+                "MRS" => "Mrs.",
+                "MS" => "Ms.",
+                "DR" => "Dr.",
+                "PROF" => "Prof.",
+                _ => null
+            };
+        } 
+        private string NormalizeGender(string gender)
+        {
+            if (string.IsNullOrWhiteSpace(gender)) return null;
+            return gender.Trim().ToUpper() switch
+            {
+                "M" => "Male",
+                "F" => "Female",
+                "O" => "Other",
+                "P" => "Prefer not to say",
+                "MALE" => "Male",
+                "FEMALE" => "Female",
+                _ => null
+            };
+        }
     }
 }
