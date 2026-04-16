@@ -16,26 +16,26 @@ public partial class DegreeProgram
     [Display(Name = "Degree ID")]
     public int DegreeId { get; set; }
 
-    [Required]
+    [Required(ErrorMessage = "Institution is required.")]
     [Column("institution")]
-    [StringLength(150)]
+    [StringLength(150, ErrorMessage = "Institution name cannot exceed 150 characters.")]
     public string Institution { get; set; }
 
-    [Required]
+    [Required(ErrorMessage = "Degree type is required.")]
     [Column("degree_type")]
-    [StringLength(20)]
+    [StringLength(20, ErrorMessage = "Degree type cannot exceed 20 characters.")]
     [Display(Name = "Degree Type")]
     public string DegreeType { get; set; }
 
-    [Required]
+    [Required(ErrorMessage = "Major field of study is required.")]
     [Column("major_field_of_study")]
-    [StringLength(100)]
+    [StringLength(100, ErrorMessage = "Major field of study cannot exceed 100 characters.")]
     [Display(Name = "Major Field of Study")]
     public string MajorFieldOfStudy { get; set; }
 
-    [Required]
+    [Required(ErrorMessage = "Department is required.")]
     [Column("department")]
-    [StringLength(100)]
+    [StringLength(100, ErrorMessage = "Department cannot exceed 100 characters.")]
     [Display(Name = "Department")]
     public string Department { get; set; }
 

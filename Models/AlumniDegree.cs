@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -14,28 +14,33 @@ public partial class AlumniDegree
     [Display(Name = "Alumni Degree ID")]
     public int AlumniDegreeId { get; set; }
 
+    [Required(ErrorMessage = "Alumni ID is required.")]
     [Column("alumni_id")]
     [Display(Name = "Alumni ID")]
     public int AlumniId { get; set; }
 
+    [Required(ErrorMessage = "Degree ID is required.")]
     [Column("degree_id")]
     [Display(Name = "Degree ID")]
     public int DegreeId { get; set; }
 
+    [Required(ErrorMessage = "Date conferred is required.")]
     [Column("date_conferred")]
     [Display(Name = "Date Conferred")]
     public DateOnly DateConferred { get; set; }
 
     [Column("years_to_complete_degree")]
+    [Range(1, 20, ErrorMessage = "Years to complete degree must be between 1 and 20.")]
     [Display(Name = "Years To Complete Degree")]
     public int? YearsToCompleteDegree { get; set; }
 
     [Column("gpa", TypeName = "decimal(3, 2)")]
+    [Range(0.0, 4.0, ErrorMessage = "GPA must be between 0.0 and 4.0.")]
     [Display(Name = "Grade")]
     public decimal? Gpa { get; set; }
 
     [Column("employment_while_studying")]
-    [StringLength(50)]
+    [StringLength(50, ErrorMessage = "Employment while studying cannot exceed 50 characters.")]
     [Display(Name = "Employment While Studying")]
     public string EmploymentWhileStudying { get; set; }
 
