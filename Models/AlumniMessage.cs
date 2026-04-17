@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -14,14 +14,17 @@ public partial class AlumniMessage
     [Display(Name = "Alumni Message ID")]
     public int AlumniMessageId { get; set; }
 
+    [Required(ErrorMessage = "Alumni ID is required.")]
     [Column("alumni_id")]
     [Display(Name = "Alumni ID")]
     public int AlumniId { get; set; }
 
+    [Required(ErrorMessage = "Message ID is required.")]
     [Column("message_id")]
     [Display(Name = "Message ID")]
     public int MessageId { get; set; }
 
+    [Required(ErrorMessage = "Sent at date/time is required.")]
     [Column("sent_at", TypeName = "datetime")]
     [Display(Name = "Sent At?")]
     public DateTime SentAt { get; set; }

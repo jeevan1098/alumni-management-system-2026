@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -14,9 +14,9 @@ public partial class OrganizationType
     [Display(Name = "Organization Type ID")]
     public int OrganizationTypeId { get; set; }
 
-    [Required]
+    [Required(ErrorMessage = "Organization name is required.")]
     [Column("organization_name")]
-    [StringLength(150)]
+    [StringLength(150, ErrorMessage = "Organization name cannot exceed 150 characters.")]
     [Display(Name = "Organization Name")]
     public string OrganizationName { get; set; }
 

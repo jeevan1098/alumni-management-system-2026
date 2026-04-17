@@ -57,6 +57,15 @@ namespace Alumni_Management_System.Controllers
         [Authorize(Roles = "Admin")] // Only Admin can create
         public async Task<IActionResult> Create([Bind("RegistryId,JagId,FirstName,LastName,GraduationYear,DegreeProgram,EmailOnRecord,AccountCreated")] AlumniRegistry alumniRegistry)
         {
+            // Check for duplicate JAG ID before saving
+            bool jagIdExists = await _context.AlumniRegistries
+                .AnyAsync(r => r.JagId == alumniRegistry.JagId);
+
+            if (jagIdExists)
+            {
+                ModelState.AddModelError("JagId", $"JAG ID '{alumniRegistry.JagId}' is already registered in the system.");
+            }
+
             if (ModelState.IsValid)
             {
                 _context.Add(alumniRegistry);
@@ -91,6 +100,15 @@ namespace Alumni_Management_System.Controllers
             if (id != alumniRegistry.RegistryId)
             {
                 return NotFound();
+            }
+
+            // Check for duplicate JAG ID, excluding the current record
+            bool jagIdExists = await _context.AlumniRegistries
+                .AnyAsync(r => r.JagId == alumniRegistry.JagId && r.RegistryId != alumniRegistry.RegistryId);
+
+            if (jagIdExists)
+            {
+                ModelState.AddModelError("JagId", $"JAG ID '{alumniRegistry.JagId}' is already registered in the system.");
             }
 
             if (ModelState.IsValid)
