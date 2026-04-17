@@ -59,7 +59,7 @@ public partial class Alumni
     public string Gender { get; set; }
 
     [Column("age_at_graduation")]
-    [Range(15, 150, ErrorMessage = "Age at graduation must be between 15 and 150.")]
+    [Range(15, 30, ErrorMessage = "Age at graduation must be between 15 and 30.")]
     [Display(Name = "Age at Graduation")]
     public int? AgeAtGraduation { get; set; }
 
