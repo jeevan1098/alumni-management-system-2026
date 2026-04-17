@@ -49,17 +49,20 @@
             </h5>
 
             <dl class="row mb-4">
-
-                <dt class="col-sm-4">Job Title</dt>
-                <dd class="col-sm-8">
-                    <span class="fw-semibold">@Model.JobTitle</span>
-                </dd>
-
                 <dt class="col-sm-4">Employer</dt>
                 <dd class="col-sm-8">
                     <span class="badge bg-primary">
                         @Model.Employer.EmployerName
                     </span>
+                </dd>
+                <dt class="col-sm-4">Job Title</dt>
+                <dd class="col-sm-8">
+                    <span class="fw-semibold">@Model.JobTitle</span>
+                </dd>
+
+                <dt class="col-sm-4">Salary Range</dt>
+                <dd class="col-sm-8">
+                    @Model.SalaryRange
                 </dd>
 
                 <dt class="col-sm-4">Start Date</dt>
@@ -79,10 +82,7 @@
                     }
                 </dd>
 
-                <dt class="col-sm-4">Salary Range</dt>
-                <dd class="col-sm-8">
-                    @Model.SalaryRange
-                </dd>
+                
 
             </dl>
 

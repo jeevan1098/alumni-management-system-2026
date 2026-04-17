@@ -78,6 +78,10 @@
                         <i class="bi bi-calendar-event me-2"></i>Dates & Alumni
                     </h5>
                     <dl class="row mb-4">
+                        <dt class="col-sm-5">Alumni</dt>
+                        <dd class="col-sm-7">
+                            @alumniName
+                        </dd>
                         <dt class="col-sm-5">Start Date</dt>
                         <dd class="col-sm-7">
                             @Model.StartDate.ToString("MMMM dd, yyyy")
@@ -88,10 +92,7 @@
                             @Model.EndDate.ToString("MMMM dd, yyyy")
                         </dd>
 
-                        <dt class="col-sm-5">Alumni</dt>
-                        <dd class="col-sm-7">
-                            @alumniName
-                        </dd>
+                       
                     </dl>
                 </div>
             </div>
