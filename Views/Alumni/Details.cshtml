@@ -28,6 +28,12 @@
                             Preferred Name: <strong>@Model.PreferredFirstName</strong>
                         </p>
                     }
+                    @if (!string.IsNullOrEmpty(Model.JagId))
+                    {
+                        <p class="text-info mb-1">
+                            JAG ID: <strong>@Model.JagId</strong>
+                        </p>
+                    }
 
                     <p class="mb-1">
                         🎓 Class of <strong>@Model.GraduationYear</strong>
@@ -77,9 +83,9 @@
                         {
                             <p class="mb-1">🏠 Address: @Model.Address</p>
                         }
-                    }
+                }
 
-                    @if (!string.IsNullOrEmpty(Model.SocialMediaAccount))
+                @if (!string.IsNullOrEmpty(Model.SocialMediaAccount))
                     {
                         <p class="mb-1">
                             🌐 Social Media:
