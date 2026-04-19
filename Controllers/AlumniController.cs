@@ -160,9 +160,16 @@ namespace Alumni_Management_System.Controllers
             {
                 alumni.LastUpdated = DateTime.Now;
                 alumni.IsActive = false;
+                var registryEntry = new AlumniRegistry
+                {
+                    JagId = alumni.JagId,
+                    FirstName = alumni.FirstName,
+                    LastName = alumni.LastName
+                };
                 _context.Add(alumni);
+                _context.AlumniRegistries.Add(registryEntry);
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Alumni created successfully!";
+                TempData["SuccessMessage"] = "Alumni created and added to Registry successfully!";
                 return RedirectToAction(nameof(Index));
             }
             return View(alumni);
