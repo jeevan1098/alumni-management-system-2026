@@ -1,57 +1,287 @@
 ﻿@{
     Layout = null;   // ❗ NO SIDEBAR BEFORE LOGIN
 }
-@if (TempData["ErrorMessage"] != null)
-{
-    <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
-        <i class="bi bi-exclamation-octagon-fill me-2"></i>
-        @TempData["ErrorMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
 
-@if (TempData["SuccessMessage"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
-        <i class="bi bi-check-circle-fill me-2"></i>
-        @TempData["SuccessMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Login - Alumni</title>
+    <title>Login - Alumni | University of South Alabama</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            background: #f4f4f4;
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .hero {
+            background: #c8102e;
+            color: white;
+            padding: 2.5rem 1rem 4rem;
+            text-align: center;
+            position: relative;
+        }
+
+            .hero::after {
+                content: '';
+                position: absolute;
+                bottom: -1px;
+                left: 0;
+                right: 0;
+                height: 48px;
+                background: #f4f4f4;
+                clip-path: ellipse(55% 100% at 50% 100%);
+            }
+
+        .hero-logo-circle {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            background: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 22px;
+            font-weight: 700;
+            color: #c8102e;
+            letter-spacing: 1px;
+            border: 3px solid rgba(255,255,255,0.4);
+        }
+
+        .hero-university {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            opacity: 0.85;
+            margin-bottom: 4px;
+        }
+
+        .hero-system {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .hero-tagline {
+            font-size: 14px;
+            opacity: 0.7;
+        }
+
+        .main-card {
+            background: white;
+            border-radius: 16px;
+            border: 1px solid rgba(0,0,0,0.08);
+            padding: 2rem 1.75rem;
+            max-width: 420px;
+            margin: -1.5rem auto 1.5rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        .card-heading {
+            font-size: 18px;
+            font-weight: 600;
+            color: #111;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+
+        .card-sub {
+            font-size: 13px;
+            color: #777;
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn-usa-primary {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 13px;
+            border-radius: 10px;
+            background: #c8102e;
+            color: white;
+            font-size: 15px;
+            font-weight: 500;
+            text-decoration: none;
+            border: none;
+            cursor: pointer;
+            margin-bottom: 10px;
+            transition: background 0.15s ease;
+        }
+
+            .btn-usa-primary:hover {
+                background: #a80d26;
+                color: white;
+                text-decoration: none;
+            }
+
+        .btn-usa-outline {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 13px;
+            border-radius: 10px;
+            background: transparent;
+            color: #c8102e;
+            font-size: 15px;
+            font-weight: 500;
+            text-decoration: none;
+            border: 1.5px solid #c8102e;
+            cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+            .btn-usa-outline:hover {
+                background: #fef0f2;
+                color: #c8102e;
+                text-decoration: none;
+            }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 1.25rem 0;
+            color: #bbb;
+            font-size: 12px;
+        }
+
+            .divider::before,
+            .divider::after {
+                content: '';
+                flex: 1;
+                height: 1px;
+                background: #e8e8e8;
+            }
+
+        .stats-strip {
+            background: white;
+            border-radius: 14px;
+            border: 1px solid rgba(0,0,0,0.07);
+            padding: 1.1rem 1rem;
+            max-width: 420px;
+            margin: 0 auto 1.5rem;
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-num {
+            font-size: 18px;
+            font-weight: 600;
+            color: #c8102e;
+        }
+
+        .stat-label {
+            font-size: 11px;
+            color: #888;
+            margin-top: 2px;
+        }
+
+        .page-footer {
+            text-align: center;
+            font-size: 12px;
+            color: #aaa;
+            padding-bottom: 2rem;
+        }
+
+            .page-footer a {
+                color: #c8102e;
+                text-decoration: none;
+            }
+
+                .page-footer a:hover {
+                    text-decoration: underline;
+                }
+    </style>
 </head>
+<body>
 
-<body class="bg-light">
-
-<div class="container mt-5">
-
-    <div class="text-center mb-4">
-        <h1>Alumni Management System</h1>
-        <p class="text-info">Login or Register to continue</p>
+    <div class="hero">
+        <div class="hero-logo-circle">USA</div>
+        <div class="hero-university">University of South Alabama</div>
+        <div class="hero-system">Alumni Management System</div>
+        <div class="hero-tagline">Connecting Jaguars &mdash; past, present &amp; future</div>
     </div>
 
-    <div class="card shadow-lg col-md-5 mx-auto">
-        <div class="card-body text-center p-4">
+    <div style="padding: 0 1rem;">
 
-            <h4 class="mb-3">Welcome</h4>
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-3" role="alert"
+                 style="max-width: 420px; margin: 1rem auto 0; border-radius: 10px;">
+                <i class="bi bi-exclamation-octagon-fill me-2"></i>
+                @TempData["ErrorMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
 
-            <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-primary w-100 mb-2">
-                <i class="bi bi-box-arrow-in-right"></i> Login
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-3" role="alert"
+                 style="max-width: 420px; margin: 1rem auto 0; border-radius: 10px;">
+                <i class="bi bi-check-circle-fill me-2"></i>
+                @TempData["SuccessMessage"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        }
+
+        <div class="main-card">
+            <p class="card-heading">Welcome back, Jaguars</p>
+            <p class="card-sub">Sign in to your alumni portal or register as a new alumnus.</p>
+
+            <a asp-area="Identity" asp-page="/Account/Login" class="btn-usa-primary">
+                <i class="bi bi-box-arrow-in-right"></i> Sign in to Alumni Portal
             </a>
 
-            <a asp-controller="Account" asp-action="VerifyJagId" class="btn btn-outline-secondary w-100">
-                <i class="bi bi-person-plus"></i> Register Alumni
-            </a>
+            <div class="divider">new to the portal?</div>
 
+            <a asp-controller="Account" asp-action="VerifyJagId" class="btn-usa-outline">
+                <i class="bi bi-person-plus"></i> Register as Alumni
+            </a>
         </div>
+
+        <div class="stats-strip">
+            <div class="stat-item">
+                <div class="stat-num">1872</div>
+                <div class="stat-label">Founded</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num">14K+</div>
+                <div class="stat-label">Students</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num">100K+</div>
+                <div class="stat-label">Alumni</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-num">200+</div>
+                <div class="stat-label">Programs</div>
+            </div>
+        </div>
+
+        <div class="page-footer">
+            Need help? <a href="https://www.southalabama.edu" target="_blank">southalabama.edu</a>
+            &nbsp;|&nbsp; Mobile, Alabama
+        </div>
+
     </div>
 
-</div>
-
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>
