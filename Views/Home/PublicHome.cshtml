@@ -74,6 +74,7 @@
             opacity: 0.7;
         }
 
+        
         .main-card {
             background: white;
             border-radius: 16px;
@@ -83,6 +84,7 @@
             margin: -1.5rem auto 1.5rem;
             position: relative;
             z-index: 1;
+            text-align: center;
         }
 
         .card-heading {
@@ -101,12 +103,11 @@
         }
 
         .btn-usa-primary {
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            width: 100%;
-            padding: 13px;
+            padding: 11px 28px; 
             border-radius: 10px;
             background: #c8102e;
             color: white;
@@ -126,12 +127,11 @@
             }
 
         .btn-usa-outline {
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 8px;
-            width: 100%;
-            padding: 13px;
+            padding: 11px 28px;
             border-radius: 10px;
             background: transparent;
             color: #c8102e;
@@ -245,15 +245,17 @@
             <p class="card-heading">Welcome back, Jaguars</p>
             <p class="card-sub">Sign in to your alumni portal or register as a new alumnus.</p>
 
-            <a asp-area="Identity" asp-page="/Account/Login" class="btn-usa-primary">
-                <i class="bi bi-box-arrow-in-right"></i> Sign in to Alumni Portal
-            </a>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
+                <a asp-area="Identity" asp-page="/Account/Login" class="btn-usa-primary">
+                    <i class="bi bi-box-arrow-in-right"></i> Sign in to Alumni Portal
+                </a>
 
-            <div class="divider">new to the portal?</div>
+                <div class="divider" style="width:280px;">new to the portal?</div>
 
-            <a asp-controller="Account" asp-action="VerifyJagId" class="btn-usa-outline">
-                <i class="bi bi-person-plus"></i> Register as Alumni
-            </a>
+                <a asp-controller="Account" asp-action="VerifyJagId" class="btn-usa-outline">
+                    <i class="bi bi-person-plus"></i> Register as Alumni
+                </a>
+            </div>
         </div>
 
         <div class="stats-strip">

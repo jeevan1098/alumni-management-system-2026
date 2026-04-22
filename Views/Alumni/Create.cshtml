@@ -284,7 +284,7 @@
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-calendar-check"></i>
                             </span>
-                            <input asp-for="GraduationYear" type="number" min="1950" max="2100"
+                            <input asp-for="GraduationYear" type="number" min="1950" max="@DateTime.Now.Year"
                                    class="form-control rounded-end-3" placeholder="e.g. 2024" />
                         </div>
                         <span asp-validation-for="GraduationYear" class="text-danger"></span>

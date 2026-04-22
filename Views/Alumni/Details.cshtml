@@ -1,153 +1,830 @@
 ﻿@model Alumni_Management_System.Models.Alumni
+@using Microsoft.AspNetCore.Identity
+@using Alumni_Management_System.Models
+@inject UserManager<AppUser> UserManager
 
 @{
     ViewData["Title"] = "Alumni Profile";
+
+    var employments   = ViewBag.Employments   as IEnumerable<AlumniEmployment>   ?? Enumerable.Empty<AlumniEmployment>();
+    var internships   = ViewBag.Internships   as IEnumerable<AlumniInternship>   ?? Enumerable.Empty<AlumniInternship>();
+    var organizations = ViewBag.Organizations as IEnumerable<AlumniOrganization> ?? Enumerable.Empty<AlumniOrganization>();
+    var degrees       = ViewBag.Degrees       as IEnumerable<AlumniDegree>       ?? Enumerable.Empty<AlumniDegree>();
+
+    bool canView      = ViewBag.CanViewDetails ?? false;
+    bool isAdminStaff = ViewBag.IsAdminOrStaff ?? false;
 }
 
-<div class="container mt-5">
-    <div class="card shadow-lg border-0 rounded-4">
-        <div class="card-body p-4">
+<style>
 
-            <!-- Header Section -->
-            <div class="row align-items-center mb-4">
-                <div class="col-md-3 text-center">
-                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto"
-                         style="width:120px;height:120px;font-size:40px;">
-                        @Model.FirstName.Substring(0, 1)@Model.LastName.Substring(0, 1)
-                    </div>
-                </div>
+    /* ══════════════════════════════════════════
+       CSS VARIABLES
+    ══════════════════════════════════════════ */
+    :root {
+        --ap-card-bg:           #ffffff;
+        --ap-card-border:       #e5e9f0;
+        --ap-card-shadow:       0 2px 12px rgba(0,0,0,0.07);
+        --ap-card-hover-shadow: 0 6px 24px rgba(31,60,136,0.13);
+        --ap-text-primary:      #1a2340;
+        --ap-text-secondary:    #5a6a85;
+        --ap-label-color:       #7a8daa;
+        --ap-divider:           #e5e9f0;
+        --ap-tag-bg:            #f0f4ff;
+        --ap-tag-color:         #1f3c88;
+        --ap-badge-green-bg:    #d1fae5;
+        --ap-badge-green-color: #065f46;
+        --ap-badge-red-bg:      #fee2e2;
+        --ap-badge-red-color:   #991b1b;
+    }
 
-                <div class="col-md-9">
-                    <h2 class="fw-bold mb-0">
-                        @Model.Prefix @Model.FirstName @Model.LastName
-                    </h2>
+    body.dark {
+        --ap-card-bg:           #1e1e2e;
+        --ap-card-border:       #2a2a3e;
+        --ap-card-shadow:       0 2px 12px rgba(0,0,0,0.35);
+        --ap-card-hover-shadow: 0 6px 24px rgba(63,124,172,0.2);
+        --ap-text-primary:      #e4e8f5;
+        --ap-text-secondary:    #a0aec0;
+        --ap-label-color:       #8899bb;
+        --ap-divider:           #2a2a3e;
+        --ap-tag-bg:            #1a2340;
+        --ap-tag-color:         #93c5fd;
+        --ap-badge-green-bg:    #064e3b;
+        --ap-badge-green-color: #6ee7b7;
+        --ap-badge-red-bg:      #450a0a;
+        --ap-badge-red-color:   #fca5a5;
+    }
 
-                    @if (!string.IsNullOrEmpty(Model.PreferredFirstName))
-                    {
-                        <p class="text-info mb-1">
-                            Preferred Name: <strong>@Model.PreferredFirstName</strong>
-                        </p>
-                    }
-                    @if (!string.IsNullOrEmpty(Model.JagId))
-                    {
-                        <p class="text-info mb-1">
-                            JAG ID: <strong>@Model.JagId</strong>
-                        </p>
-                    }
+    /* ══════════════════════════════════════════
+       HERO
+    ══════════════════════════════════════════ */
+    .profile-hero {
+        background: linear-gradient(135deg, #1f3c88, #3f7cac);
+        border-radius: 16px;
+        padding: 32px 36px;
+        color: #fff;
+        display: flex;
+        align-items: center;
+        gap: 28px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 8px 32px rgba(31,60,136,.25);
+    }
 
-                    <p class="mb-1">
-                        🎓 Class of <strong>@Model.GraduationYear</strong>
-                    </p>
+    .profile-hero::before {
+        content: '';
+        position: absolute;
+        right: -40px; top: -60px;
+        width: 220px; height: 220px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.06);
+        pointer-events: none;
+    }
 
-                    <p class="mb-0 text-info">
-                        📍 @Model.City, @Model.State, @Model.Country
-                    </p>
-                </div>
-            </div>
+    .profile-hero::after {
+        content: '';
+        position: absolute;
+        right: 80px; bottom: -80px;
+        width: 160px; height: 160px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.04);
+        pointer-events: none;
+    }
 
-            <hr />
+    .profile-avatar {
+        width: 80px; height: 80px;
+        border-radius: 50%;
+        background: rgba(255,255,255,.18);
+        border: 3px solid rgba(255,255,255,.5);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.9rem; font-weight: 700; color: #fff;
+        flex-shrink: 0; letter-spacing: -1px;
+    }
 
-            <!-- Contact Section -->
-            <div class="row mt-4">
-                <div class="col-md-6 mb-3">
-                    <h5 class="fw-bold">Contact Information</h5>
+    .profile-hero-body { flex: 1; min-width: 0; }
 
-                    @if (!string.IsNullOrEmpty(Model.StudentEmail))
-                    {
-                        <p class="mb-1">📧 Student Email: @Model.StudentEmail</p>
-                    }
+    .profile-hero-name {
+        font-size: 1.6rem; font-weight: 700;
+        margin-bottom: 3px; line-height: 1.2;
+    }
 
-                    @if (!string.IsNullOrEmpty(Model.PermanentEmail))
-                    {
-                        <p class="mb-1">📧 Current Email: @Model.PermanentEmail</p>
-                    }
-                    @if (User.IsInRole("Admin"))
-                    {
-                        @if (!string.IsNullOrEmpty(Model.Phone))
-                        {
-                            <p class="mb-1">📱 Phone: @Model.Phone</p>
-                        }
-                    }
-                </div>
-                <div class="col-md-6 mb-3">
-                    <h5 class="fw-bold">Personal Details</h5>
+    .profile-hero-preferred {
+        font-size: .83rem; opacity: .8; margin-bottom: 4px;
+    }
 
-                @if (User.IsInRole("Admin"))
-                {
-                        @if (Model.AgeAtGraduation.HasValue)
-                        {
-                            <p class="mb-1">🎓 Age at Graduation: @Model.AgeAtGraduation years</p>
-                        }
+    .profile-hero-email {
+        font-size: .87rem; opacity: .8; margin-bottom: 13px;
+    }
 
-                        @if (!string.IsNullOrEmpty(Model.Address))
-                        {
-                            <p class="mb-1">🏠 Address: @Model.Address</p>
-                        }
-                }
+    .hero-badges { display: flex; flex-wrap: wrap; gap: 7px; }
 
-                @if (!string.IsNullOrEmpty(Model.SocialMediaAccount))
-                    {
-                        <p class="mb-1">
-                            🌐 Social Media:
-                            <a href="@Model.SocialMediaAccount" target="_blank">View Profile</a>
-                        </p>
-                    }
-                </div>
-            </div>
+    .hero-badge {
+        display: inline-flex; align-items: center; gap: 5px;
+        padding: 4px 11px; border-radius: 999px;
+        font-size: .74rem; font-weight: 600;
+        background: rgba(255,255,255,.18);
+        border: 1px solid rgba(255,255,255,.3); color: #fff;
+    }
 
-            @if (User.IsInRole("Admin"))
-            {
-                <hr />
-                <!-- Settings & Status Section -->
-                <div class="mt-4">
-                    <h5 class="fw-bold mb-3">Profile Settings & Status</h5>
+    .hero-badge.private { background: rgba(220,38,38,.35); border-color: rgba(255,100,100,.5); }
+    .hero-badge.public  { background: rgba(16,185,129,.3);  border-color: rgba(100,255,180,.4); }
+    .hero-badge.admin   { background: rgba(245,158,11,.35); border-color: rgba(251,191,36,.5); }
 
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p class="mb-1">
-                                📩 Solicitation Code:
-                                <span class="badge bg-info text-dark">@Model.SolicitationCode</span>
-                            </p>
-                            <p class="mb-1">
-                                🔒 Privacy Level:
-                                <span class="badge bg-secondary">@Model.Privacy</span>
-                            </p>
-                        </div>
+    /* ══════════════════════════════════════════
+       SECTION CARD SHELL
+    ══════════════════════════════════════════ */
+    .profile-section-card {
+        background: var(--ap-card-bg);
+        border: 1px solid var(--ap-card-border);
+        border-radius: 14px;
+        padding: 22px 24px;
+        box-shadow: var(--ap-card-shadow);
+        transition: background .3s, border-color .3s;
+    }
 
-                        <div class="col-md-6">
-                            <p class="mb-1">
-                                @if (Model.IsActive)
-                                {
-                                    <span class="badge bg-success">Active</span>
-                                }
-                                else
-                                {
-                                    <span class="badge bg-danger">Inactive</span>
-                                }
-                            </p>
-                            <p class="mb-1">
-                                🕒 Last Updated: @Model.LastUpdated.ToString("MMMM dd, yyyy hh:mm tt")
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            }
+    .section-wrap { margin-bottom: 20px; }
 
+    /* ══════════════════════════════════════════
+       SECTION HEADER
+    ══════════════════════════════════════════ */
+    .section-head {
+        display: flex; align-items: center; gap: 10px;
+        margin-bottom: 18px; padding-bottom: 12px;
+        border-bottom: 2px solid var(--ap-divider);
+    }
+
+    .section-title {
+        font-size: .98rem; font-weight: 700;
+        color: var(--ap-text-primary);
+    }
+
+    .section-count {
+        background: var(--ap-tag-bg); color: var(--ap-tag-color);
+        font-size: .71rem; font-weight: 600;
+        padding: 2px 10px; border-radius: 999px;
+    }
+
+    .sec-icon {
+        width: 33px; height: 33px; border-radius: 8px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: .95rem; flex-shrink: 0;
+    }
+
+    .sec-info   { background: #e0e7ff; color: #3730a3; }
+    .sec-emp    { background: #dbeafe; color: #1f3c88; }
+    .sec-int    { background: #cffafe; color: #0891b2; }
+    .sec-org    { background: #ede9fe; color: #7c3aed; }
+    .sec-deg    { background: #fef3c7; color: #b45309; }
+
+    body.dark .sec-info { background: #1e1b4b; color: #a5b4fc; }
+    body.dark .sec-emp  { background: #1e3a5f; color: #93c5fd; }
+    body.dark .sec-int  { background: #164e63; color: #67e8f9; }
+    body.dark .sec-org  { background: #2d1b69; color: #c4b5fd; }
+    body.dark .sec-deg  { background: #451a03; color: #fcd34d; }
+
+    /* ══════════════════════════════════════════
+       PERSONAL INFO ROWS
+    ══════════════════════════════════════════ */
+    .pinfo-row {
+        display: flex;
+        flex-wrap: nowrap;
+        align-items: stretch;
+        border-bottom: 1px solid var(--ap-divider);
+    }
+
+    .pinfo-row-last { border-bottom: none; }
+
+    .pinfo-cell {
+        flex: 1 1 0;
+        display: flex; flex-direction: column; gap: 5px;
+        padding: 14px 16px;
+        border-right: 1px solid var(--ap-divider);
+        min-width: 0;
+        transition: background .15s;
+    }
+
+    .pinfo-cell:last-child { border-right: none; }
+    .pinfo-cell-lg  { flex: 2 1 0; }
+    .pinfo-cell-xl  { flex: 3 1 0; }
+
+    .pinfo-cell:hover { background: rgba(31,60,136,.03); }
+    body.dark .pinfo-cell:hover { background: rgba(255,255,255,.03); }
+
+    .pinfo-jagid {
+        font-weight: 700; font-size: 1rem;
+        color: #1f3c88; letter-spacing: .03em;
+    }
+    body.dark .pinfo-jagid { color: #93c5fd; }
+
+    .pinfo-bool-yes { color: #10b981; font-weight: 600; }
+    .pinfo-bool-no  { color: #ef4444; font-weight: 600; }
+    body.dark .pinfo-bool-yes { color: #6ee7b7; }
+    body.dark .pinfo-bool-no  { color: #fca5a5; }
+
+    /* ══════════════════════════════════════════
+       RECORD CARDS  — flex wrap, fit to content
+    ══════════════════════════════════════════ */
+    .records-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 13px;
+        align-items: flex-start;
+    }
+
+    .rec-card {
+        flex: 0 1 280px;
+        min-width: 260px;
+        max-width: 360px;
+        background: var(--ap-card-bg);
+        border: 1px solid var(--ap-card-border);
+        border-radius: 12px;
+        padding: 18px 18px 14px;
+        position: relative; overflow: hidden;
+        transition: box-shadow .2s, transform .2s, border-color .2s, background .3s;
+    }
+
+    .rec-card:hover {
+        box-shadow: var(--ap-card-hover-shadow);
+        transform: translateY(-2px);
+        border-color: rgba(63,124,172,.35);
+    }
+
+    .rec-stripe {
+        position: absolute; top: 0; left: 0; right: 0;
+        height: 3px; border-radius: 12px 12px 0 0;
+    }
+
+    .rs-info { background: linear-gradient(90deg, #3730a3, #6366f1); }
+    .rs-emp  { background: linear-gradient(90deg, #1f3c88, #3f7cac); }
+    .rs-int  { background: linear-gradient(90deg, #0891b2, #06b6d4); }
+    .rs-org  { background: linear-gradient(90deg, #7c3aed, #a78bfa); }
+    .rs-deg  { background: linear-gradient(90deg, #b45309, #f59e0b); }
+
+    .rec-title {
+        font-size: .95rem; font-weight: 700;
+        color: var(--ap-text-primary);
+        margin-bottom: 2px; padding-right: 34px;
+    }
+
+    .rec-sub {
+        font-size: .8rem; color: var(--ap-text-secondary); margin-bottom: 11px;
+    }
+
+    .rec-fields { display: flex; flex-direction: column; gap: 5px; }
+
+    .rec-field { display: flex; align-items: baseline; gap: 7px; }
+
+    .rf-label {
+        font-size: .68rem; font-weight: 600;
+        letter-spacing: .06em; text-transform: uppercase;
+        color: var(--ap-label-color);
+        min-width: 72px; flex-shrink: 0;
+    }
+
+    .rf-value { font-size: .83rem; color: var(--ap-text-primary); }
+
+    /* Edit button on cards */
+    .rec-edit {
+        position: absolute; top: 13px; right: 13px;
+        width: 27px; height: 27px; border-radius: 7px;
+        background: var(--ap-tag-bg); color: var(--ap-tag-color);
+        border: 1px solid var(--ap-card-border);
+        display: flex; align-items: center; justify-content: center;
+        font-size: .77rem; text-decoration: none;
+        transition: background .2s, color .2s, border-color .2s;
+    }
+
+    .rec-edit:hover { background: #1f3c88; color: #fff; border-color: #1f3c88; }
+
+    /* ══════════════════════════════════════════
+       BOOL TAGS
+    ══════════════════════════════════════════ */
+    .bool-tags { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 11px; }
+
+    .btag {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 3px 9px; border-radius: 999px;
+        font-size: .7rem; font-weight: 600;
+    }
+
+    .btag-yes  { background: var(--ap-badge-green-bg); color: var(--ap-badge-green-color); }
+    .btag-no   { background: var(--ap-badge-red-bg);   color: var(--ap-badge-red-color); }
+    .btag-null { background: var(--ap-tag-bg);          color: var(--ap-label-color); }
+
+    /* ══════════════════════════════════════════
+       PRIVACY NOTICE
+    ══════════════════════════════════════════ */
+    .privacy-notice {
+        background: var(--ap-badge-red-bg);
+        border: 1px solid var(--ap-badge-red-color);
+        border-radius: 12px; padding: 18px 22px;
+        display: flex; align-items: flex-start; gap: 13px;
+        color: var(--ap-badge-red-color); margin-bottom: 22px;
+    }
+
+    .privacy-notice i { font-size: 1.25rem; flex-shrink: 0; margin-top: 1px; }
+    .privacy-notice strong { display: block; margin-bottom: 2px; font-size: .9rem; }
+    .privacy-notice p { font-size: .84rem; margin: 0; opacity: .85; }
+
+    /* ══════════════════════════════════════════
+       EMPTY STATE
+    ══════════════════════════════════════════ */
+    .empty-state {
+        text-align: center; padding: 30px 20px;
+        background: var(--ap-card-bg);
+        border: 1px dashed var(--ap-card-border);
+        border-radius: 12px; color: var(--ap-label-color);
+        font-size: .87rem; transition: background .3s;
+    }
+
+    .empty-state i { font-size: 1.5rem; display: block; margin-bottom: 5px; }
+
+    /* ══════════════════════════════════════════
+       RESPONSIVE  — note: @@ escapes in Razor
+    ══════════════════════════════════════════ */
+    @@media (max-width: 900px) {
+        .pinfo-row, .pinfo-row-last {
+            flex-wrap: wrap;
+        }
+        .pinfo-cell, .pinfo-cell-lg, .pinfo-cell-xl {
+            flex: 1 1 45%;
+            border-right: none;
+            border-bottom: 1px solid var(--ap-divider);
+        }
+        .pinfo-cell:last-child { border-bottom: none; }
+    }
+
+    @@media (max-width: 600px) {
+        .profile-hero { flex-direction: column; text-align: center; padding: 24px 20px; }
+        .hero-badges  { justify-content: center; }
+        .pinfo-cell, .pinfo-cell-lg, .pinfo-cell-xl { flex: 1 1 100%; }
+        .rec-card { flex: 1 1 100%; max-width: 100%; }
+    }
+
+</style>
+
+<!-- ══════════════════════════════════════════
+     HERO BANNER
+══════════════════════════════════════════ -->
+<div class="profile-hero mb-4">
+    <div class="profile-avatar">
+        @(Model.FirstName?[0].ToString().ToUpper())@(Model.LastName?[0].ToString().ToUpper())
+    </div>
+    <div class="profile-hero-body">
+        <div class="profile-hero-name">
+            @string.Join(" ", new[] { Model.Prefix, Model.FirstName, Model.LastName }
+                .Where(x => !string.IsNullOrWhiteSpace(x)))
         </div>
-
-        <!-- Footer — Edit Profile hidden from Staff -->
-        <div class="card-footer bg-light d-flex justify-content-between rounded-bottom-4">
-            @if (User.IsInRole("Admin"))
+        @if (!string.IsNullOrWhiteSpace(Model.PreferredFirstName))
+        {
+            <div class="profile-hero-preferred">
+                Known as <strong>@Model.PreferredFirstName</strong>
+            </div>
+        }
+        <div class="profile-hero-email">
+            <i class="bi bi-envelope me-1"></i>@Model.PermanentEmail
+        </div>
+        <div class="hero-badges">
+            @if (Model.GraduationYear > 0)
             {
-                <a asp-action="Edit" asp-route-id="@Model?.AlumniId"
-                   class="btn btn-primary rounded-pill px-4">
-                    Edit Profile
-                </a>
+                <span class="hero-badge">
+                    <i class="bi bi-mortarboard-fill"></i> Class of @Model.GraduationYear
+                </span>
             }
-
-            <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
-                Back to List
-            </a>
+            @if (Model.Privacy == true)
+            {
+                <span class="hero-badge private"><i class="bi bi-lock-fill"></i> Private</span>
+            }
+            else
+            {
+                <span class="hero-badge public"><i class="bi bi-globe"></i> Public</span>
+            }
+            @if (isAdminStaff)
+            {
+                <span class="hero-badge admin"><i class="bi bi-shield-check"></i> Admin View</span>
+            }
         </div>
     </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     ADMIN — PERSONAL INFORMATION
+══════════════════════════════════════════ -->
+@if (isAdminStaff)
+{
+    <div class="section-wrap">
+        <div class="profile-section-card">
+            <div class="section-head">
+                <div class="sec-icon sec-info">
+                    <i class="bi bi-person-vcard-fill"></i>
+                </div>
+                <span class="section-title">Personal Information</span>
+                @if (User.IsInRole("Admin"))
+                {
+                    <a href="@Url.Action("Edit","Alumni", new { id = Model.AlumniId })"
+                       class="rec-edit ms-auto" title="Edit Alumni"
+                       style="position:static; flex-shrink:0;">
+                        <i class="bi bi-pencil"></i>
+                    </a>
+                }
+            </div>
+
+            <!-- Row 1: Identity -->
+            <div class="pinfo-row">
+                <div class="pinfo-cell pinfo-cell-lg">
+                    <span class="rf-label"><i class="bi bi-person-badge me-1"></i>JAG ID</span>
+                    <span class="rf-value pinfo-jagid">@(Model.JagId ?? "—")</span>
+                </div>
+                <div class="pinfo-cell pinfo-cell-lg">
+                    <span class="rf-label"><i class="bi bi-person me-1"></i>Full Name</span>
+                    <span class="rf-value">
+                        @string.Join(" ", new[] { Model.Prefix, Model.FirstName, Model.LastName }
+                            .Where(x => !string.IsNullOrWhiteSpace(x)))
+                    </span>
+                </div>
+                <div class="pinfo-cell">
+                    <span class="rf-label"><i class="bi bi-chat-quote me-1"></i>Preferred Name</span>
+                    <span class="rf-value">@(string.IsNullOrWhiteSpace(Model.PreferredFirstName) ? "—" : Model.PreferredFirstName)</span>
+                </div>
+                <div class="pinfo-cell">
+                    <span class="rf-label"><i class="bi bi-mortarboard me-1"></i>Class Of</span>
+                    <span class="rf-value">@Model.GraduationYear</span>
+                </div>
+                <div class="pinfo-cell">
+                    <span class="rf-label"><i class="bi bi-calendar2 me-1"></i>Age at Grad</span>
+                    <span class="rf-value">@(Model.AgeAtGraduation.HasValue ? Model.AgeAtGraduation + " yrs" : "—")</span>
+                </div>
+            </div>
+
+            <!-- Row 2: Contact -->
+            <div class="pinfo-row">
+                <div class="pinfo-cell pinfo-cell-lg">
+                    <span class="rf-label"><i class="bi bi-envelope me-1"></i>Permanent Email</span>
+                    <span class="rf-value">@(Model.PermanentEmail ?? "—")</span>
+                </div>
+                <div class="pinfo-cell pinfo-cell-lg">
+                    <span class="rf-label"><i class="bi bi-envelope-at me-1"></i>Student Email</span>
+                    <span class="rf-value">@(Model.StudentEmail ?? "—")</span>
+                </div>
+                <div class="pinfo-cell">
+                    <span class="rf-label"><i class="bi bi-telephone me-1"></i>Phone</span>
+                    <span class="rf-value">@(string.IsNullOrEmpty(Model.Phone) ? "—" : Model.Phone)</span>
+                </div>
+                <div class="pinfo-cell">
+                    <span class="rf-label"><i class="bi bi-link-45deg me-1"></i>Social Media</span>
+                    <span class="rf-value">
+                        @if (!string.IsNullOrWhiteSpace(Model.SocialMediaAccount))
+                        {
+                            <a href="@Model.SocialMediaAccount" target="_blank"
+                               class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 py-0 px-2">
+                                <i class="bi bi-box-arrow-up-right" style="font-size:.75rem;"></i> View
+                            </a>
+                        }
+                        else
+                        {
+                            <span class="text-muted fst-italic">Not provided</span>
+                        }
+                    </span>
+                </div>
+                <div class="pinfo-cell">
+                    <span class="rf-label"><i class="bi bi-tag me-1"></i>Solicitation</span>
+                    <span class="rf-value">
+                        @if (Model.SolicitationCode == true)
+                        {
+                            <span class="btag btag-yes"><i class="bi bi-check-circle-fill"></i> Allowed</span>
+                        }
+                        else
+                        {
+                            <span class="btag btag-no"><i class="bi bi-x-circle-fill"></i> Not Allowed</span>
+                        }
+                    </span>
+                </div>
+            </div>
+
+            <!-- Row 3: Location + flags -->
+            <div class="pinfo-row pinfo-row-last">
+                <div class="pinfo-cell pinfo-cell-xl">
+                    <span class="rf-label"><i class="bi bi-geo-alt me-1"></i>Address</span>
+                    <span class="rf-value">
+                        @{
+                            var fullAddr = string.Join(", ",
+                                new[] { Model.Address, Model.City, Model.State, Model.Postcode, Model.Country }
+                                .Where(x => !string.IsNullOrWhiteSpace(x)));
+                        }
+                        @(string.IsNullOrWhiteSpace(fullAddr) ? "—" : fullAddr)
+                    </span>
+                </div>
+                <div class="pinfo-cell">
+                    <span class="rf-label"><i class="bi bi-shield me-1"></i>Privacy</span>
+                    <span class="rf-value">
+                        @if (Model.Privacy == true)
+                        {
+                            <span class="btag btag-no"><i class="bi bi-lock-fill"></i> Private</span>
+                        }
+                        else
+                        {
+                            <span class="btag btag-yes"><i class="bi bi-globe"></i> Public</span>
+                        }
+                    </span>
+                </div>
+                <div class="pinfo-cell">
+                    <span class="rf-label"><i class="bi bi-activity me-1"></i>Status</span>
+                    <span class="rf-value">
+                        @if (Model.IsActive)
+                        {
+                            <span class="btag btag-yes"><i class="bi bi-check-circle-fill"></i> Active</span>
+                        }
+                        else
+                        {
+                            <span class="btag btag-no"><i class="bi bi-x-circle-fill"></i> Inactive</span>
+                        }
+                    </span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+}
+
+<!-- ══════════════════════════════════════════
+     ALUMNI SELF-VIEW
+══════════════════════════════════════════ -->
+@if (!isAdminStaff && User.IsInRole("Alumni"))
+{
+    <div class="section-wrap">
+        <div class="profile-section-card">
+            <div class="section-head">
+                <div class="sec-icon sec-info"><i class="bi bi-person-fill"></i></div>
+                <span class="section-title">Profile Overview</span>
+            </div>
+            <div class="pinfo-row pinfo-row-last">
+                <div class="pinfo-cell">
+                    <span class="rf-label"><i class="bi bi-mortarboard me-1"></i>Class of</span>
+                    <span class="rf-value">@Model.GraduationYear</span>
+                </div>
+                <div class="pinfo-cell">
+                    <span class="rf-label"><i class="bi bi-geo-alt me-1"></i>Location</span>
+                    <span class="rf-value">
+                        @{
+                            var loc = string.Join(", ",
+                                new[] { Model.City, Model.State }
+                                .Where(x => !string.IsNullOrWhiteSpace(x)));
+                        }
+                        @(string.IsNullOrWhiteSpace(loc) ? "—" : loc)
+                    </span>
+                </div>
+                @if (!string.IsNullOrWhiteSpace(Model.SocialMediaAccount))
+                {
+                    <div class="pinfo-cell">
+                        <span class="rf-label"><i class="bi bi-link-45deg me-1"></i>Social Media</span>
+                        <span class="rf-value">
+                            <a href="@Model.SocialMediaAccount" target="_blank"
+                               class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-1 py-0 px-2">
+                                <i class="bi bi-box-arrow-up-right" style="font-size:.75rem;"></i> View Profile
+                            </a>
+                        </span>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+<!-- ══════════════════════════════════════════
+     PRIVACY WALL
+══════════════════════════════════════════ -->
+@if (!canView)
+{
+    <div class="privacy-notice">
+        <i class="bi bi-lock-fill"></i>
+        <div>
+            <strong>This profile is private</strong>
+            <p>This alumni has chosen to keep their details private. Employment, internship, and organization records are not visible.</p>
+        </div>
+    </div>
+}
+else
+{
+       <!-- ══ DEGREES (Admin/Staff only) ══ -->
+    @if (isAdminStaff)
+    {
+        <div class="section-wrap">
+            <div class="profile-section-card">
+                <div class="section-head">
+                    <div class="sec-icon sec-deg"><i class="bi bi-mortarboard-fill"></i></div>
+                    <span class="section-title">Academic Degrees</span>
+                    <span class="section-count ms-auto">@degrees.Count()</span>
+                </div>
+                @if (!degrees.Any())
+                {
+                    <div class="empty-state">
+                        <i class="bi bi-mortarboard"></i>No degree records on file.
+                    </div>
+                }
+                else
+                {
+                    <div class="records-grid">
+                        @foreach (var deg in degrees)
+                        {
+                            <div class="rec-card">
+                                <div class="rec-stripe rs-deg"></div>
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <a href="@Url.Action("Edit","AlumniDegrees", new { id = deg.AlumniDegreeId })"
+                                       class="rec-edit" title="Edit"><i class="bi bi-pencil"></i></a>
+                                }
+                                <div class="rec-title">@deg.Degree?.Department</div>
+                                <div class="rec-sub">
+                                    <i class="bi bi-calendar3 me-1"></i>Conferred: @deg.DateConferred.ToString("MMM dd, yyyy")
+                                </div>
+                                <div class="rec-fields">
+                                    @if (deg.Gpa.HasValue)
+                                    {
+                                        <div class="rec-field">
+                                            <span class="rf-label">GPA</span>
+                                            <span class="rf-value">@deg.Gpa.Value.ToString("0.00")</span>
+                                        </div>
+                                    }
+                                    @if (deg.YearsToCompleteDegree.HasValue)
+                                    {
+                                        <div class="rec-field">
+                                            <span class="rf-label">Duration</span>
+                                            <span class="rf-value">@deg.YearsToCompleteDegree yr(s)</span>
+                                        </div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(deg.EmploymentWhileStudying))
+                                    {
+                                        <div class="rec-field">
+                                            <span class="rf-label">Employed</span>
+                                            <span class="rf-value">@deg.EmploymentWhileStudying</span>
+                                        </div>
+                                    }
+                                </div>
+                                <div class="bool-tags">
+                                    @{
+                                        void BTag(bool? v, string lbl)
+                                        {
+                                            if (v == null)       { <span class="btag btag-null">@lbl: N/A</span> }
+                                            else if (v == true)  { <span class="btag btag-yes"><i class="bi bi-check-circle-fill"></i> @lbl</span> }
+                                            else                 { <span class="btag btag-no"><i class="bi bi-x-circle-fill"></i> @lbl</span> }
+                                        }
+                                    }
+                                    @{ BTag(deg.DegreeSpecificJob,         "Degree Job"); }
+                                    @{ BTag(deg.ParticipatedInResearch,    "Research"); }
+                                    @{ BTag(deg.JobSecuredUponGraduation,  "Job @ Grad"); }
+                                    @{ BTag(deg.AttendedOrPlansGradSchool, "Grad School"); }
+                                </div>
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    }
+    <!-- ══ EMPLOYMENT ══ -->
+    <div class="section-wrap">
+        <div class="profile-section-card">
+            <div class="section-head">
+                <div class="sec-icon sec-emp"><i class="bi bi-briefcase-fill"></i></div>
+                <span class="section-title">Employment History</span>
+                <span class="section-count ms-auto">@employments.Count()</span>
+            </div>
+            @if (!employments.Any())
+            {
+                <div class="empty-state">
+                    <i class="bi bi-briefcase"></i>No employment records on file.
+                </div>
+            }
+            else
+            {
+                <div class="records-grid">
+                    @foreach (var emp in employments)
+                    {
+                        <div class="rec-card">
+                            <div class="rec-stripe rs-emp"></div>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <a href="@Url.Action("Edit","AlumniEmployments", new { id = emp.AlumniEmploymentId })"
+                                   class="rec-edit" title="Edit"><i class="bi bi-pencil"></i></a>
+                            }
+                            <div class="rec-title">@emp.JobTitle</div>
+                            <div class="rec-sub"><i class="bi bi-building me-1"></i>@emp.Employer?.EmployerName</div>
+                            <div class="rec-fields">
+                                <div class="rec-field">
+                                    <span class="rf-label">Start</span>
+                                    <span class="rf-value">@emp.StartDate.ToString("MMM dd, yyyy")</span>
+                                </div>
+                                <div class="rec-field">
+                                    <span class="rf-label">End</span>
+                                    <span class="rf-value">@(emp.EndDate.HasValue ? emp.EndDate.Value.ToString("MMM dd, yyyy") : "Present")</span>
+                                </div>
+                                @if (isAdminStaff && !string.IsNullOrEmpty(emp.SalaryRange))
+                                {
+                                    <div class="rec-field">
+                                        <span class="rf-label">Salary</span>
+                                        <span class="rf-value">@emp.SalaryRange</span>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- ══ INTERNSHIPS ══ -->
+    <div class="section-wrap">
+        <div class="profile-section-card">
+            <div class="section-head">
+                <div class="sec-icon sec-int"><i class="bi bi-person-workspace"></i></div>
+                <span class="section-title">Internship Experience</span>
+                <span class="section-count ms-auto">@internships.Count()</span>
+            </div>
+            @if (!internships.Any())
+            {
+                <div class="empty-state">
+                    <i class="bi bi-person-workspace"></i>No internship records on file.
+                </div>
+            }
+            else
+            {
+                <div class="records-grid">
+                    @foreach (var intern in internships)
+                    {
+                        <div class="rec-card">
+                            <div class="rec-stripe rs-int"></div>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <a href="@Url.Action("Edit","AlumniInternships", new { id = intern.AlumniInternshipId })"
+                                   class="rec-edit" title="Edit"><i class="bi bi-pencil"></i></a>
+                            }
+                            <div class="rec-title">@intern.Title</div>
+                            <div class="rec-sub"><i class="bi bi-building me-1"></i>@intern.Employer?.EmployerName</div>
+                            <div class="rec-fields">
+                                <div class="rec-field">
+                                    <span class="rf-label">Type</span>
+                                    <span class="rf-value">@intern.InternshipType</span>
+                                </div>
+                                <div class="rec-field">
+                                    <span class="rf-label">Start</span>
+                                    <span class="rf-value">@intern.StartDate.ToString("MMM dd, yyyy")</span>
+                                </div>
+                                <div class="rec-field">
+                                    <span class="rf-label">End</span>
+                                    <span class="rf-value">@intern.EndDate.ToString("MMM dd, yyyy")</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- ══ ORGANIZATIONS ══ -->
+    <div class="section-wrap">
+        <div class="profile-section-card">
+            <div class="section-head">
+                <div class="sec-icon sec-org"><i class="bi bi-diagram-3-fill"></i></div>
+                <span class="section-title">Organizations & Clubs</span>
+                <span class="section-count ms-auto">@organizations.Count()</span>
+            </div>
+            @if (!organizations.Any())
+            {
+                <div class="empty-state">
+                    <i class="bi bi-diagram-3"></i>No organization records on file.
+                </div>
+            }
+            else
+            {
+                <div class="records-grid">
+                    @foreach (var org in organizations)
+                    {
+                        <div class="rec-card">
+                            <div class="rec-stripe rs-org"></div>
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <a href="@Url.Action("Edit","AlumniOrganizations", new { id = org.AlumniOrganizationId })"
+                                   class="rec-edit" title="Edit"><i class="bi bi-pencil"></i></a>
+                            }
+                            <div class="rec-title">@org.OrganizationType?.OrganizationName</div>
+                            <div class="rec-fields">
+                                <div class="rec-field">
+                                    <span class="rf-label">Role(s)</span>
+                                    <span class="rf-value">@(string.IsNullOrEmpty(org.OfficerRoles) ? "Member" : org.OfficerRoles)</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+}
+
+<!-- ── Back ── -->
+<div class="mt-2 mb-4">
+    <a href="@Url.Action("Index","Alumni")" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-arrow-left me-1"></i>Back to Directory
+    </a>
 </div>

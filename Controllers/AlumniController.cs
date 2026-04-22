@@ -129,15 +129,83 @@ namespace Alumni_Management_System.Controllers
             return RedirectToAction("Edit", new { id = alumni.AlumniId });
         }
 
+        //public async Task<IActionResult> Details(int? id)
+        //{
+        //    if (id == null) return NotFound();
+        //    var alumni = await _context.Alumni
+        //        .Include(a => a.User)
+        //        .FirstOrDefaultAsync(m => m.AlumniId == id);
+        //    if (alumni == null) return NotFound();
+        //    return View(alumni);
+        //}
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
+
             var alumni = await _context.Alumni
                 .Include(a => a.User)
                 .FirstOrDefaultAsync(m => m.AlumniId == id);
+
             if (alumni == null) return NotFound();
+
+            bool isAdminOrStaff = User.IsInRole("Admin") || User.IsInRole("Staff");
+            bool isAlumni = User.IsInRole("Alumni");
+
+            // Find the logged-in alumni's own record
+            bool isOwnProfile = false;
+            if (isAlumni)
+            {
+                var currentAlumni = await _context.Alumni
+                    .FirstOrDefaultAsync(a => a.UserId == _userManager.GetUserId(User));
+                isOwnProfile = currentAlumni?.AlumniId == id;
+            }
+
+            // Alumni can view:
+            //   - their own profile (always)
+            //   - other alumni profiles only if Privacy == false
+            // Admin/Staff can view everyone
+            if (isAlumni && !isOwnProfile && alumni.Privacy == true)
+                return Forbid();
+
+            // canViewDetails: show related records when...
+            //   - Admin/Staff (always)
+            //   - Own profile (always)
+            //   - Another alumni viewing a public profile (Privacy == false)
+            bool canViewDetails = isAdminOrStaff || isOwnProfile || (!isOwnProfile && alumni.Privacy == false);
+
+            if (canViewDetails)
+            {
+                ViewBag.Employments = await _context.AlumniEmployments
+                    .Include(e => e.Employer)
+                    .Where(e => e.AlumniId == id)
+                    .ToListAsync();
+
+                ViewBag.Internships = await _context.AlumniInternships
+                    .Include(i => i.Employer)
+                    .Where(i => i.AlumniId == id)
+                    .ToListAsync();
+
+                ViewBag.Organizations = await _context.AlumniOrganizations
+                    .Include(o => o.OrganizationType)
+                    .Where(o => o.AlumniId == id)
+                    .ToListAsync();
+
+                // Degrees only for Admin/Staff
+                if (isAdminOrStaff)
+                {
+                    ViewBag.Degrees = await _context.AlumniDegrees
+                        .Include(d => d.Degree)
+                        .Where(d => d.AlumniId == id)
+                        .ToListAsync();
+                }
+            }
+
+            ViewBag.CanViewDetails = canViewDetails;
+            ViewBag.IsAdminOrStaff = isAdminOrStaff;
+
             return View(alumni);
         }
+
 
         [Authorize(Roles = "Admin")]
         public IActionResult Create() => View();
@@ -155,6 +223,9 @@ namespace Alumni_Management_System.Controllers
             {
                 ModelState.AddModelError("JagId", $"JAG ID '{alumni.JagId}' already exists in the Alumni records.");
             }
+
+            await ValidateEmails(alumni);
+
 
             if (ModelState.IsValid)
             {
@@ -233,6 +304,8 @@ namespace Alumni_Management_System.Controllers
                 ModelState.AddModelError("JagId", $"JAG ID '{alumni.JagId}' is already assigned to another alumni.");
             }
 
+            await ValidateEmails(alumni);
+
             if (ModelState.IsValid)
             {
                 try
@@ -262,6 +335,19 @@ namespace Alumni_Management_System.Controllers
             }
 
             return View(alumni);
+        }
+
+        private async Task ValidateEmails(Alumni alumni)
+        {
+            if (await _context.Alumni.AnyAsync(a => a.StudentEmail == alumni.StudentEmail && a.AlumniId != alumni.AlumniId))
+            {
+                ModelState.AddModelError("StudentEmail", "Student Email already exists.");
+            }
+
+            if (await _context.Alumni.AnyAsync(a => a.PermanentEmail == alumni.PermanentEmail && a.AlumniId != alumni.AlumniId))
+            {
+                ModelState.AddModelError("PermanentEmail", "Permanent Email already exists.");
+            }
         }
 
         [Authorize(Roles = "Admin")]

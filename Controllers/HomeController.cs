@@ -59,18 +59,11 @@ namespace Alumni_Management_System.Controllers
                 .Where(a => a.GraduationYear > 0)
                 .GroupBy(a => a.GraduationYear)
                 .Select(g => new { Year = g.Key, Count = g.Count() })
+                .OrderBy(g => g.Year)
                 .ToListAsync();
 
-            // Use int[] instead of List<int> to avoid RuntimeBinderException with dynamic ViewBag
-            var years = alumniChart
-                .Select(x => x.Year)
-                .Distinct()
-                .OrderBy(x => x)
-                .ToArray();
-
-            ViewBag.ChartLabels = years;
-            ViewBag.AlumniData = years.Select(y => alumniChart.FirstOrDefault(a => a.Year == y)?.Count ?? 0).ToArray();
-            ViewBag.RegistryData = years.Select(y => 0).ToArray();
+            ViewBag.ChartLabels = alumniChart.Select(x => x.Year).ToArray();
+            ViewBag.AlumniData = alumniChart.Select(x => x.Count).ToArray();
 
             var activity = new List<string>();
 
@@ -107,43 +100,84 @@ namespace Alumni_Management_System.Controllers
         public async Task<IActionResult> AlumniPortal()
         {
             var user = await _userManager.GetUserAsync(User);
+
             if (user == null)
                 return RedirectToAction("Index");
 
             var alumni = await _context.Alumni
                 .FirstOrDefaultAsync(a => a.UserId == user.Id || a.JagId == user.JagId);
 
-            if (alumni != null)
+            if (alumni == null)
             {
-                if (string.IsNullOrEmpty(alumni.UserId) || alumni.UserId != user.Id)
-                {
-                    alumni.UserId = user.Id;
-                    _context.Alumni.Update(alumni);
-                    await _context.SaveChangesAsync();
-                }
+                ViewData["ProfileCompletion"] = 0;
+                ViewBag.Employments = Enumerable.Empty<AlumniEmployment>();
+                ViewBag.Internships = Enumerable.Empty<AlumniInternship>();
+                ViewBag.Organizations = Enumerable.Empty<AlumniOrganization>();
+                ViewBag.Degrees = Enumerable.Empty<AlumniDegree>();
 
-                int total = 15, done = 0;
-                if (!string.IsNullOrEmpty(alumni.FirstName)) done++;
-                if (!string.IsNullOrEmpty(alumni.LastName)) done++;
-                if (!string.IsNullOrEmpty(alumni.PermanentEmail)) done++;
-                if (!string.IsNullOrEmpty(alumni.Phone)) done++;
-                if (!string.IsNullOrEmpty(alumni.Gender)) done++;
-                if (alumni.AgeAtGraduation > 0) done++;
-                if (!string.IsNullOrEmpty(alumni.Address)) done++;
-                if (!string.IsNullOrEmpty(alumni.City)) done++;
-                if (!string.IsNullOrEmpty(alumni.State)) done++;
-                if (!string.IsNullOrEmpty(alumni.Country)) done++;
-                if (alumni.GraduationYear > 0) done++;
-                if (!string.IsNullOrEmpty(alumni.StudentEmail)) done++;
-                if (!string.IsNullOrEmpty(alumni.SocialMediaAccount)) done++;
-                if (!string.IsNullOrEmpty(alumni.Prefix)) done++;
-
-                ViewData["ProfileCompletion"] = (int)((double)done / total * 100);
+                return View(null);
             }
+
+            // Link alumni account on first login if needed
+            if (string.IsNullOrEmpty(alumni.UserId) || alumni.UserId != user.Id)
+            {
+                alumni.UserId = user.Id;
+                _context.Alumni.Update(alumni);
+                await _context.SaveChangesAsync();
+            }
+
+            // Load related data for portal
+            var employments = await _context.AlumniEmployments
+                .Where(e => e.AlumniId == alumni.AlumniId)
+                .Include(e => e.Employer)
+                .OrderByDescending(e => e.StartDate)
+                .ToListAsync();
+
+            var internships = await _context.AlumniInternships
+                .Where(i => i.AlumniId == alumni.AlumniId)
+                .Include(i => i.Employer)
+                .OrderByDescending(i => i.StartDate)
+                .ToListAsync();
+
+            var organizations = await _context.AlumniOrganizations
+                .Where(o => o.AlumniId == alumni.AlumniId)
+                .Include(o => o.OrganizationType)
+                .ToListAsync();
+
+            var degrees = await _context.AlumniDegrees
+                .Where(d => d.AlumniId == alumni.AlumniId)
+                .Include(d => d.Degree)
+                .OrderByDescending(d => d.DateConferred)
+                .ToListAsync();
+
+            ViewBag.Employments = employments;
+            ViewBag.Internships = internships;
+            ViewBag.Organizations = organizations;
+            ViewBag.Degrees = degrees;
+
+            // Correct profile completion calculation
+            int total = 14;
+            int done = 0;
+
+            if (!string.IsNullOrWhiteSpace(alumni.FirstName)) done++;
+            if (!string.IsNullOrWhiteSpace(alumni.LastName)) done++;
+            if (!string.IsNullOrWhiteSpace(alumni.PermanentEmail)) done++;
+            if (!string.IsNullOrWhiteSpace(alumni.Phone)) done++;
+            if (!string.IsNullOrWhiteSpace(alumni.Gender)) done++;
+            if (alumni.AgeAtGraduation > 0) done++;
+            if (!string.IsNullOrWhiteSpace(alumni.Address)) done++;
+            if (!string.IsNullOrWhiteSpace(alumni.City)) done++;
+            if (!string.IsNullOrWhiteSpace(alumni.State)) done++;
+            if (!string.IsNullOrWhiteSpace(alumni.Country)) done++;
+            if (alumni.GraduationYear > 0) done++;
+            if (!string.IsNullOrWhiteSpace(alumni.StudentEmail)) done++;
+            if (!string.IsNullOrWhiteSpace(alumni.SocialMediaAccount)) done++;
+            if (!string.IsNullOrWhiteSpace(alumni.Prefix)) done++;
+
+            ViewData["ProfileCompletion"] = (int)Math.Round((double)done / total * 100);
 
             return View(alumni);
         }
-
         public IActionResult Privacy() => View();
 
         public IActionResult Error()

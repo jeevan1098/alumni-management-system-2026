@@ -45,6 +45,9 @@ namespace Alumni_Management_System.Data
                 entity.Property(e => e.Privacy).HasDefaultValue(true);
 
                 entity.HasIndex(a => a.JagId).IsUnique();
+                entity.HasIndex(a => a.StudentEmail).IsUnique();
+                entity.HasIndex(a => a.PermanentEmail).IsUnique();
+
 
                 entity.HasOne(a => a.User)
                       .WithMany(u => u.Alumni)

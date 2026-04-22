@@ -73,7 +73,7 @@
                     
                     <p>The Excel file should have the following columns (in any order):</p>
                     <ol>
-                        <li><strong>JagId</strong> (Required, format: J00 + digits, e.g., J0012345)</li>
+                        <li><strong>JagId</strong> (Required, format: J + digits, e.g., J012345)</li>
                         <li><strong>Name Prefix</strong> (e.g., Mr., Ms., Dr.)</li>
                         <li><strong>First Name</strong></li>
                         <li><strong>Preferred First Name</strong></li>
@@ -89,11 +89,6 @@
                         <li><strong>Postcode</strong></li>
                         <li><strong>Country</strong></li>
                         <li><strong>GraduationYear</strong> (numerical, e.g., 2020)</li>
-                        <li><strong>SolicitationCode</strong> (true or false)</li>
-                        <li><strong>Social Media Account</strong></li>
-                        <li><strong>Privacy</strong> (true or false)</li>
-                        <li><strong>IsActive</strong> (true or false)</li>
-                        <li><strong>LastUpdated</strong> (date format, e.g., 2024-01-15)</li>
                         <li><strong>DegreeType</strong> (e.g., Bachelor's, Master's, PhD)</li>
                         <li><strong>Major</strong> (e.g., Computer Science, Business Administration)</li>
                         <li><strong>DegreeProgram</strong> (name of the degree program)</li>
@@ -105,7 +100,6 @@
                         <strong>Important:</strong> 
                         <ul>
                             <li>Each JagId must be unique and cannot be duplicated in Alumni or AlumniRegistry tables.</li>
-                            <li>Column order does NOT matter — fields are matched by header name.</li>
                             <li>Headers are case-insensitive (e.g., "jagid" or "JagID" will both work).</li>
                             <li>Duplicate entries will be rejected with an error message.</li>
                         </ul>
@@ -127,7 +121,7 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td>J0012345</td>
+                                    <td>J12345</td>
                                     <td>John</td>
                                     <td>Doe</td>
                                     <td>john@example.com</td>
@@ -136,7 +130,7 @@
                                     <td>2020</td>
                                 </tr>
                                 <tr>
-                                    <td>J0012346</td>
+                                    <td>J012346</td>
                                     <td>Jane</td>
                                     <td>Smith</td>
                                     <td>jane@example.com</td>
