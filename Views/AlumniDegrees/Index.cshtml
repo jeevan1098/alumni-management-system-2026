@@ -56,10 +56,9 @@
                         <tr>
                             <th><i class="bi bi-credit-card-2-front-fill me-1 text-primary"></i>Jag ID</th>
                             <th><i class="bi bi-person-fill me-1 text-primary"></i>Alumni</th>
+                            <th><i class="bi bi-bar-chart-fill me-1 text-primary"></i>University</th>
                             <th><i class="bi bi-mortarboard-fill me-1 text-primary"></i>Degree Program</th>
-                            <th><i class="bi bi-bar-chart-fill me-1 text-primary"></i>GPA</th>
                             <th><i class="bi bi-calendar-event me-1 text-primary"></i>Date Conferred</th>
-                            <th><i class="bi bi-award-fill me-1 text-primary"></i>Job Secured</th>
                             <th><i class="bi bi-list-task me-2 text-primary"></i>Actions</th>
                         </tr>
                     </thead>
@@ -69,23 +68,9 @@
                             <tr>
                                 <td class="fw-semibold text-center">@item.Alumni.JagId</td>
                                 <td class="text-center">@item.Alumni.FirstName @item.Alumni.LastName</td>
+                                <td class="text-center">@item.Degree.Institution</td>
                                 <td class="text-center">@item.Degree.DegreeType</td>
-                                <td class="text-center">@item.Gpa</td>
                                 <td class="text-center">@item.DateConferred.Year</td>
-                                <td class="text-center">
-                                    @if (item.JobSecuredUponGraduation == true)
-                                    {
-                                        <span class="badge bg-success-subtle text-success">
-                                            <i class="bi bi-check-circle-fill me-1"></i>Yes
-                                        </span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-secondary-subtle text-info">
-                                            <i class="bi bi-x-circle me-1"></i>No
-                                        </span>
-                                    }
-                                </td>
                                 <td class="text-center">
                                     <a asp-action="Details"
                                        asp-route-id="@item.AlumniDegreeId"
@@ -100,7 +85,7 @@
                                             <i class="bi bi-pencil-fill"></i>
                                         </a>
                                     }
-                                    @if (User.IsInRole("Admin"))
+                                    @if (User.IsInRole("Admin")||User.IsInRole("Alumni"))
                                     {
                                         <a asp-action="Delete"
                                            asp-route-id="@item.AlumniDegreeId"

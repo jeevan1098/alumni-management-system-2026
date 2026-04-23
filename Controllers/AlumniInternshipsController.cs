@@ -265,6 +265,19 @@ namespace Alumni_Management_System.Controllers
             // Resolve "Other" employer
             await ResolveOtherEmployer(alumniInternship, OtherEmployerName);
 
+            // ── Exact duplicate check ──
+            bool isDuplicate = await _context.AlumniInternships.AnyAsync(i =>
+                i.AlumniId == alumniInternship.AlumniId &&
+                i.EmployerId == alumniInternship.EmployerId &&
+                i.InternshipType == alumniInternship.InternshipType &&
+                i.Title == alumniInternship.Title &&
+                i.StartDate == alumniInternship.StartDate &&
+                i.EndDate == alumniInternship.EndDate);
+
+            if (isDuplicate)
+                ModelState.AddModelError(string.Empty,
+                    "An identical internship record already exists for this alumni.");
+
             // ── Basic date checks ──
             if (alumniInternship.StartDate > DateOnly.FromDateTime(DateTime.Now))
                 ModelState.AddModelError("StartDate", "Start date cannot be in the future.");
@@ -364,6 +377,20 @@ namespace Alumni_Management_System.Controllers
 
             // Resolve "Other" employer
             await ResolveOtherEmployer(alumniInternship, OtherEmployerName);
+
+            // ── Exact duplicate check (excluding self) ──
+            bool isDuplicate = await _context.AlumniInternships.AnyAsync(i =>
+                i.AlumniInternshipId != alumniInternship.AlumniInternshipId &&
+                i.AlumniId == alumniInternship.AlumniId &&
+                i.EmployerId == alumniInternship.EmployerId &&
+                i.InternshipType == alumniInternship.InternshipType &&
+                i.Title == alumniInternship.Title &&
+                i.StartDate == alumniInternship.StartDate &&
+                i.EndDate == alumniInternship.EndDate);
+
+            if (isDuplicate)
+                ModelState.AddModelError(string.Empty,
+                    "An identical internship record already exists for this alumni.");
 
             // ── Basic date checks ──
             if (alumniInternship.StartDate > DateOnly.FromDateTime(DateTime.Now))

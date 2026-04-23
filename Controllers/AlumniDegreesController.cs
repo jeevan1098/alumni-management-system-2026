@@ -85,14 +85,16 @@ namespace Alumni_Management_System.Controllers
                 "Value", "Text", selectedId?.ToString());
         }
 
-        private async Task PopulateDegreeDropdown(object selectedId = null)
+        private async Task PopulateDegreeDropdown(object selectedId = null, bool skipAlumniFilter = false)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
 
             IQueryable<DegreeProgram> degreeQuery = _context.DegreePrograms;
 
-            if (roles.Contains(Constants.AlumniRole))
+            // Apply the Alumni filter only for Create / Other University edits.
+            // Skip it when we just need to display the current USA degree read-only.
+            if (roles.Contains(Constants.AlumniRole) && !skipAlumniFilter)
             {
                 degreeQuery = degreeQuery.Where(d =>
                     d.Institution == "Other University" &&
@@ -242,13 +244,6 @@ namespace Alumni_Management_System.Controllers
                     return RedirectToAction(nameof(Index));
                 }
 
-                // 2. Verify it is an "Other University" record
-                if (alumniDegree.Degree?.Institution != "Other University")
-                {
-                    TempData["ErrorMessage"] = "You can only edit external degrees. University records are view-only.";
-                    return RedirectToAction(nameof(Index));
-                }
-
                 ViewData["CurrentAlumniId"] = alumni.AlumniId;
                 ViewData["AlumniId"] = new SelectList(new[]
                 {
@@ -258,13 +253,22 @@ namespace Alumni_Management_System.Controllers
                         Text  = $"{alumni.JagId} — {alumni.FirstName} {alumni.LastName}"
                     }
                 }, "Value", "Text", alumniDegree.AlumniId);
+                ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
             {
                 await PopulateAlumniDropdown(alumniDegree.AlumniId);
+                ViewData["UserRole"] = "Admin";
             }
 
-            await PopulateDegreeDropdown(alumniDegree.DegreeId);
+            // Pass whether the degree belongs to "Other University" so the view can
+            // conditionally enable/disable fields.
+            bool isOtherUniversity = alumniDegree.Degree?.Institution == "Other University";
+            ViewData["IsOtherUniversity"] = isOtherUniversity;
+
+            // For a locked USA degree, skip the Alumni filter so the current degree
+            // appears in the dropdown for read-only display.
+            await PopulateDegreeDropdown(alumniDegree.DegreeId, skipAlumniFilter: !isOtherUniversity);
             return View(alumniDegree);
         }
 
@@ -278,6 +282,7 @@ namespace Alumni_Management_System.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
 
+            bool isOtherUniversity = true; // default for Admin
             if (roles.Contains(Constants.AlumniRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -286,17 +291,24 @@ namespace Alumni_Management_System.Controllers
                     .AsNoTracking()
                     .FirstOrDefaultAsync(ad => ad.AlumniDegreeId == id);
 
-                // Re-verify Ownership and Record Type on post to prevent URL manipulation
+                // Re-verify Ownership on post to prevent URL manipulation
                 if (alumni == null || existingRecord == null || existingRecord.AlumniId != alumni.AlumniId)
                 {
                     TempData["ErrorMessage"] = "Unauthorized edit attempt.";
                     return RedirectToAction(nameof(Index));
                 }
 
-                if (existingRecord.Degree?.Institution != "Other University")
+                isOtherUniversity = existingRecord.Degree?.Institution == "Other University";
+
+                // If the degree is a University of South Alabama record, only the
+                // six allowed fields may be changed. Overwrite all other fields from
+                // the stored record so bound values cannot sneak in.
+                if (!isOtherUniversity)
                 {
-                    TempData["ErrorMessage"] = "Only external degrees can be modified.";
-                    return RedirectToAction(nameof(Index));
+                    alumniDegree.AlumniId = existingRecord.AlumniId;
+                    alumniDegree.DegreeId = existingRecord.DegreeId;
+                    alumniDegree.DateConferred = existingRecord.DateConferred;
+                    alumniDegree.Gpa = existingRecord.Gpa;
                 }
             }
 
@@ -349,17 +361,20 @@ namespace Alumni_Management_System.Controllers
                         Text  = $"{alumni?.JagId} — {alumni?.FirstName} {alumni?.LastName}"
                     }
                 }, "Value", "Text", alumniDegree.AlumniId);
+                ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
             {
                 await PopulateAlumniDropdown(alumniDegree.AlumniId);
+                ViewData["UserRole"] = "Admin";
             }
 
-            await PopulateDegreeDropdown(alumniDegree.DegreeId);
+            ViewData["IsOtherUniversity"] = isOtherUniversity;
+            await PopulateDegreeDropdown(alumniDegree.DegreeId, skipAlumniFilter: !isOtherUniversity);
             return View(alumniDegree);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, Alumni")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -370,21 +385,64 @@ namespace Alumni_Management_System.Controllers
                 .FirstOrDefaultAsync(m => m.AlumniDegreeId == id);
             if (alumniDegree == null) return NotFound();
 
+            var currentUser = await _userManager.GetUserAsync(User);
+            var roles = await _userManager.GetRolesAsync(currentUser);
+
+            if (roles.Contains(Constants.AlumniRole))
+            {
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
+
+                if (alumni == null || alumniDegree.AlumniId != alumni.AlumniId)
+                {
+                    TempData["ErrorMessage"] = "You can only delete your own degrees.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                if (alumniDegree.Degree?.Institution != "Other University")
+                {
+                    TempData["ErrorMessage"] = "Only external (Other University) degrees can be deleted.";
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+
             return View(alumniDegree);
         }
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, Alumni")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var alumniDegree = await _context.AlumniDegrees.FindAsync(id);
-            if (alumniDegree != null)
+            var alumniDegree = await _context.AlumniDegrees
+                .Include(a => a.Degree)
+                .FirstOrDefaultAsync(a => a.AlumniDegreeId == id);
+
+            if (alumniDegree == null)
+                return RedirectToAction(nameof(Index));
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            var roles = await _userManager.GetRolesAsync(currentUser);
+
+            if (roles.Contains(Constants.AlumniRole))
             {
-                _context.AlumniDegrees.Remove(alumniDegree);
-                await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Degree deleted successfully!";
+                var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
+
+                if (alumni == null || alumniDegree.AlumniId != alumni.AlumniId)
+                {
+                    TempData["ErrorMessage"] = "Unauthorized delete attempt.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                if (alumniDegree.Degree?.Institution != "Other University")
+                {
+                    TempData["ErrorMessage"] = "Only external (Other University) degrees can be deleted.";
+                    return RedirectToAction(nameof(Index));
+                }
             }
+
+            _context.AlumniDegrees.Remove(alumniDegree);
+            await _context.SaveChangesAsync();
+            TempData["SuccessMessage"] = "Degree deleted successfully!";
 
             return RedirectToAction(nameof(Index));
         }

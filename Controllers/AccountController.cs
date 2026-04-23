@@ -38,6 +38,10 @@ namespace Alumni_Management_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> VerifyJagId(VerifyJagIdViewModel model)
         {
+            // Normalise: convert leading lowercase 'j' to uppercase 'J'
+            if (!string.IsNullOrEmpty(model.JagId) && model.JagId[0] == 'j')
+                model.JagId = "J" + model.JagId.Substring(1);
+
             if (!ModelState.IsValid)
             {
                 return View(model);

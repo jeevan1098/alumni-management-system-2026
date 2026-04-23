@@ -131,32 +131,34 @@ namespace Alumni_Management_System
                     await context.SaveChangesAsync();
                 }
 
-                if(!await context.DegreePrograms.AnyAsync(d => d.Institution == "Other"))
+            }
+
+            // Seed "Other University" degree programs regardless of whether alumni user exists
+            if (!await context.DegreePrograms.AnyAsync(d => d.Institution == "Other University"))
+            {
+                var degree1 = new DegreeProgram
                 {
-                    var degree1 = new DegreeProgram
-                    {
-                        Institution = "Other",
-                        DegreeType = "Bachelors",
-                        MajorFieldOfStudy = "Other",
-                        Department = "Other"
-                    };
-                    var degree2 = new DegreeProgram
-                    {
-                        Institution = "Other",
-                        DegreeType = "Masters",
-                        MajorFieldOfStudy = "Other",
-                        Department = "Other"
-                    };
-                    var degree3 = new DegreeProgram
-                    {
-                        Institution = "Other",
-                        DegreeType = "PhD",
-                        MajorFieldOfStudy = "Other",
-                        Department = "Other"
-                    };
-                    context.DegreePrograms.AddRange(degree1, degree2, degree3);
-                    await context.SaveChangesAsync();
-                }
+                    Institution = "Other University",
+                    DegreeType = "Bachelors",
+                    MajorFieldOfStudy = "Other",
+                    Department = "Other"
+                };
+                var degree2 = new DegreeProgram
+                {
+                    Institution = "Other University",
+                    DegreeType = "Masters",
+                    MajorFieldOfStudy = "Other",
+                    Department = "Other"
+                };
+                var degree3 = new DegreeProgram
+                {
+                    Institution = "Other University",
+                    DegreeType = "PhD",
+                    MajorFieldOfStudy = "Other",
+                    Department = "Other"
+                };
+                context.DegreePrograms.AddRange(degree1, degree2, degree3);
+                await context.SaveChangesAsync();
             }
         }
     }
