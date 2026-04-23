@@ -1,0 +1,86 @@
+﻿@model IEnumerable<dynamic>
+
+<form asp-action="MailingLabels" method="get">
+
+    <div class="row align-items-end g-2">
+
+        <div class="col-md-2">
+            <label>Major</label>
+            <select name="major" class="form-control">
+                <option value="">All</option>
+
+                @foreach (var m in ViewBag.Majors)
+                {
+                    <option value="@m"
+                            selected="@(Context.Request.Query["major"] == m)">
+                        @m
+                    </option>
+                }
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label>Degree Type</label>
+            <select name="degreeType" class="form-control">
+                <option value="ALL">All</option>
+                <option value="BS" selected="@(Context.Request.Query["degreeType"] == "BS")">BS</option>
+                <option value="MS" selected="@(Context.Request.Query["degreeType"] == "MS")">MS</option>
+                <option value="PhD" selected="@(Context.Request.Query["degreeType"] == "PhD")">PhD</option>
+            </select>
+        </div>
+
+        <div class="col-md-2">
+            <label>Year</label>
+            <input type="number"
+                   name="year"
+                   class="form-control"
+                   value="@Context.Request.Query["year"]" />
+        </div>
+
+        <div class="col-md-auto">
+            <button type="submit" class="btn btn-primary">
+                Generate Report
+            </button>
+        </div>
+        <div class="col-md-auto">
+            <button type="submit" name="download" value="true" class="btn btn-success">
+                Download Excel
+            </button>
+
+    </div>
+
+</form>
+
+<hr />
+
+@if (Model != null && Model.Any())
+{
+    <table class="table table-bordered mt-3">
+        <thead>
+            <tr>
+                <th>Prefix</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>Address</th>
+                <th>City</th>
+                <th>State</th>
+                <th>Pincode</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Prefix</td>
+                    <td>@item.FirstName</td>
+                    <td>@item.LastName</td>
+                    <td>@item.Address</td>
+                    <td>@item.City</td>
+                    <td>@item.State</td>
+                    <td>@item.Postcode</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}

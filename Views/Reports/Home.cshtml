@@ -52,7 +52,17 @@
             <div class="row">
                 <div class="col-md-4">
                     <label>Major</label>
-                    <input type="text" name="major" class="form-control" />
+                   <select name="major" class="form-control">
+                <option value="">All</option>
+
+                @foreach (var m in ViewBag.Majors)
+                {
+                    <option value="@m"
+                            selected="@(Context.Request.Query["major"] == m)">
+                        @m
+                    </option>
+                }
+            </select>
                 </div>
 
                 <div class="col-md-4">
@@ -69,13 +79,18 @@
                     <label>Year</label>
                     <input type="number" name="year" class="form-control" />
                 </div>
+                <!-- download checkbox -->
+                
             </div>
+            <div class="mt-3">
+                <button type="submit" class="btn btn-custom">
+                    Generate Report
+                </button>
 
-            <br />
-
-            <button type="submit" class="btn btn-custom">
-                Generate Report
-            </button>
+                <button type="submit" name="download" value="true" class="btn btn-success ms-2">
+                    Download Excel
+                </button>
+            </div>
         </form>
     </div>
 
@@ -84,10 +99,11 @@
     <div class="report-card">
         <div class="report-title">📊 Alumni Count Report</div>
         <div class="report-desc">
-            Displays alumni count grouped by Department, Major, and Degree Type within a year range.
+            Displays alumni count grouped by Department, Major, and Degree Type across selected years..
         </div>
 
         <form asp-controller="Reports" asp-action="AlumniCount" method="get">
+
             <div class="row">
                 <div class="col-md-3">
                     <label>From Year</label>
@@ -98,13 +114,29 @@
                     <label>To Year</label>
                     <input type="number" name="toYear" class="form-control" />
                 </div>
+
+               
+                <div class="col-md-3">
+                    <label>Group By</label>
+                    <select name="groupBy" class="form-control">
+                        <option value="year">Year</option>
+                        <option value="dept">Department</option>
+                    </select>
+                </div>
             </div>
 
             <br />
 
-            <button type="submit" class="btn btn-custom">
-                Generate Report
-            </button>
+            <div class="mt-3">
+                <button type="submit" class="btn btn-custom">
+                    Generate Report
+                </button>
+
+                <button type="submit" name="download" value="true" class="btn btn-success ms-2">
+                    Download Excel
+                </button>
+            </div>
+
         </form>
     </div>
 
@@ -131,9 +163,16 @@
 
             <br />
 
-            <button type="submit" class="btn btn-custom">
-                Generate Report
-            </button>
+
+            <div class="mt-3">
+                <button type="submit" class="btn btn-custom">
+                    Generate Report
+                </button>
+
+                <button type="submit" name="download" value="true" class="btn btn-success ms-2">
+                    Download Excel
+                </button>
+            </div>
         </form>
     </div>
 
