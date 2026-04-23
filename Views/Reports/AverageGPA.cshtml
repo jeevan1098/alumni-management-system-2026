@@ -1,0 +1,125 @@
+﻿@model IEnumerable<dynamic>
+<form asp-controller="Reports" asp-action="AverageGPA" method="get">
+
+    <div class="row align-items-end g-2">
+
+        <div class="col-md-3">
+            <label>From Year</label>
+            <input type="number" name="fromYear" class="form-control" />
+        </div>
+
+        <div class="col-md-3">
+            <label>To Year</label>
+            <input type="number" name="toYear" class="form-control" />
+        </div>
+
+        <div class="col-md-auto">
+            <button type="submit" class="btn btn-primary">
+                Generate Report
+            </button>
+        </div>
+
+        <div class="col-md-auto">
+            <button type="submit" name="download" value="true" class="btn btn-success">
+                Download Excel
+            </button>
+        </div>
+
+    </div>
+
+</form>
+<br/>
+
+<table class="table table-bordered">
+
+    <thead>
+        <tr>
+            <th>Year</th>
+            <th>Degree Type</th>
+            <th>Major Field of Study</th>
+            <th>Degree Count</th>
+            <th>Average GPA</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        @{
+            int grandCount = 0;
+            decimal grandTotalGpa = 0;
+
+            var yearGroups = Model
+            .GroupBy(x => x.Year)
+            .OrderBy(x => x.Key);
+
+            foreach (var yearGroup in yearGroups)
+            {
+                int yearCount = 0;
+                decimal yearTotalGpa = 0;
+
+                <tr style="background:#d9edf7; font-weight:600;">
+                    <td colspan="5">@yearGroup.Key</td>
+                </tr>
+
+                var degreeGroups = yearGroup.GroupBy(x => x.DegreeType);
+
+                foreach (var degreeGroup in degreeGroups)
+                {
+                    int degreeCount = 0;
+                    decimal degreeTotalGpa = 0;
+
+                    foreach (var item in degreeGroup.OrderBy(x => x.Major))
+                    {
+                        <tr>
+                            <td></td>
+                            <td>@item.DegreeType</td>
+                            <td>@item.Major</td>
+                            <td style="text-align:right">@item.DegreeCount</td>
+                            <td style="text-align:right">@item.AverageGPA</td>
+                        </tr>
+
+                        degreeCount += item.DegreeCount;
+                        degreeTotalGpa += (decimal)item.AverageGPA * item.DegreeCount;
+
+                        yearCount += item.DegreeCount;
+                        yearTotalGpa += (decimal)item.AverageGPA * item.DegreeCount;
+
+                        grandCount += item.DegreeCount;
+                        grandTotalGpa += (decimal)item.AverageGPA * item.DegreeCount;
+                    }
+
+                    <tr style="background:#eef5ff; color:#1a237e; font-weight:600;">
+                        <td></td>
+                        <td>Summary @degreeGroup.Key</td>
+                        <td></td>
+                        <td style="text-align:right">@degreeCount</td>
+                        <td style="text-align:right">
+                            @(degreeCount == 0 ? 0 : Math.Round(degreeTotalGpa / degreeCount, 2))
+                        </td>
+                    </tr>
+                }
+
+                <tr style="background:#e3f2fd; color:#0d47a1; font-weight:700;">
+                    <td colspan="3">Year Summary @yearGroup.Key</td> 
+                    <td style="text-align:right">@yearCount</td>
+                    <td style="text-align:right">
+                        @(yearCount == 0 ? 0 : Math.Round(yearTotalGpa / yearCount, 2))
+                    </td>
+                </tr>
+
+                <tr>
+                    <td colspan="5" style="border:none;height:10px;"></td>
+                </tr>
+            }
+        }
+
+        <tr style="background:#c8e6c9; font-weight:700;">
+            <td colspan="3">Grand Total</td>
+            <td style="text-align:right">@grandCount</td>
+            <td style="text-align:right">
+                @(grandCount == 0 ? 0 : Math.Round(grandTotalGpa / grandCount, 2))
+            </td>
+        </tr>
+
+    </tbody>
+</table>

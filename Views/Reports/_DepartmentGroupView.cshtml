@@ -1,0 +1,122 @@
+﻿@model IEnumerable<dynamic>
+
+<form asp-controller="Reports" asp-action="AlumniCount" method="get">
+
+    <div class="row align-items-end g-2">
+
+        <div class="col-md-2">
+            <label>From Year</label>
+            <input type="number" name="fromYear" class="form-control" />
+        </div>
+
+        <div class="col-md-2">
+            <label>To Year</label>
+            <input type="number" name="toYear" class="form-control" />
+        </div>
+
+        <div class="col-md-3">
+            <label>Group By</label>
+            <select name="groupBy" class="form-control">
+                <option value="department">Department</option>
+                <option value="year">Year</option>
+            </select>
+        </div>
+
+        <div class="col-md-auto">
+            <button type="submit" class="btn btn-primary">
+                Generate Report
+            </button>
+        </div>
+
+        <div class="col-md-auto">
+            <button type="submit" name="download" value="true" class="btn btn-success">
+                Download Excel
+            </button>
+        </div>
+
+    </div>
+
+</form>
+
+<br />
+
+<table class="table table-bordered">
+
+    <thead>
+        <tr>
+            <th>Department</th>
+            <th>Degree Type</th>
+            <th>Major</th>
+             <th>Year</th>
+            <th>Count</th>
+        </tr>
+    </thead>
+
+    <tbody>
+
+        @{
+            int grandTotal = 0;
+
+            var deptGroups = Model
+            .GroupBy(x => x.Department)
+            .OrderBy(x => x.Key);
+
+            foreach (var deptGroup in deptGroups)
+            {
+                int deptTotal = 0;
+
+                <tr style="background:#d9edf7; font-weight:600;">
+                    <td colspan="5">@deptGroup.Key</td>
+                </tr>
+
+                var degreeGroups = deptGroup.GroupBy(x => x.DegreeType);
+
+                foreach (var degreeGroup in degreeGroups)
+                {
+                    int degreeTotal = 0;
+
+                    foreach (var item in degreeGroup
+                    .OrderBy(x => x.Major)
+                    .ThenBy(x => x.Year))
+                    {
+                        <tr>
+                            <td></td>
+                           
+                            <td>@item.DegreeType</td>
+                            <td>@item.Major</td>
+                            <td>@item.Year</td>
+                            <td style="text-align:right">@item.Count</td>
+                        </tr>
+
+                        deptTotal += item.Count;
+                        degreeTotal += item.Count;
+                        grandTotal += item.Count;
+                    }
+
+                    <tr style="background:#eef5ff; color:#1a237e; font-weight:600;">
+                        <td></td>
+                        <td colspan="3">Summary @degreeGroup.Key</td>
+                        
+                        <td style="text-align:right">@degreeTotal</td>
+                    </tr>
+                }
+
+                <tr style="background:#e3f2fd; color:#0d47a1; font-weight:700;">
+                    <td colspan="4">@deptGroup.Key Department</td>
+                    <td style="text-align:right">@deptTotal</td>
+                </tr>
+
+                <tr>
+                    <td colspan="5" style="border:none;height:10px;"></td>
+                </tr>
+            }
+        }
+
+        <tr style="background:#c8e6c9; font-weight:700;">
+            <td colspan="4">Grand Total</td>
+            <td style="text-align:right">@grandTotal</td>
+        </tr>
+
+    </tbody>
+
+</table>
