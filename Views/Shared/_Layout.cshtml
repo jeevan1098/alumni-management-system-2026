@@ -27,6 +27,8 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    @RenderSection("Styles", required: false)
 
     <style>
         body {
@@ -259,6 +261,15 @@
         body.dark .footer-meta {
             color: #e5e7eb;
         }
+
+        .alumni-nav-title {
+            color: #111;
+            transition: color 0.3s;
+        }
+
+        body.dark .alumni-nav-title {
+            color: #ffffff;
+        }
     </style>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
@@ -363,8 +374,8 @@
                     <span class="sidebar-text">Student Organizations</span>
                 </a>
 
-                <a asp-controller="AlumniMessages" asp-action="Index"
-                   class="@(currentController == "AlumniMessages" ? "active-nav" : "")">
+                <a asp-controller="Messages" asp-action="Index"
+                   class="@(currentController == "Messages" ? "active-nav" : "")">
                     <i class="bi bi-chat-dots"></i>
                     <span class="sidebar-text">Alumni Messages</span>
                 </a>
@@ -389,7 +400,13 @@
 
                 <!-- TOP BAR -->
                 <div class="navbar-custom d-flex justify-content-between align-items-center">
-                    <strong>Alumni Management System</strong>
+                    @* <strong>Alumni Management System</strong> *@
+                    <a asp-controller="Home" asp-action="Dashboard" class="text-decoration-none d-flex align-items-center transition-all">
+                        <div class="bg-primary rounded-3 p-2 me-2 d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
+                            <i class="bi bi-mortarboard-fill text-white fs-5"></i>
+                        </div>
+                        <span class="fs-5 fw-bold tracking-tight alumni-nav-title">Alumni Management System</span>
+                    </a>
 
                     <div class="d-flex align-items-center gap-3">
                         <button class="btn btn-sm btn-outline-secondary" onclick="toggleDark()">
@@ -558,7 +575,7 @@
                         <div class="bg-primary rounded-3 p-2 me-2 d-flex align-items-center justify-content-center" style="width: 35px; height: 35px;">
                             <i class="bi bi-mortarboard-fill text-white fs-5"></i>
                         </div>
-                        <span class="fs-5 fw-bold text-dark tracking-tight">Alumni Portal</span>
+                        <span class="fs-5 fw-bold tracking-tight alumni-nav-title">Alumni Portal</span>
                     </a>
 
                     @{

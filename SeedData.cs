@@ -2,6 +2,7 @@
 using Alumni_Management_System.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
 
 namespace Alumni_Management_System
 {
@@ -127,6 +128,33 @@ namespace Alumni_Management_System
                         LastUpdated = DateTime.Now
                     };
                     context.Alumni.Add(alumni);
+                    await context.SaveChangesAsync();
+                }
+
+                if(!await context.DegreePrograms.AnyAsync(d => d.Institution == "Other"))
+                {
+                    var degree1 = new DegreeProgram
+                    {
+                        Institution = "Other",
+                        DegreeType = "Bachelors",
+                        MajorFieldOfStudy = "Other",
+                        Department = "Other"
+                    };
+                    var degree2 = new DegreeProgram
+                    {
+                        Institution = "Other",
+                        DegreeType = "Masters",
+                        MajorFieldOfStudy = "Other",
+                        Department = "Other"
+                    };
+                    var degree3 = new DegreeProgram
+                    {
+                        Institution = "Other",
+                        DegreeType = "PhD",
+                        MajorFieldOfStudy = "Other",
+                        Department = "Other"
+                    };
+                    context.DegreePrograms.AddRange(degree1, degree2, degree3);
                     await context.SaveChangesAsync();
                 }
             }

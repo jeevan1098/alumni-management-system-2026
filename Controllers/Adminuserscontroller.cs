@@ -192,25 +192,28 @@ namespace Alumni_Management_System.Controllers
             }
 
             // Get only Admin/Staff users (non-Alumni) to calculate next JagId
-            // This keeps the Admin/Staff JagId sequence separate from Alumni JagIds
             var allUsers = await _userManager.Users.ToListAsync();
-            var staffAdminJagIds = new List<string>();
+            var staffAdminJagIds = new HashSet<int>();
 
             foreach (var u in allUsers)
             {
                 var roles = await _userManager.GetRolesAsync(u);
                 if (!roles.Contains(Constants.AlumniRole) && !string.IsNullOrEmpty(u.JagId))
-                    staffAdminJagIds.Add(u.JagId);
+                {
+                    if (u.JagId.StartsWith("J") && int.TryParse(u.JagId.Substring(1), out int n))
+                        staffAdminJagIds.Add(n);
+                }
             }
 
-            // Parse numeric part after "J", default to 0 if no staff/admin users yet
-            int maxNumber = staffAdminJagIds
-                .Select(id => id.StartsWith("J") && int.TryParse(id.Substring(1), out int n) ? n : 0)
-                .DefaultIfEmpty(0)
-                .Max();
+            // Find the next available number starting from 1, skipping any already taken
+            int nextNumber = 1;
+            while (staffAdminJagIds.Contains(nextNumber))
+            {
+                nextNumber++;
+            }
 
-            // Produces J0000001, J0000002, J0000003, ...
-            string nextJagId = $"J{(maxNumber + 1):D7}";
+            // Produces J1, J2, J3, ... 
+            string nextJagId = $"J{nextNumber}";
 
             var newUser = new AppUser
             {

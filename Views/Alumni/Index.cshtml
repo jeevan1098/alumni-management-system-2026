@@ -1,6 +1,4 @@
-﻿
-
-@model IEnumerable<Alumni_Management_System.Models.Alumni>
+﻿@model IEnumerable<Alumni_Management_System.Models.Alumni>
 
 @{
     ViewData["Title"] = "Alumni Directory";
@@ -10,6 +8,7 @@
     var isAdmin = userRole == "Admin";
     var isStaff = userRole == "Staff";
 }
+
 @if (TempData["ErrorMessage"] != null)
 {
     <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
@@ -55,7 +54,7 @@
             </div>
         </div>
 
-        <!-- Toggle (ONLY FOR ALUMNI) -->
+        <!-- View Toggle: Alumni only -->
         @if (isAlumni)
         {
             <div class="btn-group" role="group">
@@ -84,41 +83,52 @@
             </div>
         }
     </div>
-
-    <!-- Search -->
-    <form asp-action="Index" method="get" class="mb-4 row g-3">
-        <div class="col-md-10">
-            <div class="input-group input-group-lg">
-                <span class="input-group-text bg-white">
-                    <i class="bi bi-search text-primary"></i>
-                </span>
-                <input type="text" name="searchString"
-                       value="@ViewData["CurrentFilter"]"
-                       class="form-control"
-                       placeholder="Search by name, JAG ID or email..." />
+    @if (isAdmin)
+    {
+        <!-- Search -->
+            <form asp-action="Index" method="get" class="mb-4 row g-3">
+                <div class="col-md-10">
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text bg-white">
+                        <i class="bi bi-search text-primary"></i>
+                    </span>
+                    <input type="text" name="searchString"
+                           value="@ViewData["CurrentFilter"]"
+                           class="form-control"
+                           placeholder="@(isAlumni ? "Search by name or email..." : "Search by name, JAG ID or email...")" />
+                </div>
             </div>
-        </div>
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-primary w-100 btn-lg">
-                Search
-            </button>
-        </div>
-    </form>
-
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-primary w-100 btn-lg">Search</button>
+            </div>
+        </form>
+    }
     <!-- ================= TABLE VIEW ================= -->
     <div id="tableView">
-
         <div class="table-responsive">
             <table class="table table-hover align-middle text-center">
                 <thead class="table-dark">
                     <tr>
-                        <th><i class="bi bi-credit-card-2-front-fill me-1 text-primary"></i>Jag ID</th>
+                        @if (isAdmin || isStaff)
+                        {
+                            <th><i class="bi bi-credit-card-2-front-fill me-1 text-primary"></i>Jag ID</th>
+                        }
                         <th><i class="bi bi-person-fill me-1 text-primary"></i>Name</th>
                         <th><i class="bi bi-envelope-fill me-1 text-primary"></i>Email</th>
-                        <th><i class="bi bi-telephone-fill me-1 text-primary"></i>Phone</th>
+                        @if (isAdmin || isStaff)
+                        {
+                            <th><i class="bi bi-telephone-fill me-1 text-primary"></i>Phone</th>
+                        }
                         <th><i class="bi bi-mortarboard-fill me-1 text-primary"></i>Grad Year</th>
-                        <th><i class="bi bi-building me-1 text-primary"></i>City</th>
-                        <th><i class="bi bi-geo-alt-fill me-1 text-primary"></i>State</th>
+                        @if (isAdmin || isStaff)
+                        {
+                            <th><i class="bi bi-building me-1 text-primary"></i>City</th>
+                            <th><i class="bi bi-geo-alt-fill me-1 text-primary"></i>State</th>
+                        }
+                        @if (isAlumni)
+                        {
+                            <th><i class="bi bi-globe me-1 text-primary"></i>Social Media</th>
+                        }
                         <th><i class="bi bi-list-task me-2 text-primary"></i>Actions</th>
                     </tr>
                 </thead>
@@ -138,43 +148,59 @@
                     @foreach (var item in Model)
                     {
                         <tr>
-                            <td>@item.JagId</td>
+                            @if (isAdmin || isStaff)
+                            {
+                                <td class="fw-bolder">@item.JagId</td>
+                            }
                             <td>
-                                @item.FirstName @item.LastName
+                                @item.Prefix @item.FirstName @item.LastName
                                 @if (!string.IsNullOrEmpty(item.PreferredFirstName))
                                 {
                                     <br />
-                                    <small class="text-info">
-                                        (@item.PreferredFirstName)
-                                    </small>
+                                    <small class="text-info">(@item.PreferredFirstName)</small>
                                 }
                             </td>
                             <td>@item.PermanentEmail</td>
-                            <td>@item.Phone</td>
+                            @if (isAdmin || isStaff)
+                            {
+                                <td>@item.Phone</td>
+                            }
                             <td>@item.GraduationYear</td>
-                            <td>@item.City</td>
-                            <td>@item.State</td>
+                            @if (isAdmin || isStaff)
+                            {
+                                <td>@item.City</td>
+                                <td>@item.State</td>
+                            }
+                            @if (isAlumni)
+                            {
+                                <td>
+                                    @if (!string.IsNullOrEmpty(item.SocialMediaAccount))
+                                    {
+                                        <a href="@item.SocialMediaAccount" target="_blank" class="btn btn-sm btn-outline-primary rounded-pill">
+                                            <i class="bi bi-globe me-1"></i>View
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">—</span>
+                                    }
+                                </td>
+                            }
 
                             @if (isAdmin)
                             {
                                 <td>
                                     <div class="btn-group" role="group">
-                                        <a asp-action="Details"
-                                           asp-route-id="@item.AlumniId"
-                                           class="btn btn-sm btn-outline-primary rounded-circle me-1"
-                                           title="View">
+                                        <a asp-action="Details" asp-route-id="@item.AlumniId"
+                                           class="btn btn-sm btn-outline-primary rounded-circle me-1" title="View">
                                             <i class="bi bi-eye-fill text-primary"></i>
                                         </a>
-                                        <a asp-action="Edit"
-                                           asp-route-id="@item.AlumniId"
-                                           class="btn btn-sm btn-outline-warning rounded-circle me-1"
-                                           title="Edit">
+                                        <a asp-action="Edit" asp-route-id="@item.AlumniId"
+                                           class="btn btn-sm btn-outline-warning rounded-circle me-1" title="Edit">
                                             <i class="bi bi-pencil-fill text-warning"></i>
                                         </a>
-                                        <a asp-action="Delete"
-                                           asp-route-id="@item.AlumniId"
-                                           class="btn btn-sm btn-outline-danger rounded-circle"
-                                           title="Delete">
+                                        <a asp-action="Delete" asp-route-id="@item.AlumniId"
+                                           class="btn btn-sm btn-outline-danger rounded-circle" title="Delete">
                                             <i class="bi bi-trash-fill text-danger"></i>
                                         </a>
                                     </div>
@@ -183,10 +209,8 @@
                             else if (isStaff || isAlumni)
                             {
                                 <td>
-                                    <a asp-action="Details"
-                                       asp-route-id="@item.AlumniId"
-                                       class="btn btn-sm btn-outline-primary rounded-circle"
-                                       title="View">
+                                    <a asp-action="Details" asp-route-id="@item.AlumniId"
+                                       class="btn btn-sm btn-outline-primary rounded-circle" title="View">
                                         <i class="bi bi-eye-fill text-primary"></i>
                                     </a>
                                 </td>
@@ -213,39 +237,41 @@
                                      style="width:60px;height:60px;">
                                     <i class="bi bi-person-fill text-primary fs-4"></i>
                                 </div>
-
                                 <div class="ms-3">
                                     <h5 class="mb-0">
-                                        @item.FirstName @item.LastName
+                                        @item.Prefix @item.FirstName @item.LastName
                                     </h5>
-                                    <small class="text-info">
-                                        @item.GraduationYear
-                                    </small>
+                                    <small class="text-info">Class of @item.GraduationYear</small>
                                 </div>
                             </div>
 
-                            <p class="mb-1">
-                                <i class="bi bi-envelope-fill text-primary me-2"></i>
-                                @item.PermanentEmail
-                            </p>
+                            @if (!string.IsNullOrEmpty(item.PermanentEmail))
+                            {
+                                <p class="mb-1">
+                                    <i class="bi bi-envelope-fill text-primary me-2"></i>
+                                    @item.PermanentEmail
+                                </p>
+                            }
 
-                            <p class="mb-1">
-                                <i class="bi bi-telephone-fill text-primary me-2"></i>
-                                @item.Phone
-                            </p>
-
-                            <p class="mb-0">
-                                <i class="bi bi-geo-alt-fill text-primary me-2"></i>
-                                @item.City, @item.State
-                            </p>
+                            @if (!string.IsNullOrEmpty(item.SocialMediaAccount))
+                            {
+                                <p class="mb-0">
+                                    <i class="bi bi-globe text-primary me-2"></i>
+                                    <a href="@item.SocialMediaAccount" target="_blank">View Social Profile</a>
+                                </p>
+                            }
+                            else
+                            {
+                                <p class="mb-0 text-muted">
+                                    <i class="bi bi-globe text-muted me-2"></i>No social media listed
+                                </p>
+                            }
                         </div>
 
                         <div class="card-footer bg-transparent border-0">
-                            <a asp-action="Details"
-                               asp-route-id="@item.AlumniId"
+                            <a asp-action="Details" asp-route-id="@item.AlumniId"
                                class="btn btn-primary w-100">
-                                <i class="bi bi-eye-fill text-white me-1"></i>
-                                View Profile
+                                <i class="bi bi-eye-fill text-white me-1"></i> View Profile
                             </a>
                         </div>
                     </div>
@@ -259,7 +285,6 @@
 @section Scripts {
     <script>
         function toggleView(viewType) {
-
             const cardView = document.getElementById('cardView');
             const tableView = document.getElementById('tableView');
             const cardBtn = document.getElementById('cardViewBtn');

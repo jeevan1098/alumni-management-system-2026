@@ -32,17 +32,7 @@
                         <i class="bi bi-building me-2"></i>Employer & Position
                     </h5>
                     <dl class="row mb-4">
-                        <dt class="col-sm-5">Job Title</dt>
-                        <dd class="col-sm-7">
-                            @if (!string.IsNullOrEmpty(Model.JobTitle))
-                            {
-                                <span class="badge bg-info text-dark">@Model.JobTitle</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-danger">Not Answered</span>
-                            }
-                        </dd>
+                       
 
                         <dt class="col-sm-5">Employer</dt>
                         <dd class="col-sm-7">
@@ -55,7 +45,17 @@
                                 <span class="text-danger">Not Assigned</span>
                             }
                         </dd>
-
+                        <dt class="col-sm-5">Job Title</dt>
+                        <dd class="col-sm-7">
+                            @if (!string.IsNullOrEmpty(Model.JobTitle))
+                            {
+                                <span class="badge bg-info text-dark">@Model.JobTitle</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Not Answered</span>
+                            }
+                        </dd>
                         <dt class="col-sm-5">Salary Range</dt>
                         <dd class="col-sm-7">
                             @if (!string.IsNullOrEmpty(Model.SalaryRange))
@@ -76,6 +76,10 @@
                         <i class="bi bi-calendar-event me-2"></i>Employment Period & Alumni
                     </h5>
                     <dl class="row mb-4">
+                        <dt class="col-sm-5">Alumni</dt>
+                        <dd class="col-sm-7">
+                            @alumniName
+                        </dd>
                         <dt class="col-sm-5">Start Date</dt>
                         <dd class="col-sm-7">
                             @Model.StartDate.ToString("MMMM dd, yyyy")
@@ -93,10 +97,7 @@
                             }
                         </dd>
 
-                        <dt class="col-sm-5">Alumni</dt>
-                        <dd class="col-sm-7">
-                            @alumniName
-                        </dd>
+                        
                     </dl>
                 </div>
             </div>

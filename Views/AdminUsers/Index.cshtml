@@ -36,7 +36,7 @@
                     <tr>
                         <th>Username</th>
                         <th>Current Role</th>
-                        <th>Change Role</th>
+                        @* <th>Change Role</th> *@
                         <th>Reset Password</th>
                         <th>Delete</th>
                     </tr>
@@ -52,7 +52,7 @@
                                     <span class="badge bg-secondary">@role</span>
                                 </td>
 
-                                <td>
+                                @* <td>
                                     <form asp-action="UpdateRole" method="post" class="d-flex gap-2 align-items-center">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="userId" value="@user.Id" />
@@ -74,7 +74,7 @@
                                         </select>
                                         <button type="submit" class="btn btn-warning btn-sm">Update</button>
                                     </form>
-                                </td>
+                                </td> *@
 
                                 <td>
                                     <form asp-action="ResetPassword" method="post"

@@ -7,6 +7,11 @@
     ViewData["Title"] = "Edit Profile";
     var currentUser = await UserManager.GetUserAsync(User);
     var isFirstLogin = currentUser?.IsFirstLogin ?? false;
+    var isAdmin = User.IsInRole("Admin");
+    var isAlumni = User.IsInRole("Alumni");
+
+    var alumniReadonly = isAlumni ? "readonly" : null;
+    var alumniClass = isAlumni ? "form-control bg-light" : "form-control";
 
     int totalFields = 15;
     int completedFields = 0;
@@ -29,6 +34,7 @@
 
     int completionPercentage = (int)((double)completedFields / totalFields * 100);
 }
+
 @if (TempData["ErrorMessage"] != null)
 {
     <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
@@ -60,7 +66,6 @@
         <h1><i class="bi bi-person-circle"></i> Edit Profile</h1>
         <p class="text-info">Update your alumni profile information</p>
 
-        <!-- Profile Completion Progress -->
         <div class="card mb-4">
             <div class="card-body">
                 <h6 class="card-subtitle mb-2 text-info">Profile Completion</h6>
@@ -81,14 +86,15 @@
         </div>
     </div>
 </div>
+
 <hr />
+
 <div class="row">
     <div class="col-md-10 mx-auto">
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="AlumniId" />
             <input type="hidden" asp-for="LastUpdated" />
-            <input type="hidden" asp-for="IsActive" />
 
             <!-- Basic Information -->
             <div class="card mb-4">
@@ -96,13 +102,18 @@
                     <h5 class="mb-0"><i class="bi bi-person"></i> Basic Information</h5>
                 </div>
                 <div class="card-body">
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label asp-for="JagId" class="form-label"></label>
-                            <input asp-for="JagId" class="form-control" placeholder="J0012345" readonly />
+                            <input asp-for="JagId" class="@alumniClass" placeholder="J0012345" readonly="@alumniReadonly" />
                             <span asp-validation-for="JagId" class="text-danger"></span>
-                            <small class="form-text text-info"><i class="bi bi-lock"></i> JAG ID cannot be changed</small>
+                            @if (isAlumni)
+                            {
+                                <small class="form-text text-info"><i class="bi bi-lock"></i> JAG ID cannot be changed</small>
+                            }
                         </div>
+
                         <div class="col-md-6 mb-3">
                             <label asp-for="Prefix" class="form-label"></label>
                             <select asp-for="Prefix" class="form-select">
@@ -116,25 +127,35 @@
                             <span asp-validation-for="Prefix" class="text-danger"></span>
                         </div>
                     </div>
+
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             <label asp-for="FirstName" class="form-label"></label>
-                            <input asp-for="FirstName" class="form-control" readonly />
+                            <input asp-for="FirstName" class="@alumniClass" readonly="@alumniReadonly" />
                             <span asp-validation-for="FirstName" class="text-danger"></span>
-                            <small class="form-text text-info"><i class="bi bi-lock"></i> From Records</small>
+                            @if (isAlumni)
+                            {
+                                <small class="form-text text-info"><i class="bi bi-lock"></i> From Records</small>
+                            }
                         </div>
+
                         <div class="col-md-4 mb-3">
                             <label asp-for="PreferredFirstName" class="form-label"></label>
                             <input asp-for="PreferredFirstName" class="form-control" />
                             <span asp-validation-for="PreferredFirstName" class="text-danger"></span>
                         </div>
+
                         <div class="col-md-4 mb-3">
                             <label asp-for="LastName" class="form-label"></label>
-                            <input asp-for="LastName" class="form-control" readonly />
+                            <input asp-for="LastName" class="@alumniClass" readonly="@alumniReadonly" />
                             <span asp-validation-for="LastName" class="text-danger"></span>
-                            <small class="form-text text-info"><i class="bi bi-lock"></i> From Records</small>
+                            @if (isAlumni)
+                            {
+                                <small class="form-text text-info"><i class="bi bi-lock"></i> From Records</small>
+                            }
                         </div>
                     </div>
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label asp-for="Gender" class="form-label"></label>
@@ -147,6 +168,7 @@
                             </select>
                             <span asp-validation-for="Gender" class="text-danger"></span>
                         </div>
+
                         <div class="col-md-6 mb-3">
                             <label asp-for="AgeAtGraduation" class="form-label"></label>
                             <input asp-for="AgeAtGraduation" class="form-control" type="number" min="15" placeholder="e.g., 22" />
@@ -154,14 +176,19 @@
                             <small class="text-muted">Minimum age: 15</small>
                         </div>
                     </div>
+
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label asp-for="GraduationYear" class="form-label"></label>
-                            <input asp-for="GraduationYear" class="form-control" type="number" readonly />
+                            <input asp-for="GraduationYear" class="@alumniClass" type="number" readonly="@alumniReadonly" />
                             <span asp-validation-for="GraduationYear" class="text-danger"></span>
-                            <small class="form-text text-info"><i class="bi bi-lock"></i> From Records</small>
+                            @if (isAlumni)
+                            {
+                                <small class="form-text text-info"><i class="bi bi-lock"></i> From Records</small>
+                            }
                         </div>
                     </div>
+
                 </div>
             </div>
 
@@ -243,9 +270,7 @@
                 <div class="card-header bg-warning text-dark">
                     <h5 class="mb-0"><i class="bi bi-shield-check"></i> Privacy Settings</h5>
                 </div>
-                <!-- Status -->
                 <div class="card-body">
-                    <label class="form-label fw-semibold">&nbsp;</label>
                     <div class="form-check mb-3">
                         <input asp-for="IsActive" class="form-check-input me-2 border-primary" type="checkbox" />
                         <label asp-for="IsActive" class="form-check-label fw-semibold"></label>
@@ -255,18 +280,16 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col-md-4 mb-3">
-                            <label class="form-label fw-semibold">&nbsp;</label>
                             <div class="form-check mt-2">
                                 <input asp-for="SolicitationCode" class="form-check-input me-2 border-primary" type="checkbox" />
                                 <label asp-for="SolicitationCode" class="form-check-label fw-semibold"></label>
                             </div>
                             <div class="form-text">
-                                Allow receive broadcast messages from administrators.
+                                Allow receiving broadcast messages from administrators.
                             </div>
                             <span asp-validation-for="SolicitationCode" class="text-danger"></span>
                         </div>
                         <div class="col-md-4 mb-3">
-                            <label class="form-label fw-semibold">&nbsp;</label>
                             <div class="form-check mt-2">
                                 <input asp-for="Privacy" class="form-check-input me-2 border-primary" type="checkbox" />
                                 <label asp-for="Privacy" class="form-check-label fw-semibold"></label>
@@ -289,10 +312,13 @@
                     <i class="bi bi-save"></i> Save Profile
                 </button>
             </div>
+
         </form>
     </div>
 </div>
 
 @section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
 }

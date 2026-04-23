@@ -172,7 +172,7 @@ namespace Alumni_Management_System.Controllers
             return View(alumniOrganization);
         }
 
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, Alumni")]
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null) return NotFound();
@@ -191,7 +191,7 @@ namespace Alumni_Management_System.Controllers
 
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, Alumni")]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var alumniOrganization = await _context.AlumniOrganizations.FindAsync(id);

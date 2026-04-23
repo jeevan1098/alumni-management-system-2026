@@ -4,6 +4,7 @@ using Alumni_Management_System.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Alumni_Management_System.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260416000054_Testing")]
+    partial class Testing
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -73,8 +76,8 @@ namespace Alumni_Management_System.Migrations
 
                     b.Property<string>("JagId")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasMaxLength(12)
+                        .HasColumnType("nvarchar(12)")
                         .HasColumnName("jag_id");
 
                     b.Property<string>("LastName")
@@ -149,14 +152,6 @@ namespace Alumni_Management_System.Migrations
 
                     b.HasIndex("JagId")
                         .IsUnique();
-
-                    b.HasIndex("PermanentEmail")
-                        .IsUnique()
-                        .HasFilter("[permanent_email] IS NOT NULL");
-
-                    b.HasIndex("StudentEmail")
-                        .IsUnique()
-                        .HasFilter("[student_email] IS NOT NULL");
 
                     b.HasIndex("UserId");
 

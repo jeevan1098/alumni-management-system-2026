@@ -85,6 +85,7 @@
     }
 </style>
 
+
 @{
     var role = ViewData["UserRole"]?.ToString() ?? "Unknown";
 }
@@ -253,7 +254,9 @@
                         borderWidth: 2,
                         fill: true,
                         tension: 0.3
-                    },
+                    }
+                    /*
+                    ,
                     {
                         label: "Registry",
                         data: registryData,
@@ -261,6 +264,7 @@
                         fill: true,
                         tension: 0.3
                     }
+                    */
                 ]
             },
             options: {

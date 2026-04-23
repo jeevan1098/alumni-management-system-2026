@@ -1,6 +1,4 @@
-﻿
-
-@model Alumni_Management_System.Models.AlumniInternship
+﻿@model Alumni_Management_System.Models.AlumniInternship
 
 @{
     ViewData["Title"] = "Edit Internship";
@@ -162,7 +160,7 @@
                             </span>
                             <input asp-for="StartDate"
                                    type="date"
-                                   class="form-control rounded-end-3" />
+                                   class="form-control rounded-end-3" min="1930" max="@DateTime.Now.ToString("yyyy-MM-dd")" />
                         </div>
                         <span asp-validation-for="StartDate" class="text-danger small"></span>
                     </div>

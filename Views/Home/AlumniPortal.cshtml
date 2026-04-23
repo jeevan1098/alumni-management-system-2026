@@ -1,137 +1,1119 @@
-﻿
-
-@model Alumni_Management_System.Models.Alumni
+﻿@model Alumni_Management_System.Models.Alumni
 
 @{
-    ViewData["Title"] = "Dashboard";
+    ViewData["Title"] = "Alumni Portal";
+
+    var employments = ViewBag.Employments as IEnumerable<Alumni_Management_System.Models.AlumniEmployment> ?? Enumerable.Empty<Alumni_Management_System.Models.AlumniEmployment>();
+    var internships = ViewBag.Internships as IEnumerable<Alumni_Management_System.Models.AlumniInternship> ?? Enumerable.Empty<Alumni_Management_System.Models.AlumniInternship>();
+    var organizations = ViewBag.Organizations as IEnumerable<Alumni_Management_System.Models.AlumniOrganization> ?? Enumerable.Empty<Alumni_Management_System.Models.AlumniOrganization>();
+    var degrees = ViewBag.Degrees as IEnumerable<Alumni_Management_System.Models.AlumniDegree> ?? Enumerable.Empty<Alumni_Management_System.Models.AlumniDegree>();
+
+    int completion = (int)(ViewData["ProfileCompletion"] ?? 0);
+
+    string initials = "";
+    if (Model != null)
+    {
+        if (!string.IsNullOrEmpty(Model.FirstName)) initials += Model.FirstName[0].ToString().ToUpper();
+        if (!string.IsNullOrEmpty(Model.LastName)) initials += Model.LastName[0].ToString().ToUpper();
+    }
 }
+<style>
+    /* ── Variables ── */ :root {
+        --portal-card-bg: #ffffff;
+        --portal-card-border: #e5e9f0;
+        --portal-card-shadow: 0 1px 8px rgba(0,0,0,0.06);
+        --portal-text: #1a2340;
+        --portal-text-muted: #6b7a99;
+        --portal-label: #8a9bbf;
+        --portal-divider: #edf0f7;
+        --portal-accent: #1f3c88;
+        --portal-accent-lt: #3f7cac;
+        --portal-tag-bg: #f0f4ff;
+        --portal-tag-color: #1f3c88;
+        --portal-banner: linear-gradient(135deg, #1f3c88 0%, #3f7cac 100%);
+    }
+
+    body.dark {
+        --portal-card-bg: #1e1e2e;
+        --portal-card-border: #2a2a3e;
+        --portal-card-shadow: 0 1px 8px rgba(0,0,0,0.3);
+        --portal-text: #e4e8f5;
+        --portal-text-muted: #8899bb;
+        --portal-label: #6677aa;
+        --portal-divider: #252538;
+        --portal-accent: #93c5fd;
+        --portal-accent-lt: #60a5fa;
+        --portal-tag-bg: #1a2340;
+        --portal-tag-color: #93c5fd;
+        --portal-banner: linear-gradient(135deg, #0f2055 0%, #1a3a5c 100%);
+    }
+    /* ── Layout ── */
+
+    .ap-layout {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 20px;
+        align-items: start;
+    }
+    /* ── Base card ── */
+
+    .ap-card {
+        background: var(--portal-card-bg);
+        border: 1px solid var(--portal-card-border);
+        border-radius: 14px;
+        box-shadow: var(--portal-card-shadow);
+        transition: background .3s, border-color .3s;
+        overflow: hidden;
+    }
+    /* ───────────────────────────────── SIDEBAR ───────────────────────────────── */
+
+    .ap-sidebar {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        position: sticky;
+        top: 20px;
+    }
+    /* Profile Card */
+
+    .ap-profile-banner {
+        height: 72px;
+        background: var(--portal-banner);
+        position: relative;
+    }
+
+    .ap-profile-body {
+        padding: 0 20px 20px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+    }
+
+    .ap-avatar-wrap {
+        position: relative;
+        margin-top: -36px;
+        margin-bottom: 10px;
+    }
+
+    .ap-avatar {
+        width: 72px;
+        height: 72px;
+        border-radius: 50%;
+        background: var(--portal-banner);
+        border: 3px solid var(--portal-card-bg);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.6rem;
+        font-weight: 700;
+        color: #fff;
+        letter-spacing: -1px;
+        transition: border-color .3s;
+    }
+
+    .ap-avatar-dot {
+        position: absolute;
+        bottom: 3px;
+        right: 3px;
+        width: 13px;
+        height: 13px;
+        border-radius: 50%;
+        background: #10b981;
+        border: 2px solid var(--portal-card-bg);
+    }
+
+    .ap-profile-name {
+        font-size: 1.1rem;
+        font-weight: 700;
+        color: var(--portal-text);
+        margin: 0 0 2px;
+        line-height: 1.3;
+    }
+
+    .ap-profile-preferred {
+        font-size: .78rem;
+        color: var(--portal-text-muted);
+        margin: 0 0 6px;
+    }
+
+    .ap-profile-headline {
+        font-size: .82rem;
+        color: var(--portal-accent);
+        margin: 0 0 4px;
+        font-weight: 500;
+    }
+
+    .ap-profile-headline-at {
+        color: var(--portal-text-muted);
+        font-weight: 400;
+    }
+
+    .ap-profile-location {
+        font-size: .78rem;
+        color: var(--portal-text-muted);
+        margin: 0 0 14px;
+    }
+    /* Completion */
+
+    .ap-completion {
+        width: 100%;
+        margin-bottom: 14px;
+        padding: 12px 14px;
+        background: var(--portal-tag-bg);
+        border-radius: 10px;
+    }
+
+    .ap-completion-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 6px;
+    }
+
+    .ap-completion-label {
+        font-size: .72rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .06em;
+        color: var(--portal-label);
+    }
+
+    .ap-completion-pct {
+        font-size: .8rem;
+        font-weight: 700;
+        color: var(--portal-accent);
+    }
+
+    .ap-completion-track {
+        height: 6px;
+        background: var(--portal-card-border);
+        border-radius: 999px;
+        overflow: hidden;
+    }
+
+    .ap-completion-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(90deg, #1f3c88, #3f7cac);
+        transition: width .6s ease;
+    }
+
+    .ap-completion-hint {
+        font-size: .72rem;
+        color: var(--portal-text-muted);
+        margin: 6px 0 0;
+        text-align: left;
+    }
+
+    .ap-social-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: .8rem;
+        color: var(--portal-accent);
+        text-decoration: none;
+        font-weight: 500;
+        padding: 4px 10px;
+        border-radius: 999px;
+        border: 1px solid var(--portal-card-border);
+        transition: background .2s;
+    }
+
+        .ap-social-link:hover {
+            background: var(--portal-tag-bg);
+            color: var(--portal-accent);
+        }
+    /* Stats Card */
+
+    .ap-stats-card {
+        padding: 16px 20px;
+    }
+
+    .ap-stats-title {
+        font-size: .68rem;
+        font-weight: 700;
+        letter-spacing: .1em;
+        text-transform: uppercase;
+        color: var(--portal-label);
+        margin-bottom: 12px;
+    }
+
+    .ap-stats-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
+    .ap-stat {
+        background: var(--portal-tag-bg);
+        border-radius: 10px;
+        padding: 12px 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        transition: background .3s;
+    }
+
+    .ap-stat-num {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--portal-accent);
+        line-height: 1;
+    }
+
+    .ap-stat-lbl {
+        font-size: .7rem;
+        color: var(--portal-text-muted);
+        font-weight: 500;
+    }
+    /* Quick Links Card */
+
+    .ap-quick-card {
+        padding: 16px 20px;
+    }
+
+    .ap-quick-nav {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .ap-quick-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 10px;
+        border-radius: 9px;
+        text-decoration: none;
+        font-size: .85rem;
+        font-weight: 500;
+        color: var(--portal-text);
+        transition: background .15s;
+    }
+
+        .ap-quick-link:hover {
+            background: var(--portal-tag-bg);
+            color: var(--portal-accent);
+        }
+
+    .ap-quick-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 7px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .85rem;
+        flex-shrink: 0;
+    }
+
+    body.dark .ap-quick-icon {
+        filter: brightness(.8);
+    }
+    /* ───────────────────────────────── MAIN COLUMN ───────────────────────────────── */
+
+    .ap-main {
+        display: flex;
+        flex-direction: column;
+        gap: 14px;
+        min-width: 0;
+    }
+    /* Contact Strip */
+
+    .ap-contact-strip {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        padding: 14px 20px;
+        gap: 0;
+    }
+
+    .ap-contact-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex: 1 1 160px;
+        padding: 4px 12px;
+    }
+
+        .ap-contact-item > i {
+            font-size: 1rem;
+            color: var(--portal-accent);
+            flex-shrink: 0;
+        }
+
+        .ap-contact-item > div {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+    .ap-contact-label {
+        font-size: .67rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: .07em;
+        color: var(--portal-label);
+    }
+
+    .ap-contact-val {
+        font-size: .85rem;
+        font-weight: 500;
+        color: var(--portal-text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ap-jagid-val {
+        color: var(--portal-accent);
+        font-weight: 700;
+    }
+
+    .ap-contact-divider {
+        width: 1px;
+        height: 36px;
+        background: var(--portal-divider);
+        flex-shrink: 0;
+    }
+    /* Section card */
+
+    .ap-section {
+        padding: 20px 22px;
+    }
+
+    .ap-section-head {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 16px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--portal-divider);
+    }
+
+    .ap-section-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .88rem;
+        flex-shrink: 0;
+    }
+
+    body.dark .ap-section-icon {
+        filter: brightness(.75);
+    }
+
+    .ap-section-title {
+        font-size: .95rem;
+        font-weight: 700;
+        color: var(--portal-text);
+        margin: 0;
+    }
+
+    .ap-section-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        font-size: .75rem;
+        font-weight: 600;
+        color: var(--portal-accent);
+        text-decoration: none;
+        padding: 4px 10px;
+        border-radius: 7px;
+        border: 1px solid var(--portal-card-border);
+        transition: background .15s, border-color .15s;
+    }
+
+        .ap-section-action:hover {
+            background: var(--portal-tag-bg);
+            border-color: var(--portal-accent);
+            color: var(--portal-accent);
+        }
+    /* Empty inline */
+
+    .ap-empty-inline {
+        font-size: .85rem;
+        color: var(--portal-text-muted);
+        font-style: italic;
+        text-align: center;
+        padding: 12px 0 4px;
+        margin: 0;
+    }
+    /* ───────────────────────────────── TIMELINE ───────────────────────────────── */
+
+    .ap-timeline {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .ap-tl-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        padding: 14px 0;
+        border-bottom: 1px solid var(--portal-divider);
+        position: relative;
+    }
+
+        .ap-tl-item:last-child {
+            border-bottom: none;
+        }
+
+    .ap-tl-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        flex-shrink: 0;
+        margin-top: 5px;
+        box-shadow: 0 0 0 3px var(--portal-card-bg), 0 0 0 4px rgba(0,0,0,0.08);
+        transition: box-shadow .3s;
+    }
+
+    .ap-tl-body {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .ap-tl-title {
+        font-size: .92rem;
+        font-weight: 700;
+        color: var(--portal-text);
+        margin-bottom: 2px;
+    }
+
+    .ap-tl-sub {
+        font-size: .8rem;
+        color: var(--portal-text-muted);
+        margin-bottom: 8px;
+    }
+
+    .ap-tl-meta-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .ap-tl-chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 2px 9px;
+        border-radius: 999px;
+        font-size: .7rem;
+        font-weight: 600;
+    }
+
+    .ap-chip-amber {
+        background: #fef3c7;
+        color: #92400e;
+    }
+
+    .ap-chip-blue {
+        background: #dbeafe;
+        color: #1e40af;
+    }
+
+    .ap-chip-green {
+        background: #d1fae5;
+        color: #065f46;
+    }
+
+    .ap-chip-teal {
+        background: #cffafe;
+        color: #155e75;
+    }
+
+    .ap-chip-gray {
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    body.dark .ap-chip-amber {
+        background: #451a03;
+        color: #fcd34d;
+    }
+
+    body.dark .ap-chip-blue {
+        background: #1e3a5f;
+        color: #93c5fd;
+    }
+
+    body.dark .ap-chip-green {
+        background: #064e3b;
+        color: #6ee7b7;
+    }
+
+    body.dark .ap-chip-teal {
+        background: #164e63;
+        color: #67e8f9;
+    }
+
+    body.dark .ap-chip-gray {
+        background: #2a2a3e;
+        color: #94a3b8;
+    }
+    /* Edit btn on timeline items */
+
+    .ap-tl-edit {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        border-radius: 7px;
+        background: var(--portal-tag-bg);
+        color: var(--portal-tag-color);
+        border: 1px solid var(--portal-card-border);
+        text-decoration: none;
+        font-size: .75rem;
+        flex-shrink: 0;
+        opacity: 0;
+        transition: opacity .15s, background .15s;
+    }
+
+    .ap-tl-item:hover .ap-tl-edit, .ap-org-chip:hover .ap-tl-edit {
+        opacity: 1;
+    }
+
+    .ap-tl-edit:hover {
+        background: #1f3c88;
+        color: #fff;
+        border-color: #1f3c88;
+    }
+    /* ───────────────────────────────── ORGANIZATION CHIPS GRID ───────────────────────────────── */
+
+    .ap-org-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+
+    .ap-org-chip {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: var(--portal-tag-bg);
+        border: 1px solid var(--portal-card-border);
+        border-radius: 10px;
+        padding: 10px 12px;
+        flex: 1 1 220px;
+        position: relative;
+        transition: border-color .15s, background .3s;
+    }
+
+        .ap-org-chip:hover {
+            border-color: #7c3aed44;
+        }
+
+    .ap-org-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: #ede9fe;
+        color: #7c3aed;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: .85rem;
+        flex-shrink: 0;
+    }
+
+    body.dark .ap-org-icon {
+        background: #2d1b69;
+        color: #c4b5fd;
+    }
+
+    .ap-org-info {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+        flex: 1;
+    }
+
+    .ap-org-name {
+        font-size: .85rem;
+        font-weight: 600;
+        color: var(--portal-text);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ap-org-role {
+        font-size: .75rem;
+        color: var(--portal-text-muted);
+    }
+
+    .ap-org-edit {
+        position: static;
+    }
+    /* ───────────────────────────────── UNLINKED STATE ───────────────────────────────── */
+
+    .ap-unlinked {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 60px 20px;
+        text-align: center;
+        color: var(--portal-text-muted);
+    }
+
+    .ap-unlinked-icon {
+        font-size: 3rem;
+        margin-bottom: 16px;
+        opacity: .4;
+    }
+</style>
 @if (TempData["ErrorMessage"] != null)
 {
     <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
-        <i class="bi bi-exclamation-octagon-fill me-2"></i>
-        @TempData["ErrorMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <i class="bi bi-exclamation-octagon-fill me-2"></i>@TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 }
-
 @if (TempData["SuccessMessage"] != null)
 {
     <div class="alert alert-success alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
-        <i class="bi bi-check-circle-fill me-2"></i>
-        @TempData["SuccessMessage"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <i class="bi bi-check-circle-fill me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 }
 
-<div class="container-fluid">
-
-    <!-- ================= HERO ================= -->
-    <div class="hero mb-4">
-
-        <div>
-            <h2>Welcome back, @User.Identity.Name 👋</h2>
-
-            <p>
-                Manage your alumni profile, track career progress,
-                and stay connected with the
-                <strong>University of South Alabama</strong>.
-            </p>
-        </div>
-
+@if (Model == null)
+{
+    <div class="ap-unlinked">
+        <i class="bi bi-person-x ap-unlinked-icon"></i>
+        <h4>Profile Not Linked</h4>
+        <p>Your alumni profile is not yet linked to this account. Please contact the administrator.</p>
     </div>
+}
+else
+{
+    <div class="ap-layout">
 
-    <div class="card mb-4 p-3">
-        <h5>Alumni Profile</h5>
-        @if (Model == null)
-        {
-            <p class="text-warning">Your alumni profile is not yet linked. Please contact admin.</p>
-        }
-        else
-        {
-            <dl class="row">
-                <dt class="col-sm-3">Name</dt>
-                <dd class="col-sm-9">@Model.FirstName @Model.LastName</dd>
+        <!-- ════════════════════════════════
+             LEFT COLUMN — Profile Card
+        ════════════════════════════════ -->
+        <aside class="ap-sidebar">
 
-                <dt class="col-sm-3">JAG ID</dt>
-                <dd class="col-sm-9">@Model.JagId</dd>
+            <!-- Profile Identity Card -->
+            <div class="ap-card ap-profile-card">
+                <div class="ap-profile-banner"></div>
+                <div class="ap-profile-body">
+                    <div class="ap-avatar-wrap">
+                        <div class="ap-avatar">@initials</div>
+                        @if (Model.IsActive)
+                        {
+                            <span class="ap-avatar-dot"></span>
+                        }
+                </div>
+                <h2 class="ap-profile-name">
+                    @string.Join(" ", new[] { Model.Prefix, Model.FirstName, Model.LastName }
+                                        .Where(x => !string.IsNullOrWhiteSpace(x)))
+                </h2>
+                @if (!string.IsNullOrWhiteSpace(Model.PreferredFirstName))
+                    {
+                        <p class="ap-profile-preferred">
+                            Goes by <strong>@Model.PreferredFirstName</strong>
+                        </p>
+                    }
 
-                <dt class="col-sm-3">Email</dt>
-                <dd class="col-sm-9">@Model.PermanentEmail</dd>
+                    @{
+                        var latestJob = employments.OrderByDescending(e => e.StartDate).FirstOrDefault();
+                        var latestDeg = degrees.OrderByDescending(d => d.DateConferred).FirstOrDefault();
+                    }
+                    @if (latestJob != null)
+                    {
+                        <p class="ap-profile-headline">
+                            <i class="bi bi-briefcase-fill me-1"></i>
+                            @latestJob.JobTitle
+                            @if (latestJob.Employer != null)
+                            {
+                                <span class="ap-profile-headline-at"> · @latestJob.Employer.EmployerName</span>
+                            }
+                        </p>
+                    }
+                    else if (latestDeg != null)
+                    {
+                        <p class="ap-profile-headline">
+                            <i class="bi bi-mortarboard-fill me-1"></i>
+                            @latestDeg.Degree?.Department · Class of @Model.GraduationYear
+                        </p>
+                    }
 
-                <dt class="col-sm-3">Graduation Year</dt>
-                <dd class="col-sm-9">@Model.GraduationYear</dd>
+                    @if (!string.IsNullOrWhiteSpace(Model.City) || !string.IsNullOrWhiteSpace(Model.State))
+                    {
+                        <p class="ap-profile-location">
+                            <i class="bi bi-geo-alt me-1"></i>
+                            @string.Join(", ", new[] { Model.City, Model.State }.Where(x => !string.IsNullOrWhiteSpace(x)))
+                        </p>
+                    }
 
-                <dt class="col-sm-3">Phone</dt>
-                <dd class="col-sm-9">@Model.Phone</dd>
+                    <!-- Completion bar -->
+                    <div class="ap-completion">
+                        <div class="ap-completion-header">
+                            <span class="ap-completion-label">Profile Strength</span>
+                            <span class="ap-completion-pct">@completion%</span>
+                        </div>
+                        <div class="ap-completion-track">
+                            <div class="ap-completion-fill" style="width:@(completion)%"></div>
+                        </div>
+                        <p class="ap-completion-hint">
+                            @if (completion < 50)
+                            {
+                                <span>Add more details to boost visibility</span>
+                            }
+                            else if (completion < 80)
+                            {
 
-                <dt class="col-sm-3">Address</dt>
-                <dd class="col-sm-9">@Model.Address, @Model.City, @Model.State, @Model.Postcode</dd>
-            </dl>
-        }
-    </div>
+                                <span>You're getting there — keep going!</span>
+                            }
+                            else
+                            {
 
-    <!-- ================= PROFILE STATUS ================= -->
-    <div class="card shadow-sm mb-4 border-0">
-        <div class="card-body">
+                                <span>Strong profile — keep it updated!</span>
+                            }
+                        </p>
+                    </div>
 
-            <div class="d-flex justify-content-between">
-                <h5>Profile Completion</h5>
-                <strong>@ViewData["ProfileCompletion"]%</strong>
-            </div>
+                    @if (!string.IsNullOrWhiteSpace(Model.SocialMediaAccount))
+                    {
+                        <a href="@Model.SocialMediaAccount" target="_blank" class="ap-social-link">
+                            <i class="bi bi-globe2 me-1"></i> Social Profile
+                        </a>
+                    }
 
-            <div class="progress mt-2" style="height:10px;">
-                <div class="progress-bar bg-success"
-                     style="width:@ViewData["ProfileCompletion"]%">
+                    <!-- Edit profile CTA -->
+                    <a asp-controller="Alumni" asp-action="Edit" asp-route-id="@Model.AlumniId"
+                       class="btn btn-sm btn-outline-primary w-100 mt-3 d-flex align-items-center justify-content-center gap-1">
+                        <i class="bi bi-pencil" style="font-size:.8rem;"></i> Edit Profile
+                    </a>
                 </div>
             </div>
 
-        </div>
+            <!-- Quick Stats -->
+            <div class="ap-card ap-stats-card">
+                <div class="ap-stats-title">At a Glance</div>
+                <div class="ap-stats-grid">
+                    <div class="ap-stat">
+                        <span class="ap-stat-num">@degrees.Count()</span>
+                        <span class="ap-stat-lbl">Degree(s)</span>
+                    </div>
+                    <div class="ap-stat">
+                        <span class="ap-stat-num">@employments.Count()</span>
+                        <span class="ap-stat-lbl">Job(s)</span>
+                    </div>
+                    <div class="ap-stat">
+                        <span class="ap-stat-num">@internships.Count()</span>
+                        <span class="ap-stat-lbl">Internship(s)</span>
+                    </div>
+                    <div class="ap-stat">
+                        <span class="ap-stat-num">@organizations.Count()</span>
+                        <span class="ap-stat-lbl">Org(s)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="ap-card ap-quick-card">
+                <div class="ap-stats-title">Quick Actions</div>
+                <nav class="ap-quick-nav">
+                    <a asp-controller="AlumniEmployments" asp-action="Create" class="ap-quick-link">
+                        <span class="ap-quick-icon" style="background:#dbeafe;color:#1f3c88;"><i class="bi bi-briefcase-fill"></i></span>
+                        Add Employment
+                        <i class="bi bi-plus-circle ms-auto"></i>
+                    </a>
+                    <a asp-controller="AlumniInternships" asp-action="Create" class="ap-quick-link">
+                        <span class="ap-quick-icon" style="background:#cffafe;color:#0891b2;"><i class="bi bi-person-workspace"></i></span>
+                        Add Internship
+                        <i class="bi bi-plus-circle ms-auto"></i>
+                    </a>
+                    <a asp-controller="AlumniOrganizations" asp-action="Create" class="ap-quick-link">
+                        <span class="ap-quick-icon" style="background:#ede9fe;color:#7c3aed;"><i class="bi bi-diagram-3-fill"></i></span>
+                        Add Organization
+                        <i class="bi bi-plus-circle ms-auto"></i>
+                    </a>
+                    <a asp-controller="AlumniMessages" asp-action="Index" class="ap-quick-link">
+                        <span class="ap-quick-icon" style="background:#fef9c3;color:#b45309;"><i class="bi bi-chat-dots-fill"></i></span>
+                        Messages
+                        <i class="bi bi-chevron-right ms-auto"></i>
+                    </a>
+                </nav>
+            </div>
+
+        </aside>
+
+        <!-- ════════════════════════════════
+             MAIN COLUMN — Timeline
+        ════════════════════════════════ -->
+        <main class="ap-main">
+
+            <!-- ── Contact Info Strip ── -->
+            <div class="ap-card ap-contact-strip">
+                <div class="ap-contact-item">
+                    <i class="bi bi-envelope-fill"></i>
+                    <div>
+                        <span class="ap-contact-label">Email</span>
+                        <span class="ap-contact-val">@(Model.PermanentEmail ?? "—")</span>
+                    </div>
+                </div>
+                <div class="ap-contact-divider"></div>
+                <div class="ap-contact-item">
+                    <i class="bi bi-telephone-fill"></i>
+                    <div>
+                        <span class="ap-contact-label">Phone</span>
+                        <span class="ap-contact-val">@(string.IsNullOrEmpty(Model.Phone) ? "—" : Model.Phone)</span>
+                    </div>
+                </div>
+                <div class="ap-contact-divider"></div>
+                <div class="ap-contact-item">
+                    <i class="bi bi-mortarboard-fill"></i>
+                    <div>
+                        <span class="ap-contact-label">JAG ID</span>
+                        <span class="ap-contact-val ap-jagid-val">@(Model.JagId ?? "—")</span>
+                    </div>
+                </div>
+                <div class="ap-contact-divider"></div>
+                <div class="ap-contact-item">
+                    <i class="bi bi-calendar-check-fill"></i>
+                    <div>
+                        <span class="ap-contact-label">Graduated</span>
+                        <span class="ap-contact-val">@Model.GraduationYear</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Education ── -->
+            @if (degrees.Any())
+            {
+                <div class="ap-card ap-section">
+                    <div class="ap-section-head">
+                        <div class="ap-section-icon" style="background:#fef3c7;color:#b45309;">
+                            <i class="bi bi-mortarboard-fill"></i>
+                        </div>
+                        <h3 class="ap-section-title">Education</h3>
+                        <a asp-controller="AlumniDegrees" asp-action="Index"
+                           class="ap-section-action ms-auto">
+                            <i class="bi bi-pencil me-1"></i>Manage
+                        </a>
+                    </div>
+                    <div class="ap-timeline">
+                        @foreach (var deg in degrees.OrderByDescending(d => d.DateConferred))
+                        {
+                            <div class="ap-tl-item">
+                                <div class="ap-tl-dot" style="background:#b45309;"></div>
+                                <div class="ap-tl-body">
+                                    <div class="ap-tl-title">@(deg.Degree?.Department ?? "—")</div>
+                                    <div class="ap-tl-sub">
+                                        University of South Alabama · @deg.DateConferred.ToString("yyyy")
+                                    </div>
+                                    <div class="ap-tl-meta-row">
+                                        @if (deg.Gpa.HasValue)
+                                        {
+                                            <span class="ap-tl-chip ap-chip-amber">GPA @deg.Gpa.Value.ToString("0.00")</span>
+                                        }
+                                        @if (deg.YearsToCompleteDegree.HasValue)
+                                        {
+                                            <span class="ap-tl-chip ap-chip-gray">@deg.YearsToCompleteDegree yr(s)</span>
+                                        }
+                                        @if (deg.ParticipatedInResearch == true)
+                                        {
+                                            <span class="ap-tl-chip ap-chip-blue">Research</span>
+                                        }
+                                        @if (deg.JobSecuredUponGraduation == true)
+                                        {
+                                            <span class="ap-tl-chip ap-chip-green">Job at Grad</span>
+                                        }
+                                    </div>
+                                </div>
+                                <a asp-controller="AlumniDegrees" asp-action="Edit"
+                                   asp-route-id="@deg.AlumniDegreeId"
+                                   class="ap-tl-edit" title="Edit"><i class="bi bi-pencil"></i></a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="ap-card ap-section">
+                    <div class="ap-section-head">
+                        <div class="ap-section-icon" style="background:#fef3c7;color:#b45309;"><i class="bi bi-mortarboard-fill"></i></div>
+                        <h3 class="ap-section-title">Education</h3>
+                        <a asp-controller="AlumniDegrees" asp-action="Create" class="ap-section-action ms-auto">
+                            <i class="bi bi-plus-circle me-1"></i>Add
+                        </a>
+                    </div>
+                    <p class="ap-empty-inline">No degree records yet.</p>
+                </div>
+            }
+
+            <!-- ── Experience ── -->
+            @if (employments.Any())
+            {
+                <div class="ap-card ap-section">
+                    <div class="ap-section-head">
+                        <div class="ap-section-icon" style="background:#dbeafe;color:#1f3c88;">
+                            <i class="bi bi-briefcase-fill"></i>
+                        </div>
+                        <h3 class="ap-section-title">Experience</h3>
+                        <a asp-controller="AlumniEmployments" asp-action="Index"
+                           class="ap-section-action ms-auto">
+                            <i class="bi bi-pencil me-1"></i>Manage
+                        </a>
+                    </div>
+                    <div class="ap-timeline">
+                        @foreach (var emp in employments.OrderByDescending(e => e.StartDate))
+                        {
+                            <div class="ap-tl-item">
+                                <div class="ap-tl-dot" style="background:#1f3c88;"></div>
+                                <div class="ap-tl-body">
+                                    <div class="ap-tl-title">@emp.JobTitle</div>
+                                    <div class="ap-tl-sub">
+                                        @emp.Employer?.EmployerName
+                                        · @emp.StartDate.ToString("MMM yyyy") —
+                                        @(emp.EndDate.HasValue? emp.EndDate.Value.ToString("MMM yyyy") : "Present")
+                                    </div>
+                                    <div class="ap-tl-meta-row">
+                                        @if (!emp.EndDate.HasValue)
+                                        {
+                                            <span class="ap-tl-chip ap-chip-green">Current</span>
+                                        }
+                                        @if (!string.IsNullOrEmpty(emp.SalaryRange))
+                                        {
+                                            <span class="ap-tl-chip ap-chip-gray">@emp.SalaryRange</span>
+                                        }
+                                    </div>
+                                </div>
+                                <a asp-controller="AlumniEmployments" asp-action="Edit"
+                                   asp-route-id="@emp.AlumniEmploymentId"
+                                   class="ap-tl-edit" title="Edit"><i class="bi bi-pencil"></i></a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="ap-card ap-section">
+                    <div class="ap-section-head">
+                        <div class="ap-section-icon" style="background:#dbeafe;color:#1f3c88;"><i class="bi bi-briefcase-fill"></i></div>
+                        <h3 class="ap-section-title">Experience</h3>
+                        <a asp-controller="AlumniEmployments" asp-action="Create" class="ap-section-action ms-auto">
+                            <i class="bi bi-plus-circle me-1"></i>Add
+                        </a>
+                    </div>
+                    <p class="ap-empty-inline">No employment records yet.</p>
+                </div>
+            }
+
+            <!-- ── Internships ── -->
+            @if (internships.Any())
+            {
+                <div class="ap-card ap-section">
+                    <div class="ap-section-head">
+                        <div class="ap-section-icon" style="background:#cffafe;color:#0891b2;">
+                            <i class="bi bi-person-workspace"></i>
+                        </div>
+                        <h3 class="ap-section-title">Internships</h3>
+                        <a asp-controller="AlumniInternships" asp-action="Index"
+                           class="ap-section-action ms-auto">
+                            <i class="bi bi-pencil me-1"></i>Manage
+                        </a>
+                    </div>
+                    <div class="ap-timeline">
+                        @foreach (var intern in internships.OrderByDescending(i => i.StartDate))
+                        {
+                            <div class="ap-tl-item">
+                                <div class="ap-tl-dot" style="background:#0891b2;"></div>
+                                <div class="ap-tl-body">
+                                    <div class="ap-tl-title">@intern.Title</div>
+                                    <div class="ap-tl-sub">
+                                        @intern.Employer?.EmployerName
+                                        · @intern.StartDate.ToString("MMM yyyy") — @intern.EndDate.ToString("MMM yyyy")
+                                    </div>
+                                    <div class="ap-tl-meta-row">
+                                        <span class="ap-tl-chip ap-chip-teal">@intern.InternshipType</span>
+                                    </div>
+                                </div>
+                                <a asp-controller="AlumniInternships" asp-action="Edit"
+                                   asp-route-id="@intern.AlumniInternshipId"
+                                   class="ap-tl-edit" title="Edit"><i class="bi bi-pencil"></i></a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="ap-card ap-section">
+                    <div class="ap-section-head">
+                        <div class="ap-section-icon" style="background:#cffafe;color:#0891b2;"><i class="bi bi-person-workspace"></i></div>
+                        <h3 class="ap-section-title">Internships</h3>
+                        <a asp-controller="AlumniInternships" asp-action="Create" class="ap-section-action ms-auto">
+                            <i class="bi bi-plus-circle me-1"></i>Add
+                        </a>
+                    </div>
+                    <p class="ap-empty-inline">No internship records yet.</p>
+                </div>
+            }
+
+            <!-- ── Organizations ── -->
+            @if (organizations.Any())
+            {
+                <div class="ap-card ap-section">
+                    <div class="ap-section-head">
+                        <div class="ap-section-icon" style="background:#ede9fe;color:#7c3aed;">
+                            <i class="bi bi-diagram-3-fill"></i>
+                        </div>
+                        <h3 class="ap-section-title">Organizations & Clubs</h3>
+                        <a asp-controller="AlumniOrganizations" asp-action="Index"
+                           class="ap-section-action ms-auto">
+                            <i class="bi bi-pencil me-1"></i>Manage
+                        </a>
+                    </div>
+                    <div class="ap-org-grid">
+                        @foreach (var org in organizations)
+                        {
+                            <div class="ap-org-chip">
+                                <div class="ap-org-icon"><i class="bi bi-people-fill"></i></div>
+                                <div class="ap-org-info">
+                                    <span class="ap-org-name">@org.OrganizationType?.OrganizationName</span>
+                                    <span class="ap-org-role">@(string.IsNullOrEmpty(org.OfficerRoles) ? "Member" : org.OfficerRoles)</span>
+                                </div>
+                                <a asp-controller="AlumniOrganizations" asp-action="Edit"
+                                   asp-route-id="@org.AlumniOrganizationId"
+                                   class="ap-tl-edit ap-org-edit" title="Edit"><i class="bi bi-pencil"></i></a>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            else
+            {
+                <div class="ap-card ap-section">
+                    <div class="ap-section-head">
+                        <div class="ap-section-icon" style="background:#ede9fe;color:#7c3aed;"><i class="bi bi-diagram-3-fill"></i></div>
+                        <h3 class="ap-section-title">Organizations & Clubs</h3>
+                        <a asp-controller="AlumniOrganizations" asp-action="Create" class="ap-section-action ms-auto">
+                            <i class="bi bi-plus-circle me-1"></i>Add
+                        </a>
+                    </div>
+                    <p class="ap-empty-inline">No organization records yet.</p>
+                </div>
+            }
+
+        </main>
+
     </div>
 
-    <!-- ================= QUICK ACTIONS ================= -->
-    <h5 class="mb-3">Quick Actions</h5>
-
-    <div class="row g-4">
-
-        <div class="col-md-4">
-            <a asp-controller="Alumni" asp-action="MyProfile"
-               class="quick-card">
-                <i class="bi bi-person"></i>
-                <span>My Profile</span>
-            </a>
-        </div>
-
-        <div class="col-md-4">
-            <a asp-controller="AlumniDegrees" asp-action="Index"
-               class="quick-card">
-                <i class="bi bi-award"></i>
-                <span>Degrees</span>
-            </a>
-        </div>
-
-        <div class="col-md-4">
-            <a asp-controller="AlumniMessages" asp-action="Index"
-               class="quick-card">
-                <i class="bi bi-chat-dots"></i>
-                <span>Messages</span>
-            </a>
-        </div>
-
-    </div>
-
-    <!-- ================= ALUMNI INFO ================= -->
-    <div class="card shadow-sm border-0 mt-5">
-        <div class="card-body">
-
-            <h5>South Alabama Alumni Network</h5>
-
-            <p>
-                The University of South Alabama Alumni Association
-                connects graduates worldwide through mentorship,
-                innovation programs, and professional networking.
-            </p>
-
-        </div>
-    </div>
-
-</div>
+    <!-- /ap-layout -->
+}
+@section Styles {
+    <link rel="stylesheet" href="~/css/alumni-portal.css" asp-append-version="true" />
+}   

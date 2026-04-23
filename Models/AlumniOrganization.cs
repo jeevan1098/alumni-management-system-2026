@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -14,16 +14,18 @@ public partial class AlumniOrganization
     [Display(Name = "Student Organization ID")]
     public int AlumniOrganizationId { get; set; }
 
+    [Required(ErrorMessage = "Alumni ID is required.")]
     [Column("alumni_id")]
     [Display(Name = "Alumni ID")]
     public int AlumniId { get; set; }
 
+    [Required(ErrorMessage = "Organization type is required.")]
     [Column("organization_type_id")]
     [Display(Name = "Organization Type ID")]
     public int OrganizationTypeId { get; set; }
 
     [Column("officer_roles")]
-    [StringLength(150)]
+    [StringLength(150, ErrorMessage = "Officer roles cannot exceed 150 characters.")]
     [Display(Name = "Officer Roles")]
     public string OfficerRoles { get; set; }
 

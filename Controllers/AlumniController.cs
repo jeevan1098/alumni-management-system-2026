@@ -39,26 +39,16 @@ namespace Alumni_Management_System.Controllers
 
             if (!string.IsNullOrWhiteSpace(searchString))
             {
-                // Split on comma, trim each token, remove empties
-                // e.g. "john,2026" → ["john", "2026"]
-                // e.g. "john@email.com" → ["john@email.com"]
                 var tokens = searchString
                     .Split(',', StringSplitOptions.RemoveEmptyEntries)
                     .Select(t => t.Trim())
                     .Where(t => !string.IsNullOrWhiteSpace(t))
                     .ToList();
 
-                // Pull the full dataset into memory once so we can do
-                // ToString() comparisons (EF cannot translate those to SQL)
                 var allAlumni = await alumniQuery.ToListAsync();
 
-                // Each token must match at least one field on the same record.
-                // All tokens must match (AND logic across tokens) so that
-                // "john,2026" only returns Johns who graduated in 2026.
                 var filtered = allAlumni.Where(a =>
-                    tokens.All(token =>
-                        MatchesToken(a, token)
-                    )
+                    tokens.All(token => MatchesToken(a, token))
                 ).ToList();
 
                 ViewData["CurrentFilter"] = searchString;
@@ -111,7 +101,7 @@ namespace Alumni_Management_System.Controllers
                 (!string.IsNullOrEmpty(a.Postcode) && a.Postcode.ToLower().Contains(t)) ||
                 (!string.IsNullOrEmpty(a.Country) && a.Country.ToLower().Contains(t)) ||
 
-              // Academic
+                // Academic
                 (a.GraduationYear.ToString().Contains(t)) ||
                 (a.AgeAtGraduation.ToString().Contains(t)) ||
 
@@ -139,15 +129,83 @@ namespace Alumni_Management_System.Controllers
             return RedirectToAction("Edit", new { id = alumni.AlumniId });
         }
 
+        //public async Task<IActionResult> Details(int? id)
+        //{
+        //    if (id == null) return NotFound();
+        //    var alumni = await _context.Alumni
+        //        .Include(a => a.User)
+        //        .FirstOrDefaultAsync(m => m.AlumniId == id);
+        //    if (alumni == null) return NotFound();
+        //    return View(alumni);
+        //}
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null) return NotFound();
+
             var alumni = await _context.Alumni
                 .Include(a => a.User)
                 .FirstOrDefaultAsync(m => m.AlumniId == id);
+
             if (alumni == null) return NotFound();
+
+            bool isAdminOrStaff = User.IsInRole("Admin") || User.IsInRole("Staff");
+            bool isAlumni = User.IsInRole("Alumni");
+
+            // Find the logged-in alumni's own record
+            bool isOwnProfile = false;
+            if (isAlumni)
+            {
+                var currentAlumni = await _context.Alumni
+                    .FirstOrDefaultAsync(a => a.UserId == _userManager.GetUserId(User));
+                isOwnProfile = currentAlumni?.AlumniId == id;
+            }
+
+            // Alumni can view:
+            //   - their own profile (always)
+            //   - other alumni profiles only if Privacy == false
+            // Admin/Staff can view everyone
+            if (isAlumni && !isOwnProfile && alumni.Privacy == true)
+                return Forbid();
+
+            // canViewDetails: show related records when...
+            //   - Admin/Staff (always)
+            //   - Own profile (always)
+            //   - Another alumni viewing a public profile (Privacy == false)
+            bool canViewDetails = isAdminOrStaff || isOwnProfile || (!isOwnProfile && alumni.Privacy == false);
+
+            if (canViewDetails)
+            {
+                ViewBag.Employments = await _context.AlumniEmployments
+                    .Include(e => e.Employer)
+                    .Where(e => e.AlumniId == id)
+                    .ToListAsync();
+
+                ViewBag.Internships = await _context.AlumniInternships
+                    .Include(i => i.Employer)
+                    .Where(i => i.AlumniId == id)
+                    .ToListAsync();
+
+                ViewBag.Organizations = await _context.AlumniOrganizations
+                    .Include(o => o.OrganizationType)
+                    .Where(o => o.AlumniId == id)
+                    .ToListAsync();
+
+                // Degrees only for Admin/Staff
+                if (isAdminOrStaff)
+                {
+                    ViewBag.Degrees = await _context.AlumniDegrees
+                        .Include(d => d.Degree)
+                        .Where(d => d.AlumniId == id)
+                        .ToListAsync();
+                }
+            }
+
+            ViewBag.CanViewDetails = canViewDetails;
+            ViewBag.IsAdminOrStaff = isAdminOrStaff;
+
             return View(alumni);
         }
+
 
         [Authorize(Roles = "Admin")]
         public IActionResult Create() => View();
@@ -157,13 +215,32 @@ namespace Alumni_Management_System.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([Bind("AlumniId,JagId,Prefix,FirstName,PreferredFirstName,LastName,Gender,AgeAtGraduation,StudentEmail,PermanentEmail,Phone,Address,City,State,Postcode,Country,GraduationYear,SolicitationCode,SocialMediaAccount,Privacy,IsActive,LastUpdated")] Alumni alumni)
         {
+            // Check for duplicate JAG ID in Alumni table
+            bool jagIdExistsInAlumni = await _context.Alumni
+                .AnyAsync(a => a.JagId == alumni.JagId);
+
+            if (jagIdExistsInAlumni)
+            {
+                ModelState.AddModelError("JagId", $"JAG ID '{alumni.JagId}' already exists in the Alumni records.");
+            }
+
+            await ValidateEmails(alumni);
+
+
             if (ModelState.IsValid)
             {
                 alumni.LastUpdated = DateTime.Now;
                 alumni.IsActive = false;
+                var registryEntry = new AlumniRegistry
+                {
+                    JagId = alumni.JagId,
+                    FirstName = alumni.FirstName,
+                    LastName = alumni.LastName
+                };
                 _context.Add(alumni);
+                _context.AlumniRegistries.Add(registryEntry);
                 await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Alumni created successfully!";
+                TempData["SuccessMessage"] = "Alumni created and added to Registry successfully!";
                 return RedirectToAction(nameof(Index));
             }
             return View(alumni);
@@ -218,6 +295,17 @@ namespace Alumni_Management_System.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            // Check for duplicate JAG ID, excluding the current record
+            bool jagIdTaken = await _context.Alumni
+                .AnyAsync(a => a.JagId == alumni.JagId && a.AlumniId != alumni.AlumniId);
+
+            if (jagIdTaken)
+            {
+                ModelState.AddModelError("JagId", $"JAG ID '{alumni.JagId}' is already assigned to another alumni.");
+            }
+
+            await ValidateEmails(alumni);
+
             if (ModelState.IsValid)
             {
                 try
@@ -247,6 +335,19 @@ namespace Alumni_Management_System.Controllers
             }
 
             return View(alumni);
+        }
+
+        private async Task ValidateEmails(Alumni alumni)
+        {
+            if (await _context.Alumni.AnyAsync(a => a.StudentEmail == alumni.StudentEmail && a.AlumniId != alumni.AlumniId))
+            {
+                ModelState.AddModelError("StudentEmail", "Student Email already exists.");
+            }
+
+            if (await _context.Alumni.AnyAsync(a => a.PermanentEmail == alumni.PermanentEmail && a.AlumniId != alumni.AlumniId))
+            {
+                ModelState.AddModelError("PermanentEmail", "Permanent Email already exists.");
+            }
         }
 
         [Authorize(Roles = "Admin")]
@@ -327,6 +428,15 @@ namespace Alumni_Management_System.Controllers
                 return View();
             }
 
+            // Validate file extension
+            var allowedExtensions = new[] { ".xlsx", ".xls" };
+            var fileExtension = Path.GetExtension(excelFile.FileName).ToLowerInvariant();
+            if (!allowedExtensions.Contains(fileExtension))
+            {
+                TempData["ErrorMessages"] = "Invalid file type. Please upload an Excel file (.xlsx or .xls).";
+                return View();
+            }
+
             var importErrors = new List<string>();
             var successCount = 0;
             var updatedCount = 0;
@@ -350,6 +460,12 @@ namespace Alumni_Management_System.Controllers
 
                 var rowCount = worksheet.Dimension?.End.Row ?? 0;
                 var colCount = worksheet.Dimension?.End.Column ?? 0;
+
+                if (rowCount < 2)
+                {
+                    TempData["ErrorMessages"] = "Excel file contains no data rows.";
+                    return View();
+                }
 
                 // Build header map from row 1
                 var headerMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
@@ -418,19 +534,19 @@ namespace Alumni_Management_System.Controllers
                         if (!System.Text.RegularExpressions.Regex.IsMatch(jagId, @"^J\d+$",
                             System.Text.RegularExpressions.RegexOptions.IgnoreCase))
                         {
-                            importErrors.Add($"Row {row}: ID '{jagId}' invalid (must be J + digits) — skipped.");
+                            importErrors.Add($"Row {row}: ID '{jagId}' is invalid — must start with 'J' followed by numbers only (e.g. J0012345) — skipped.");
                             continue;
                         }
 
                         if (string.IsNullOrWhiteSpace(firstName))
                         {
-                            importErrors.Add($"Row {row}: First Name required — skipped.");
+                            importErrors.Add($"Row {row}: First Name is required — skipped.");
                             continue;
                         }
 
                         if (string.IsNullOrWhiteSpace(lastName))
                         {
-                            importErrors.Add($"Row {row}: Last Name required — skipped.");
+                            importErrors.Add($"Row {row}: Last Name is required — skipped.");
                             continue;
                         }
 
@@ -439,14 +555,47 @@ namespace Alumni_Management_System.Controllers
                         if (!string.IsNullOrEmpty(gradText) && gradText.Length >= 4)
                             int.TryParse(gradText.Substring(0, 4), out graduationYear);
 
+                        if (graduationYear > 0 && (graduationYear < 1900 || graduationYear > 2100))
+                        {
+                            importErrors.Add($"Row {row}: Graduation year '{graduationYear}' is invalid — must be between 1900 and 2100 — skipped.");
+                            continue;
+                        }
+
                         var conferredDate = graduationYear > 0
                             ? DateOnly.FromDateTime(new DateTime(graduationYear, 1, 1))
                             : DateOnly.FromDateTime(DateTime.UtcNow);
 
-                        // Parse remaining common fields
+                        // Parse age
                         int age = 0;
                         if (!string.IsNullOrEmpty(ageText))
+                        {
                             int.TryParse(ageText, out age);
+                            if (age > 0 && (age < 15 || age > 150))
+                            {
+                                importErrors.Add($"Row {row}: Age '{age}' is invalid — must be between 15 and 150 — skipped.");
+                                continue;
+                            }
+                        }
+
+                        // Validate GPA if present
+                        if (gpa.HasValue && (gpa < 0.0m || gpa > 4.0m))
+                        {
+                            importErrors.Add($"Row {row}: GPA '{gpa}' is invalid — must be between 0.0 and 4.0 — skipped.");
+                            continue;
+                        }
+
+                        // Validate emails if present
+                        if (!string.IsNullOrWhiteSpace(studentEmail) && !IsValidEmail(studentEmail))
+                        {
+                            importErrors.Add($"Row {row}: Student email '{studentEmail}' is not a valid email address — skipped.");
+                            continue;
+                        }
+
+                        if (!string.IsNullOrWhiteSpace(permEmail) && !IsValidEmail(permEmail))
+                        {
+                            importErrors.Add($"Row {row}: Permanent email '{permEmail}' is not a valid email address — skipped.");
+                            continue;
+                        }
 
                         var finalEmail = !string.IsNullOrEmpty(permEmail)
                             ? permEmail
@@ -454,40 +603,20 @@ namespace Alumni_Management_System.Controllers
                                 ? studentEmail
                                 : $"{jagId.ToLower()}@placeholder.com");
 
-                        var fullAddress = string.IsNullOrEmpty(street2)
-                            ? street1
-                            : $"{street1}, {street2}";
+                        var fullAddress = string.Join(", ", new[] { street1, street2 }
+                            .Where(s => !string.IsNullOrWhiteSpace(s)));
 
                         // Check whether alumni and registry records already exist
                         var alumniExists = await _context.Alumni.AnyAsync(a => a.JagId == jagId);
                         var registryEntry = await _context.AlumniRegistries.FirstOrDefaultAsync(r => r.JagId == jagId);
 
-                        // ── PATH A: ALUMNI ALREADY EXISTS ─────────────────────────────────────
-                        // Do NOT re-insert the alumni record. Instead, check whether the degree
-                        // from this import row is a new one and add it if so.
-                        //
-                        // Degree identity is determined solely by (DegreeType + MajorFieldOfStudy),
-                        // which maps to a single DegreeProgram row and therefore a single DegreeId.
-                        //
-                        // Duplicate rules applied here:
-                        //   same degree + same year   → skip  (exact duplicate import)
-                        //   same degree + diff year   → skip  (same qualification, year doesn't make it new)
-                        //   diff degree + same year   → add   (genuinely different qualification)
-                        //   diff degree + diff year   → add   (genuinely different qualification)
-                        //
-                        // Because DegreeId already encodes (DegreeType + Major), checking whether
-                        // that DegreeId is already linked to the alumni covers all four cases:
-                        //   - same degree → same DegreeId → already linked → skip
-                        //   - diff degree → different DegreeId → not linked → add
-                        // The graduation year plays no role in the duplicate decision.
-
+                        // ── PATH A: ALUMNI ALREADY EXISTS ────────────────────────────────────
                         if (alumniExists)
                         {
                             var existingAlumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == jagId);
 
                             if (existingAlumni != null && !string.IsNullOrEmpty(major))
                             {
-                                // Find or create the DegreeProgram for this import row
                                 var degreeProgram = await _context.DegreePrograms.FirstOrDefaultAsync(dp =>
                                     dp.DegreeType.ToLower() == (degreeCode ?? "").ToLower() &&
                                     dp.MajorFieldOfStudy.ToLower() == major.ToLower());
@@ -505,14 +634,12 @@ namespace Alumni_Management_System.Controllers
                                     await _context.SaveChangesAsync();
                                 }
 
-                                // Is this exact degree (by DegreeId) already on the alumni's record?
                                 bool degreeAlreadyLinked = await _context.AlumniDegrees.AnyAsync(ad =>
                                     ad.AlumniId == existingAlumni.AlumniId &&
                                     ad.DegreeId == degreeProgram.DegreeId);
 
                                 if (!degreeAlreadyLinked)
                                 {
-                                    // Different degree → add it regardless of year
                                     _context.AlumniDegrees.Add(new AlumniDegree
                                     {
                                         AlumniId = existingAlumni.AlumniId,
@@ -528,10 +655,8 @@ namespace Alumni_Management_System.Controllers
                                     });
                                     await _context.SaveChangesAsync();
 
-                                    // Tag as a degree-added notice — will appear in success banner
                                     importErrors.Add($"Row {row}: '{jagId}' already exists — new degree '{degreeCode} in {major}' (conferred {conferredDate.Year}) added successfully.");
                                 }
-                                // else: same degree already linked → skipped without adding
                             }
 
                             // Keep registry names current regardless
@@ -550,17 +675,17 @@ namespace Alumni_Management_System.Controllers
                         var alumniEntity = new Alumni
                         {
                             JagId = jagId,
-                            Prefix = string.IsNullOrEmpty(prefix) ? null : prefix,
+                            Prefix = NormalizePrefix(prefix),
                             FirstName = firstName,
                             LastName = lastName,
-                            Gender = string.IsNullOrEmpty(gender) ? null : gender,
+                            Gender = NormalizeGender(gender),
                             AgeAtGraduation = age > 0 ? age : null,
-                            StudentEmail = string.IsNullOrEmpty(studentEmail) ? null : studentEmail,
+                            StudentEmail = string.IsNullOrWhiteSpace(studentEmail) ? null : studentEmail,
                             PermanentEmail = finalEmail,
-                            Address = string.IsNullOrEmpty(fullAddress) ? null : fullAddress,
-                            City = string.IsNullOrEmpty(city) ? null : city,
-                            State = string.IsNullOrEmpty(state) ? null : state,
-                            Postcode = string.IsNullOrEmpty(zip) ? null : zip,
+                            Address = string.IsNullOrWhiteSpace(fullAddress) ? null : fullAddress,
+                            City = string.IsNullOrWhiteSpace(city) ? null : city,
+                            State = string.IsNullOrWhiteSpace(state) ? null : state,
+                            Postcode = string.IsNullOrWhiteSpace(zip) ? null : zip,
                             Country = "USA",
                             GraduationYear = graduationYear,
                             SolicitationCode = true,
@@ -571,7 +696,6 @@ namespace Alumni_Management_System.Controllers
 
                         _context.Alumni.Add(alumniEntity);
 
-                        // Registry: update name if entry exists, otherwise create it
                         if (registryEntry != null)
                         {
                             registryEntry.FirstName = firstName;
@@ -589,10 +713,8 @@ namespace Alumni_Management_System.Controllers
                             });
                         }
 
-                        // Save now so AlumniId is generated before linking degrees
                         await _context.SaveChangesAsync();
 
-                        // Find or create DegreeProgram and link to the new alumni
                         if (!string.IsNullOrEmpty(major))
                         {
                             var degreeProgram = await _context.DegreePrograms.FirstOrDefaultAsync(dp =>
@@ -637,9 +759,9 @@ namespace Alumni_Management_System.Controllers
                         }
 
                         if (registryEntry != null)
-                            updatedCount++; // re-imported after a previous delete
+                            updatedCount++;
                         else
-                            successCount++; // brand new alumni
+                            successCount++;
                     }
                     catch (Exception rowEx)
                     {
@@ -661,7 +783,7 @@ namespace Alumni_Management_System.Controllers
                 return View();
             }
 
-            // Separate degree-added notices from real errors so they appear in green, not red
+            // Separate degree-added notices from real errors
             var degreeAddedNotices = importErrors
                 .Where(e => e.Contains("added successfully"))
                 .ToList();
@@ -690,5 +812,52 @@ namespace Alumni_Management_System.Controllers
         }
 
         private bool AlumniExists(int id) => _context.Alumni.Any(e => e.AlumniId == id);
+
+        /// <summary>
+        /// Simple email format check used during bulk import validation.
+        /// </summary>
+        private static bool IsValidEmail(string email)
+        {
+            try
+            {
+                var addr = new System.Net.Mail.MailAddress(email);
+                return addr.Address == email;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private string NormalizePrefix(string prefix)
+        {
+            if (string.IsNullOrWhiteSpace(prefix))
+                return null;
+
+            return prefix.Trim().ToUpper().Replace(".", "") switch
+            {
+                "MR" => "Mr.",
+                "MRS" => "Mrs.",
+                "MS" => "Ms.",
+                "DR" => "Dr.",
+                "PROF" => "Prof.",
+                _ => null
+            };
+        }
+
+        private string NormalizeGender(string gender)
+        {
+            if (string.IsNullOrWhiteSpace(gender)) return null;
+            return gender.Trim().ToUpper() switch
+            {
+                "M" => "Male",
+                "F" => "Female",
+                "O" => "Other",
+                "P" => "Prefer not to say",
+                "MALE" => "Male",
+                "FEMALE" => "Female",
+                _ => null
+            };
+        }
     }
 }
