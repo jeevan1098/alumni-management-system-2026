@@ -81,19 +81,19 @@ The system supports three distinct roles:
 The system comes with pre-seeded test accounts:
 
 ### Admin Account
-- **Email**: admin@admin.com
-- **Password**: Password1!
+- **Username**: admin
+- **Password**: Admin@123
 - **JAG ID**: J0000001
 
 ### Staff Account
-- **Email**: staff@university.edu
-- **Password**: Password1!
+- **Username**: staff
+- **Password**: Staff@123
 - **JAG ID**: J0000002
 
 ### Alumni Accounts
-- **Email**: john.doe@email.com
-- **Password**: Password1!
-- **JAG ID**: J0012345
+- **Username**: alumni
+- **Password**: Alumni@123
+- **JAG ID**: J0010002
 
 Additional alumni accounts: jane.smith@email.com, michael.johnson@email.com, sarah.williams@email.com, david.brown@email.com (all with Password1!)
 
