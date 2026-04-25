@@ -34,6 +34,7 @@ public partial class AlumniDegree
     [Display(Name = "Years To Complete Degree")]
     public int? YearsToCompleteDegree { get; set; }
 
+    [Required(ErrorMessage = "GPA is required.")]
     [Column("gpa", TypeName = "decimal(3, 2)")]
     [Range(0.0, 4.0, ErrorMessage = "GPA must be between 0.0 and 4.0.")]
     [Display(Name = "Grade")]
