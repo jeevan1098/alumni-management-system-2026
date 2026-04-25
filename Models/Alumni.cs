@@ -18,7 +18,7 @@ public partial class Alumni
     [Required(ErrorMessage = "JAG ID is required.")]
     [Column("jag_id")]
     [StringLength(20, ErrorMessage = "JAG ID cannot exceed 20 characters.")]
-    [RegularExpression(@"^J\d+$", ErrorMessage = "JAG ID must start with 'J' followed by numbers only (e.g. J0012345).")]
+    [RegularExpression(@"^[Jj]\d+$", ErrorMessage = "JAG ID must start with 'J' followed by numbers only (e.g. J0012345).")]
     [Display(Name = "JAG ID")]
     public string JagId { get; set; }
 

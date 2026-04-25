@@ -270,6 +270,18 @@ namespace Alumni_Management_System.Controllers
             // Resolve "Other" employer
             await ResolveOtherEmployer(alumniEmployment, OtherEmployerName);
 
+            // ── Exact duplicate check ──
+            bool isDuplicate = await _context.AlumniEmployments.AnyAsync(e =>
+                e.AlumniId == alumniEmployment.AlumniId &&
+                e.EmployerId == alumniEmployment.EmployerId &&
+                e.JobTitle == alumniEmployment.JobTitle &&
+                e.StartDate == alumniEmployment.StartDate &&
+                e.EndDate == alumniEmployment.EndDate);
+
+            if (isDuplicate)
+                ModelState.AddModelError(string.Empty,
+                    "An identical employment record already exists for this alumni.");
+
             // ── Basic date checks ──
             if (alumniEmployment.StartDate > DateOnly.FromDateTime(DateTime.Now))
                 ModelState.AddModelError("StartDate", "Start date cannot be in the future.");
@@ -370,6 +382,19 @@ namespace Alumni_Management_System.Controllers
 
             // Resolve "Other" employer
             await ResolveOtherEmployer(alumniEmployment, OtherEmployerName);
+
+            // ── Exact duplicate check (excluding self) ──
+            bool isDuplicate = await _context.AlumniEmployments.AnyAsync(e =>
+                e.AlumniEmploymentId != alumniEmployment.AlumniEmploymentId &&
+                e.AlumniId == alumniEmployment.AlumniId &&
+                e.EmployerId == alumniEmployment.EmployerId &&
+                e.JobTitle == alumniEmployment.JobTitle &&
+                e.StartDate == alumniEmployment.StartDate &&
+                e.EndDate == alumniEmployment.EndDate);
+
+            if (isDuplicate)
+                ModelState.AddModelError(string.Empty,
+                    "An identical employment record already exists for this alumni.");
 
             // ── Basic date checks ──
             if (alumniEmployment.StartDate > DateOnly.FromDateTime(DateTime.Now))
