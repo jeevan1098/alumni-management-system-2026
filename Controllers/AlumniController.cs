@@ -32,7 +32,7 @@ namespace Alumni_Management_System.Controllers
                 return RedirectToAction("Login", "Account");
 
             var roles = await _userManager.GetRolesAsync(currentUser);
-            IQueryable<Alumni> alumniQuery = _context.Alumni.Include(a => a.User).OrderByDescending(a => a.GraduationYear).ThenBy(a => a.LastName).ThenBy(a => a.FirstName);
+            IQueryable<Alumni> alumniQuery = _context.Alumni.Include(a => a.User);
 
             if (roles.Contains(Constants.AlumniRole))
                 alumniQuery = alumniQuery.Where(a => a.Privacy == false);
@@ -49,7 +49,7 @@ namespace Alumni_Management_System.Controllers
 
                 var filtered = allAlumni.Where(a =>
                     tokens.All(token => MatchesToken(a, token))
-                ).ToList();
+                ).OrderByDescending(a => a.GraduationYear).ToList();
 
                 ViewData["CurrentFilter"] = searchString;
                 ViewData["UserRole"] = roles.FirstOrDefault();
@@ -68,7 +68,7 @@ namespace Alumni_Management_System.Controllers
                 .FirstOrDefaultAsync(a => a.UserId == currentUser.Id || a.JagId == currentUser.JagId);
             ViewData["CurrentAlumniId"] = currentAlumniDefault?.AlumniId;
 
-            return View(await alumniQuery.ToListAsync());
+            return View(await alumniQuery.OrderByDescending(a => a.GraduationYear).ToListAsync());
         }
 
         /// <summary>
@@ -341,12 +341,12 @@ namespace Alumni_Management_System.Controllers
         {
             if (await _context.Alumni.AnyAsync(a => a.StudentEmail == alumni.StudentEmail && a.AlumniId != alumni.AlumniId))
             {
-                ModelState.AddModelError("StudentEmail", "Please Enter a Valid Student Email or it maybe already used.");
+                ModelState.AddModelError("StudentEmail", "Student Email already exists.");
             }
 
             if (await _context.Alumni.AnyAsync(a => a.PermanentEmail == alumni.PermanentEmail && a.AlumniId != alumni.AlumniId))
             {
-                ModelState.AddModelError("PermanentEmail", "Please Enter a Valid Permanent Email or it maybe already used.");
+                ModelState.AddModelError("PermanentEmail", "Permanent Email already exists.");
             }
         }
 

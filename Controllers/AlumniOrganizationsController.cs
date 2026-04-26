@@ -64,7 +64,7 @@ namespace Alumni_Management_System.Controllers
                 alumniList.Select(a => new SelectListItem
                 {
                     Value = a.AlumniId.ToString(),
-                    Text = $"{a.JagId} — {a.FirstName} {a.LastName}"
+                    Text = $"{a.JagId}   {a.FirstName} {a.LastName}"
                 }), "Value", "Text", selectedId?.ToString());
         }
 
@@ -78,7 +78,7 @@ namespace Alumni_Management_System.Controllers
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null) { TempData["ErrorMessage"] = "Alumni profile not found."; return RedirectToAction("Index", "Home"); }
                 ViewData["CurrentAlumniId"] = alumni.AlumniId;
-                ViewData["AlumniId"] = new SelectList(new[] { new SelectListItem { Value = alumni.AlumniId.ToString(), Text = $"{alumni.JagId} — {alumni.FirstName} {alumni.LastName}" } }, "Value", "Text", alumni.AlumniId);
+                ViewData["AlumniId"] = new SelectList(new[] { new SelectListItem { Value = alumni.AlumniId.ToString(), Text = $"{alumni.JagId}   {alumni.FirstName} {alumni.LastName}" } }, "Value", "Text", alumni.AlumniId);
                 ViewData["UserRole"] = Constants.AlumniRole;
             }
             else { await PopulateAlumniDropdown(); ViewData["UserRole"] = "Admin"; }
@@ -99,6 +99,16 @@ namespace Alumni_Management_System.Controllers
                 if (alumni == null || alumniOrganization.AlumniId != alumni.AlumniId)
                 { TempData["ErrorMessage"] = "You can only create organization records for yourself."; return RedirectToAction(nameof(Index)); }
             }
+            // Duplicate check: same Alumni + Organization + Role
+            bool isDuplicate = await _context.AlumniOrganizations.AnyAsync(o =>
+                o.AlumniId == alumniOrganization.AlumniId &&
+                o.OrganizationTypeId == alumniOrganization.OrganizationTypeId &&
+                (o.OfficerRoles ?? "").ToLower() == (alumniOrganization.OfficerRoles ?? "").ToLower());
+
+            if (isDuplicate)
+                ModelState.AddModelError(string.Empty,
+                    "This alumni is already registered in the same organization with the same role.");
+
             if (ModelState.IsValid)
             {
                 _context.Add(alumniOrganization);
@@ -110,7 +120,7 @@ namespace Alumni_Management_System.Controllers
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 ViewData["CurrentAlumniId"] = alumni?.AlumniId;
-                ViewData["AlumniId"] = new SelectList(new[] { new SelectListItem { Value = alumni?.AlumniId.ToString(), Text = $"{alumni?.JagId} — {alumni?.FirstName} {alumni?.LastName}" } }, "Value", "Text", alumniOrganization.AlumniId);
+                ViewData["AlumniId"] = new SelectList(new[] { new SelectListItem { Value = alumni?.AlumniId.ToString(), Text = $"{alumni?.JagId}   {alumni?.FirstName} {alumni?.LastName}" } }, "Value", "Text", alumniOrganization.AlumniId);
                 ViewData["UserRole"] = Constants.AlumniRole;
             }
             else { await PopulateAlumniDropdown(alumniOrganization.AlumniId); ViewData["UserRole"] = "Admin"; }
@@ -132,7 +142,7 @@ namespace Alumni_Management_System.Controllers
                 if (alumni == null || alumniOrganization.AlumniId != alumni.AlumniId)
                 { TempData["ErrorMessage"] = "You can only edit your own organization records."; return RedirectToAction(nameof(Index)); }
                 ViewData["CurrentAlumniId"] = alumni.AlumniId;
-                ViewData["AlumniId"] = new SelectList(new[] { new SelectListItem { Value = alumni.AlumniId.ToString(), Text = $"{alumni.JagId} — {alumni.FirstName} {alumni.LastName}" } }, "Value", "Text", alumniOrganization.AlumniId);
+                ViewData["AlumniId"] = new SelectList(new[] { new SelectListItem { Value = alumni.AlumniId.ToString(), Text = $"{alumni.JagId}   {alumni.FirstName} {alumni.LastName}" } }, "Value", "Text", alumniOrganization.AlumniId);
                 ViewData["UserRole"] = Constants.AlumniRole;
             }
             else { await PopulateAlumniDropdown(alumniOrganization.AlumniId); ViewData["UserRole"] = "Admin"; }
@@ -154,6 +164,17 @@ namespace Alumni_Management_System.Controllers
                 if (alumni == null || alumniOrganization.AlumniId != alumni.AlumniId)
                 { TempData["ErrorMessage"] = "You can only edit your own organization records."; return RedirectToAction(nameof(Index)); }
             }
+            // Duplicate check excluding self
+            bool isDuplicateEdit = await _context.AlumniOrganizations.AnyAsync(o =>
+                o.AlumniOrganizationId != alumniOrganization.AlumniOrganizationId &&
+                o.AlumniId == alumniOrganization.AlumniId &&
+                o.OrganizationTypeId == alumniOrganization.OrganizationTypeId &&
+                (o.OfficerRoles ?? "").ToLower() == (alumniOrganization.OfficerRoles ?? "").ToLower());
+
+            if (isDuplicateEdit)
+                ModelState.AddModelError(string.Empty,
+                    "This alumni is already registered in the same organization with the same role.");
+
             if (ModelState.IsValid)
             {
                 try { _context.Update(alumniOrganization); await _context.SaveChangesAsync(); TempData["SuccessMessage"] = "Organization record updated successfully!"; }
@@ -164,7 +185,7 @@ namespace Alumni_Management_System.Controllers
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 ViewData["CurrentAlumniId"] = alumni?.AlumniId;
-                ViewData["AlumniId"] = new SelectList(new[] { new SelectListItem { Value = alumni?.AlumniId.ToString(), Text = $"{alumni?.JagId} — {alumni?.FirstName} {alumni?.LastName}" } }, "Value", "Text", alumniOrganization.AlumniId);
+                ViewData["AlumniId"] = new SelectList(new[] { new SelectListItem { Value = alumni?.AlumniId.ToString(), Text = $"{alumni?.JagId}   {alumni?.FirstName} {alumni?.LastName}" } }, "Value", "Text", alumniOrganization.AlumniId);
                 ViewData["UserRole"] = Constants.AlumniRole;
             }
             else { await PopulateAlumniDropdown(alumniOrganization.AlumniId); ViewData["UserRole"] = "Admin"; }

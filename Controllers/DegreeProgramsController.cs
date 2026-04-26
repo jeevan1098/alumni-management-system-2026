@@ -41,6 +41,20 @@ namespace Alumni_Management_System.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([Bind("DegreeId,Institution,DegreeType,MajorFieldOfStudy,Department")] DegreeProgram degreeProgram)
         {
+            // Normalize casing before anything else
+            NormalizeProgram(degreeProgram);
+
+            // Duplicate check (case-insensitive because values are now normalized)
+            bool isDuplicate = await _context.DegreePrograms.AnyAsync(dp =>
+                dp.Institution == degreeProgram.Institution &&
+                dp.DegreeType == degreeProgram.DegreeType &&
+                dp.MajorFieldOfStudy == degreeProgram.MajorFieldOfStudy &&
+                dp.Department == degreeProgram.Department);
+
+            if (isDuplicate)
+                ModelState.AddModelError(string.Empty,
+                    "A degree program with the same Institution, Type, Major, and Department already exists.");
+
             if (ModelState.IsValid)
             {
                 _context.Add(degreeProgram);
@@ -66,6 +80,21 @@ namespace Alumni_Management_System.Controllers
         public async Task<IActionResult> Edit(int id, [Bind("DegreeId,Institution,DegreeType,MajorFieldOfStudy,Department")] DegreeProgram degreeProgram)
         {
             if (id != degreeProgram.DegreeId) return NotFound();
+
+            // Normalize casing before anything else
+            NormalizeProgram(degreeProgram);
+
+            // Duplicate check excluding self
+            bool isDuplicate = await _context.DegreePrograms.AnyAsync(dp =>
+                dp.DegreeId != degreeProgram.DegreeId &&
+                dp.Institution == degreeProgram.Institution &&
+                dp.DegreeType == degreeProgram.DegreeType &&
+                dp.MajorFieldOfStudy == degreeProgram.MajorFieldOfStudy &&
+                dp.Department == degreeProgram.Department);
+
+            if (isDuplicate)
+                ModelState.AddModelError(string.Empty,
+                    "A degree program with the same Institution, Type, Major, and Department already exists.");
 
             if (ModelState.IsValid)
             {
@@ -130,6 +159,71 @@ namespace Alumni_Management_System.Controllers
         private bool DegreeProgramExists(int id)
             => _context.DegreePrograms.Any(e => e.DegreeId == id);
 
+        /// <summary>
+        /// Normalizes all fields on a DegreeProgram to prevent case-variant duplicates.
+        /// Institution is matched to known values; unknown institutions use Title Case.
+        /// DegreeType preserves known codes (BSCSC, MSCYS etc) and normalises common words.
+        /// MajorFieldOfStudy and Department are always stored in Title Case.
+        /// </summary>
+        private static void NormalizeProgram(DegreeProgram dp)
+        {
+            dp.Institution = NormalizeInstitution(dp.Institution);
+            dp.DegreeType = NormalizeDegreeType(dp.DegreeType);
+            dp.MajorFieldOfStudy = ToTitleCase(dp.MajorFieldOfStudy);
+            dp.Department = ToTitleCase(dp.Department);
+        }
+
+        private static string NormalizeInstitution(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return value;
+            var trimmed = value.Trim();
+
+            // Map known institutions to their canonical form
+            var known = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "University of South Alabama", "University of South Alabama" },
+                { "Other University",            "Other University" },
+            };
+
+            return known.TryGetValue(trimmed, out var canonical)
+                ? canonical
+                : ToTitleCase(trimmed); // unknown institutions → Title Case
+        }
+
+        private static string NormalizeDegreeType(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return value;
+            var trimmed = value.Trim();
+
+            // Map common words; preserve degree codes (BSCSC, MSCYS, etc.) as-is
+            var known = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                { "Bachelors",  "Bachelors" },
+                { "Bachelor",   "Bachelors" },
+                { "Masters",    "Masters"   },
+                { "Master",     "Masters"   },
+                { "PhD",        "PhD"       },
+                { "Phd",        "PhD"       },
+                { "PHD",        "PhD"       },
+                { "Doctorate",  "PhD"       },
+            };
+
+            return known.TryGetValue(trimmed, out var canonical)
+                ? canonical
+                : trimmed.ToUpper(); // degree codes like BSCSC stored as uppercase
+        }
+
+        /// <summary>
+        /// Converts a string to Title Case (e.g. "computer science" → "Computer Science").
+        /// Returns null if the input is null or whitespace.
+        /// </summary>
+        private static string ToTitleCase(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return value;
+            return System.Globalization.CultureInfo.CurrentCulture
+                         .TextInfo.ToTitleCase(value.Trim().ToLower());
+        }
+
         [Authorize(Roles = "Admin")]
         public IActionResult BulkImport() => View();
 
@@ -187,11 +281,18 @@ namespace Alumni_Management_System.Controllers
                             continue;
                         }
 
+                        // Institution and DegreeType: trim only (preserve intended casing)
+                        // MajorFieldOfStudy and Department: convert to Title Case
+                        institution = NormalizeInstitution(institution);
+                        degreeType = NormalizeDegreeType(degreeType);
+                        majorFieldOfStudy = ToTitleCase(majorFieldOfStudy);
+                        department = ToTitleCase(department);
+
                         if (await _context.DegreePrograms.AnyAsync(dp =>
-                            dp.Institution == institution &&
-                            dp.DegreeType == degreeType &&
-                            dp.MajorFieldOfStudy == majorFieldOfStudy &&
-                            dp.Department == department))
+                            dp.Institution.ToLower() == institution.ToLower() &&
+                            dp.DegreeType.ToLower() == degreeType.ToLower() &&
+                            dp.MajorFieldOfStudy.ToLower() == majorFieldOfStudy.ToLower() &&
+                            dp.Department.ToLower() == department.ToLower()))
                         {
                             errors.Add($"Row {row}: Duplicate — already exists.");
                             errorCount++;

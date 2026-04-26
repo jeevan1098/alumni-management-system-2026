@@ -39,6 +39,15 @@ namespace Alumni_Management_System.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([Bind("OrganizationTypeId,OrganizationName")] OrganizationType organizationType)
         {
+            organizationType.OrganizationName = ToTitleCase(organizationType.OrganizationName);
+
+            bool isDuplicate = await _context.OrganizationTypes.AnyAsync(o =>
+                o.OrganizationName.ToLower() == organizationType.OrganizationName.ToLower());
+
+            if (isDuplicate)
+                ModelState.AddModelError(string.Empty,
+                    "An organization type with the same name already exists.");
+
             if (ModelState.IsValid)
             {
                 _context.Add(organizationType);
@@ -64,6 +73,16 @@ namespace Alumni_Management_System.Controllers
         public async Task<IActionResult> Edit(int id, [Bind("OrganizationTypeId,OrganizationName")] OrganizationType organizationType)
         {
             if (id != organizationType.OrganizationTypeId) return NotFound();
+
+            organizationType.OrganizationName = ToTitleCase(organizationType.OrganizationName);
+
+            bool isDuplicate = await _context.OrganizationTypes.AnyAsync(o =>
+                o.OrganizationTypeId != organizationType.OrganizationTypeId &&
+                o.OrganizationName.ToLower() == organizationType.OrganizationName.ToLower());
+
+            if (isDuplicate)
+                ModelState.AddModelError(string.Empty,
+                    "An organization type with the same name already exists.");
 
             if (ModelState.IsValid)
             {
@@ -127,5 +146,12 @@ namespace Alumni_Management_System.Controllers
 
         private bool OrganizationTypeExists(int id)
             => _context.OrganizationTypes.Any(e => e.OrganizationTypeId == id);
+
+        private static string ToTitleCase(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return value;
+            return System.Globalization.CultureInfo.CurrentCulture
+                         .TextInfo.ToTitleCase(value.Trim().ToLower());
+        }
     }
 }
