@@ -1,7 +1,7 @@
 ﻿@model IEnumerable<Alumni_Management_System.Models.ViewModels.AlumniMailingViewmodel>
 
 @{
-    ViewData["Title"] = "Alumni Message Filter";
+   
     var list = Model.ToList();
 }
 @if (TempData["ErrorMessage"] != null)
@@ -87,7 +87,7 @@
                 <tr class="@(list[i].IsAlreadyMapped ? "table-secondary" : "")">
 
                     <td>
-                        <!-- ✅ CHECKBOX (MODEL BINDING FIXED) -->
+                        <!--  CHECKBOX (MODEL BINDING FIXED) -->
                         <input type="checkbox"
                                name="model[@i].IsSelected"
                                value="true"
@@ -135,7 +135,7 @@
             <i class="bi bi-arrow-left me-2"></i>Back
         </a>
         <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
-            <i class="bi bi-check-circle-fill me-2"></i>Send Message
+            <i class="bi bi-check-circle-fill me-2"></i>Send Mail
         </button>
     </div>
 
@@ -176,11 +176,11 @@
     }
 
 
-    // 🔍 SEARCH EVENT
+    // SEARCH EVENT
     document.getElementById("globalSearch").addEventListener("keyup", filterTable);
 
 
-    // ☑️ SELECT ALL (only visible + not disabled)
+    // SELECT ALL (only visible + not disabled)
     document.getElementById("selectAll").addEventListener("change", function () {
 
         let checkboxes = document.querySelectorAll("#alumniTable tbody input[type='checkbox']");
@@ -196,7 +196,7 @@
     });
 
 
-    // 🔥 INITIAL COUNT
+    // INITIAL COUNT
     window.onload = function () {
         let totalRows = document.querySelectorAll("#alumniTable tbody tr").length;
         document.getElementById("resultCount").innerText = totalRows;

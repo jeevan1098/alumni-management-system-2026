@@ -50,8 +50,8 @@
                     <thead class="table-dark">
                         <tr>
                             <th><i class="bi bi-card-text me-1 text-primary"></i>Title</th>
-                            <th><i class="bi bi-chat-left-text me-1 text-primary"></i>Message</th>
-                            <th><i class="bi bi-info-circle-fill me-1 text-primary"></i>Type</th>
+                            @* <th><i class="bi bi-chat-left-text me-1 text-primary"></i>Message</th> *@
+                           @*  <th><i class="bi bi-info-circle-fill me-1 text-primary"></i>Type</th> *@
                             <th><i class="bi bi-calendar-event me-1 text-primary"></i>Created At</th>
                             <th><i class="bi bi-person-fill me-1 text-primary"></i>Created By</th>
                             <th><i class="bi bi-list-task me-2 text-primary"></i>Actions</th>
@@ -63,8 +63,8 @@
                         {
                             <tr>
                                 <td>@item.Title</td>
-                                <td>@item.MessageBody</td>
-                                <td>@item.MessageType</td>
+                                @* <td>@item.MessageBody</td> *@
+                                @*   <td>@item.MessageType</td> *@
                                 <td>@item.CreatedAt.ToString("MMM dd, yyyy")</td>
                                 <td>@item.CreatedByNavigation.UserName</td>
                                 <td class="text-end">
@@ -81,7 +81,7 @@
                                 </td>
                                 <td>
                                     <a asp-action="Alumnimessagefilter" asp-route-id="@item.MessageId" class="btn btn-sm btn-success rounded-pill">
-                                        <i class="bi bi-send-fill me-1"></i>Send Mail
+                                        <i class="bi bi-send-fill me-1"></i>Send Message
                                     </a>
                                 </td>
                             </tr>
