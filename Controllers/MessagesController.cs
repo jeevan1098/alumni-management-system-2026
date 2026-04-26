@@ -159,21 +159,33 @@ namespace Alumni_Management_System.Controllers
             return View(message);
         }
 
-        [HttpPost, ActionName("Delete")]
-        [ValidateAntiForgeryToken]
-        [Authorize(Roles = "Admin")] // Only Admin can delete messages
-        public async Task<IActionResult> DeleteConfirmed(int id)
-        {
-            var message = await _context.Messages.FindAsync(id);
-            if (message != null)
-            {
-                _context.Messages.Remove(message);
-                await _context.SaveChangesAsync();
-                TempData["SuccessMessage"] = "Message deleted successfully!";
-            }
+    [HttpPost, ActionName("Delete")]
+    [ValidateAntiForgeryToken]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> DeleteConfirmed(int id)
+    {
+        var message = await _context.Messages.FindAsync(id);
 
+        if (message == null)
+        {
+            return NotFound();
+        }
+
+        bool isSentToAlumni = await _context.AlumniMessages
+            .AnyAsync(am => am.MessageId == id);
+
+        if (isSentToAlumni)
+        {
+            TempData["ErrorMessage"] = "This message cannot be deleted because it is already sent to alumni.";
             return RedirectToAction(nameof(Index));
         }
+
+        _context.Messages.Remove(message);
+        await _context.SaveChangesAsync();
+
+        TempData["SuccessMessage"] = "Message deleted successfully!";
+        return RedirectToAction(nameof(Index));
+    }
 
         private bool MessageExists(int id)
         {
@@ -183,7 +195,7 @@ namespace Alumni_Management_System.Controllers
         {
             ViewBag.MessageId = id;
 
-            // ✅ Get already mapped alumni for this message
+            //  Get already mapped alumni for this message
             var mappedAlumniIds = await _context.AlumniMessages
                 .Where(x => x.MessageId == id)
                 .Select(x => x.AlumniId)
@@ -202,24 +214,24 @@ namespace Alumni_Management_System.Controllers
                     PermanentEmail = a.PermanentEmail,
                     GraduationYear = a.GraduationYear,
 
-                    // ✅ All degrees
+                    //  All degrees
                     Degree = string.Join(", ",
                         a.AlumniDegrees
                             .Select(d => d.Degree.MajorFieldOfStudy)
                             .Distinct()
                     ),
 
-                    // ✅ Degree Type
+                    //  Degree Type
                     DegreeType = string.Join(", ",
                         a.AlumniDegrees
                             .Select(d => d.Degree.DegreeType)
                             .Distinct()
                     ),
 
-                    // ✅ Already mapped logic
+                    //  Already mapped logic
                     IsAlreadyMapped = mappedAlumniIds.Contains(a.AlumniId),
 
-                    // ✅ Pre-select already mapped
+                    //  Pre-select already mapped
                     IsSelected = mappedAlumniIds.Contains(a.AlumniId)
                 })
                 .ToListAsync();
@@ -232,7 +244,7 @@ namespace Alumni_Management_System.Controllers
         [HttpPost]
         public async Task<IActionResult> SaveSelectedAlumniMessage(int MessageId, List<AlumniMailingViewmodel> model)
         {
-            // ✅ Include both selected + already mapped
+            //  Include both selected + already mapped
             var selectedAlumni = model
                 .Where(x => x.IsSelected || x.IsAlreadyMapped)
                 .ToList();
@@ -241,7 +253,7 @@ namespace Alumni_Management_System.Controllers
 
             foreach (var item in selectedAlumni)
             {
-                // ✅ Prevent duplicate mapping
+                //  Prevent duplicate mapping
                 var exists = await _context.AlumniMessages
                     .AnyAsync(x => x.MessageId == MessageId && x.AlumniId == item.AlumniId);
 
@@ -255,20 +267,20 @@ namespace Alumni_Management_System.Controllers
                     });
                 }
 
-                // ✅ Always send email (even if already mapped)
+                //  Always send email (even if already mapped)
                 if (!string.IsNullOrEmpty(item.PermanentEmail))
                 {
                     emailsToSend.Add(item.PermanentEmail);
                 }
             }
 
-            // ✅ Save DB first
+            //  Save DB first
             await _context.SaveChangesAsync();
 
-            // ✅ Get message content
+            //  Get message content
             var message = await _context.Messages.FindAsync(MessageId);
 
-            // ✅ Send emails
+            //  Send emails
             if (message != null && emailsToSend.Any())
             {
                 await SendEmailAsync(

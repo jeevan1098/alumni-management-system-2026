@@ -32,7 +32,7 @@ namespace Alumni_Management_System.Controllers
                 return RedirectToAction("Login", "Account");
 
             var roles = await _userManager.GetRolesAsync(currentUser);
-            IQueryable<Alumni> alumniQuery = _context.Alumni.Include(a => a.User);
+            IQueryable<Alumni> alumniQuery = _context.Alumni.Include(a => a.User).OrderByDescending(a => a.GraduationYear).ThenBy(a => a.LastName).ThenBy(a => a.FirstName);
 
             if (roles.Contains(Constants.AlumniRole))
                 alumniQuery = alumniQuery.Where(a => a.Privacy == false);
@@ -341,12 +341,12 @@ namespace Alumni_Management_System.Controllers
         {
             if (await _context.Alumni.AnyAsync(a => a.StudentEmail == alumni.StudentEmail && a.AlumniId != alumni.AlumniId))
             {
-                ModelState.AddModelError("StudentEmail", "Student Email already exists.");
+                ModelState.AddModelError("StudentEmail", "Please Enter a Valid Student Email or it maybe already used.");
             }
 
             if (await _context.Alumni.AnyAsync(a => a.PermanentEmail == alumni.PermanentEmail && a.AlumniId != alumni.AlumniId))
             {
-                ModelState.AddModelError("PermanentEmail", "Permanent Email already exists.");
+                ModelState.AddModelError("PermanentEmail", "Please Enter a Valid Permanent Email or it maybe already used.");
             }
         }
 
