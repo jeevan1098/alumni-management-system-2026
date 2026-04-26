@@ -49,7 +49,7 @@ namespace Alumni_Management_System.Controllers
 
                 var filtered = allAlumni.Where(a =>
                     tokens.All(token => MatchesToken(a, token))
-                ).ToList();
+                ).OrderByDescending(a => a.GraduationYear).ToList();
 
                 ViewData["CurrentFilter"] = searchString;
                 ViewData["UserRole"] = roles.FirstOrDefault();
@@ -68,7 +68,7 @@ namespace Alumni_Management_System.Controllers
                 .FirstOrDefaultAsync(a => a.UserId == currentUser.Id || a.JagId == currentUser.JagId);
             ViewData["CurrentAlumniId"] = currentAlumniDefault?.AlumniId;
 
-            return View(await alumniQuery.ToListAsync());
+            return View(await alumniQuery.OrderByDescending(a => a.GraduationYear).ToListAsync());
         }
 
         /// <summary>
