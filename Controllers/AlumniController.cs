@@ -25,7 +25,7 @@ namespace Alumni_Management_System.Controllers
             _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index(string searchString)
+        public async Task<IActionResult> Index(string searchString, string sortOrder)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             if (currentUser == null)
@@ -49,26 +49,48 @@ namespace Alumni_Management_System.Controllers
 
                 var filtered = allAlumni.Where(a =>
                     tokens.All(token => MatchesToken(a, token))
-                ).OrderByDescending(a => a.GraduationYear).ToList();
+                ).ToList();
 
                 ViewData["CurrentFilter"] = searchString;
                 ViewData["UserRole"] = roles.FirstOrDefault();
+                ViewData["SortOrder"] = sortOrder;
 
                 var currentAlumni = await _context.Alumni
                     .FirstOrDefaultAsync(a => a.UserId == currentUser.Id || a.JagId == currentUser.JagId);
                 ViewData["CurrentAlumniId"] = currentAlumni?.AlumniId;
 
-                return View(filtered);
+                return View(ApplySort(filtered.AsQueryable(), sortOrder).ToList());
             }
 
             ViewData["CurrentFilter"] = searchString;
             ViewData["UserRole"] = roles.FirstOrDefault();
+            ViewData["SortOrder"] = sortOrder;
 
             var currentAlumniDefault = await _context.Alumni
                 .FirstOrDefaultAsync(a => a.UserId == currentUser.Id || a.JagId == currentUser.JagId);
             ViewData["CurrentAlumniId"] = currentAlumniDefault?.AlumniId;
 
-            return View(await alumniQuery.OrderByDescending(a => a.GraduationYear).ToListAsync());
+            return View(ApplySort(alumniQuery, sortOrder).ToList());
+        }
+
+        private IQueryable<Alumni> ApplySort(IQueryable<Alumni> query, string sortOrder)
+        {
+            return sortOrder switch
+            {
+                "jagid" => query.OrderBy(a => a.JagId),
+                "jagid_desc" => query.OrderByDescending(a => a.JagId),
+                "name" => query.OrderBy(a => a.LastName).ThenBy(a => a.FirstName),
+                "name_desc" => query.OrderByDescending(a => a.LastName).ThenByDescending(a => a.FirstName),
+                "email" => query.OrderBy(a => a.PermanentEmail),
+                "email_desc" => query.OrderByDescending(a => a.PermanentEmail),
+                "year" => query.OrderBy(a => a.GraduationYear),
+                "year_desc" => query.OrderByDescending(a => a.GraduationYear),
+                "city" => query.OrderBy(a => a.City),
+                "city_desc" => query.OrderByDescending(a => a.City),
+                "state" => query.OrderBy(a => a.State),
+                "state_desc" => query.OrderByDescending(a => a.State),
+                _ => query.OrderByDescending(a => a.GraduationYear),
+            };
         }
 
         /// <summary>
