@@ -1,6 +1,4 @@
-﻿
-
-@model IEnumerable<Alumni_Management_System.Models.AlumniEmployment>
+﻿@model IEnumerable<Alumni_Management_System.Models.AlumniEmployment>
 
 @{
     ViewData["Title"] = "Alumni Employments";
@@ -40,6 +38,29 @@
 
             <hr class="mb-4" />
 
+            <form asp-action="Index" method="get" class="mb-4 row g-3">
+                <input type="hidden" name="sortOrder" value="@ViewData["SortOrder"]" />
+                <div class="col-md-8">
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-white">
+                            <i class="bi bi-search text-primary"></i>
+                        </span>
+                        <input type="text" name="searchString"
+                               value="@ViewData["CurrentFilter"]"
+                               class="form-control"
+                               placeholder="Search by name, JAG ID, job title or employer..." />
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100 btn-lg">Search</button>
+                </div>
+                <div class="col-md-2">
+                    <a asp-action="Index" class="btn btn-outline-secondary w-100 btn-lg">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Filters
+                    </a>
+                </div>
+            </form>
+
             <!-- Add New Button -->
             <div class="d-flex justify-content-end mb-3">
                 @if (User.IsInRole("Admin") || User.IsInRole("Alumni"))
@@ -54,12 +75,76 @@
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
                     <thead class="table-dark text-center">
+                        @{
+                            var sortOrder = ViewData["SortOrder"]?.ToString() ?? "";
+                            var search = ViewData["CurrentFilter"]?.ToString() ?? "";
+                        }
                         <tr>
-                            <th><i class="bi bi-person-fill me-1 text-primary"></i>Alumni</th>
-                            <th><i class="bi bi-briefcase-fill me-1 text-primary"></i>Job Title</th>
-                            <th><i class="bi bi-building me-1 text-primary"></i>Employer</th>
-                            <th><i class="bi bi-calendar-event me-1 text-primary"></i>Start Date</th>
-                            <th><i class="bi bi-calendar-x me-1 text-primary"></i>End Date</th>
+                            <th>
+                                <a href="@Url.Action("Index", new { sortOrder = sortOrder == "name" ? "name_desc" : "name", searchString = search })" class="text-white text-decoration-none">
+                                    <i class="bi bi-person-fill me-1 text-primary"></i>Alumni
+                                    @if (sortOrder == "name")
+                                    {
+                                        <span>▲</span>
+                                    }
+                                    else if (sortOrder == "name_desc")
+                                    {
+                                        <span>▼</span>
+                                    }
+                                </a>
+                            </th>
+                            <th>
+                                <a href="@Url.Action("Index", new { sortOrder = sortOrder == "jobtitle" ? "jobtitle_desc" : "jobtitle", searchString = search })" class="text-white text-decoration-none">
+                                    <i class="bi bi-briefcase-fill me-1 text-primary"></i>Job Title
+                                    @if (sortOrder == "jobtitle")
+                                    {
+                                        <span>▲</span>
+                                    }
+                                    else if (sortOrder == "jobtitle_desc")
+                                    {
+                                        <span>▼</span>
+                                    }
+                                </a>
+                            </th>
+                            <th>
+                                <a href="@Url.Action("Index", new { sortOrder = sortOrder == "employer" ? "employer_desc" : "employer", searchString = search })" class="text-white text-decoration-none">
+                                    <i class="bi bi-building me-1 text-primary"></i>Employer
+                                    @if (sortOrder == "employer")
+                                    {
+                                        <span>▲</span>
+                                    }
+                                    else if (sortOrder == "employer_desc")
+                                    {
+                                        <span>▼</span>
+                                    }
+                                </a>
+                            </th>
+                            <th>
+                                <a href="@Url.Action("Index", new { sortOrder = sortOrder == "start" ? "start_desc" : "start", searchString = search })" class="text-white text-decoration-none">
+                                    <i class="bi bi-calendar-event me-1 text-primary"></i>Start Date
+                                    @if (sortOrder == "start")
+                                    {
+                                        <span>▲</span>
+                                    }
+                                    else if (sortOrder == "start_desc")
+                                    {
+                                        <span>▼</span>
+                                    }
+                                </a>
+                            </th>
+                            <th>
+                                <a href="@Url.Action("Index", new { sortOrder = sortOrder == "end" ? "end_desc" : "end", searchString = search })" class="text-white text-decoration-none">
+                                    <i class="bi bi-calendar-x me-1 text-primary"></i>End Date
+                                    @if (sortOrder == "end")
+                                    {
+                                        <span>▲</span>
+                                    }
+                                    else if (sortOrder == "end_desc")
+                                    {
+                                        <span>▼</span>
+                                    }
+                                </a>
+                            </th>
                             <th><i class="bi bi-cash-stack me-1 text-primary"></i>Salary Range</th>
                             <th><i class="bi bi-list-task me-2 text-primary"></i>Actions</th>
                         </tr>

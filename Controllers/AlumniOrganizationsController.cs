@@ -24,7 +24,7 @@ namespace Alumni_Management_System.Controllers
             _userManager = userManager;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString, string sortOrder)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
@@ -36,6 +36,32 @@ namespace Alumni_Management_System.Controllers
                 if (alumni != null) query = query.Where(ao => ao.AlumniId == alumni.AlumniId);
                 else return View(new List<AlumniOrganization>());
             }
+
+            if (!string.IsNullOrWhiteSpace(searchString))
+            {
+                var s = searchString.ToLower();
+                query = query.Where(o =>
+                    o.Alumni.FirstName.ToLower().Contains(s) ||
+                    o.Alumni.LastName.ToLower().Contains(s) ||
+                    o.Alumni.JagId.ToLower().Contains(s) ||
+                    o.OrganizationType.OrganizationName.ToLower().Contains(s) ||
+                    (o.OfficerRoles != null && o.OfficerRoles.ToLower().Contains(s)));
+            }
+
+            query = sortOrder switch
+            {
+                "name" => query.OrderBy(o => o.Alumni.LastName).ThenBy(o => o.Alumni.FirstName),
+                "name_desc" => query.OrderByDescending(o => o.Alumni.LastName).ThenByDescending(o => o.Alumni.FirstName),
+                "org" => query.OrderBy(o => o.OrganizationType.OrganizationName),
+                "org_desc" => query.OrderByDescending(o => o.OrganizationType.OrganizationName),
+                "role" => query.OrderBy(o => o.OfficerRoles),
+                "role_desc" => query.OrderByDescending(o => o.OfficerRoles),
+                _ => query.OrderBy(o => o.Alumni.LastName),
+            };
+
+            ViewData["CurrentFilter"] = searchString;
+            ViewData["SortOrder"] = sortOrder;
+
             return View(await query.ToListAsync());
         }
 

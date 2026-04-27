@@ -50,7 +50,7 @@
                     <thead class="table-dark">
                         <tr>
                             <th><i class="bi bi-card-text me-1 text-primary"></i>Title</th>
-                            <th><i class="bi bi-chat-left-text me-1 text-primary"></i>Message</th>
+                            @* <th><i class="bi bi-chat-left-text me-1 text-primary"></i>Message</th> *@
                             <th><i class="bi bi-info-circle-fill me-1 text-primary"></i>Type</th>
                             <th><i class="bi bi-calendar-event me-1 text-primary"></i>Created At</th>
                             <th><i class="bi bi-person-fill me-1 text-primary"></i>Created By</th>
@@ -63,7 +63,7 @@
                         {
                             <tr>
                                 <td>@item.Title</td>
-                                <td>@item.MessageBody</td>
+                                @* <td>@item.MessageBody</td> *@
                                 <td>@item.MessageType</td>
                                 <td>@item.CreatedAt.ToString("MMM dd, yyyy")</td>
                                 <td>@item.CreatedByNavigation.UserName</td>
