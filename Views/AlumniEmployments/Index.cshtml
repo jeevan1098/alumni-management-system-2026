@@ -3,6 +3,7 @@
 @{
     ViewData["Title"] = "Alumni Employments";
 }
+
 @if (TempData["ErrorMessage"] != null)
 {
     <div class="alert alert-danger alert-dismissible fade show shadow-sm border-0 mb-4" role="alert">
@@ -26,43 +27,19 @@
         <div class="card-body p-5">
 
             <!-- Header -->
-            <div class="d-flex align-items-center mb-4">
-                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
-                    <i class="bi bi-briefcase-fill text-primary fs-3"></i>
-                </div>
-                <div>
-                    <h3 class="fw-bold mb-0">Alumni Employments</h3>
-                    <small class="text-info">List of alumni employment records</small>
-                </div>
-            </div>
-
-            <hr class="mb-4" />
-
-            <form asp-action="Index" method="get" class="mb-4 row g-3">
-                <input type="hidden" name="sortOrder" value="@ViewData["SortOrder"]" />
-                <div class="col-md-8">
-                    <div class="input-group input-group-lg">
-                        <span class="input-group-text bg-white">
-                            <i class="bi bi-search text-primary"></i>
-                        </span>
-                        <input type="text" name="searchString"
-                               value="@ViewData["CurrentFilter"]"
-                               class="form-control"
-                               placeholder="Search by name, JAG ID, job title or employer..." />
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <!-- Left: Icon + Title -->
+            <div class="d-flex align-items-center">
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                        <i class="bi bi-briefcase-fill text-primary fs-3"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-bold mb-0">Alumni Employments</h3>
+                        <small class="text-info">List of alumni employment records</small>
                     </div>
                 </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100 btn-lg">Search</button>
-                </div>
-                <div class="col-md-2">
-                    <a asp-action="Index" class="btn btn-outline-secondary w-100 btn-lg">
-                        <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Filters
-                    </a>
-                </div>
-            </form>
 
-            <!-- Add New Button -->
-            <div class="d-flex justify-content-end mb-3">
+                <!-- Right: Add Button -->
                 @if (User.IsInRole("Admin") || User.IsInRole("Alumni"))
                 {
                     <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
@@ -70,6 +47,42 @@
                     </a>
                 }
             </div>
+
+            <hr class="mb-4" />
+
+            <!-- Search Form -->
+            <form asp-action="Index" method="get" class="mb-4 row g-3">
+                <input type="hidden" name="sortOrder" value="@ViewData["SortOrder"]" />
+
+                <!-- Search Input -->
+                <div class="col-md-8">
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-white">
+                            <i class="bi bi-search text-primary"></i>
+                        </span>
+                        <input type="text" name="searchString"
+                            value="@ViewData["CurrentFilter"]"
+                            class="form-control"
+                            placeholder="Search by name, job title or employer..." />
+                    </div>
+                </div>
+
+                <!-- Search Button -->
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100 btn-lg text-nowrap">
+                        Search
+                    </button>
+                </div>
+
+                <!-- Reset Button -->
+                <div class="col-md-2">
+                    <a asp-action="Index"
+                    class="btn btn-outline-secondary w-100 btn-lg text-nowrap d-flex align-items-center justify-content-center">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>
+                        Reset Filters
+                    </a>
+                </div>
+            </form>
 
             <!-- Table -->
             <div class="table-responsive">
@@ -79,6 +92,7 @@
                             var sortOrder = ViewData["SortOrder"]?.ToString() ?? "";
                             var search = ViewData["CurrentFilter"]?.ToString() ?? "";
                         }
+
                         <tr>
                             <th>
                                 <a href="@Url.Action("Index", new { sortOrder = sortOrder == "name" ? "name_desc" : "name", searchString = search })" class="text-white text-decoration-none">
@@ -93,6 +107,7 @@
                                     }
                                 </a>
                             </th>
+
                             <th>
                                 <a href="@Url.Action("Index", new { sortOrder = sortOrder == "jobtitle" ? "jobtitle_desc" : "jobtitle", searchString = search })" class="text-white text-decoration-none">
                                     <i class="bi bi-briefcase-fill me-1 text-primary"></i>Job Title
@@ -106,6 +121,7 @@
                                     }
                                 </a>
                             </th>
+
                             <th>
                                 <a href="@Url.Action("Index", new { sortOrder = sortOrder == "employer" ? "employer_desc" : "employer", searchString = search })" class="text-white text-decoration-none">
                                     <i class="bi bi-building me-1 text-primary"></i>Employer
@@ -119,6 +135,7 @@
                                     }
                                 </a>
                             </th>
+
                             <th>
                                 <a href="@Url.Action("Index", new { sortOrder = sortOrder == "start" ? "start_desc" : "start", searchString = search })" class="text-white text-decoration-none">
                                     <i class="bi bi-calendar-event me-1 text-primary"></i>Start Date
@@ -132,6 +149,7 @@
                                     }
                                 </a>
                             </th>
+
                             <th>
                                 <a href="@Url.Action("Index", new { sortOrder = sortOrder == "end" ? "end_desc" : "end", searchString = search })" class="text-white text-decoration-none">
                                     <i class="bi bi-calendar-x me-1 text-primary"></i>End Date
@@ -145,10 +163,17 @@
                                     }
                                 </a>
                             </th>
-                            <th><i class="bi bi-cash-stack me-1 text-primary"></i>Salary Range</th>
-                            <th><i class="bi bi-list-task me-2 text-primary"></i>Actions</th>
+
+                            <th>
+                                <i class="bi bi-cash-stack me-1 text-primary"></i>Salary Range
+                            </th>
+
+                            <th>
+                                <i class="bi bi-list-task me-2 text-primary"></i>Actions
+                            </th>
                         </tr>
                     </thead>
+
                     <tbody>
                         @foreach (var item in Model.OrderByDescending(e => e.StartDate))
                         {
@@ -157,6 +182,7 @@
                                 <td>@item.JobTitle</td>
                                 <td>@item.Employer.EmployerName</td>
                                 <td>@item.StartDate.ToString("MMM yyyy")</td>
+
                                 <td>
                                     @if (item.EndDate.HasValue)
                                     {
@@ -167,19 +193,20 @@
                                         <span class="badge bg-secondary-subtle text-info">Present</span>
                                     }
                                 </td>
+
                                 <td>@item.SalaryRange</td>
+
                                 <td>
                                     <a asp-action="Details" asp-route-id="@item.AlumniEmploymentId" class="btn btn-sm btn-outline-primary rounded-pill">
                                         <i class="bi bi-eye-fill"></i>
                                     </a>
+
                                     @if (User.IsInRole("Admin") || User.IsInRole("Alumni"))
                                     {
                                         <a asp-action="Edit" asp-route-id="@item.AlumniEmploymentId" class="btn btn-sm btn-outline-warning rounded-pill">
                                             <i class="bi bi-pencil-fill"></i>
                                         </a>
-                                    }
-                                    @if (User.IsInRole("Admin") || User.IsInRole("Alumni"))
-                                    {
+
                                         <a asp-action="Delete" asp-route-id="@item.AlumniEmploymentId" class="btn btn-sm btn-outline-danger rounded-pill">
                                             <i class="bi bi-trash-fill"></i>
                                         </a>
