@@ -24,52 +24,64 @@
     <div class="card shadow-lg border-0 rounded-4">
         <div class="card-body p-5">
 
-            <!-- Header -->
-            <div class="d-flex align-items-center mb-4">
-                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
-                    <i class="bi bi-people-fill text-primary fs-3"></i>
-                </div>
-                <div>
-                    <h3 class="fw-bold mb-0">Student Organizations</h3>
-                    <small class="text-info">List of alumni and their organization roles</small>
-                </div>
+          <!-- Header -->
+    <div class="d-flex align-items-center justify-content-between mb-3">
+    
+        <!-- Left: Icon + Title -->
+        <div class="d-flex align-items-center">
+            <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                <i class="bi bi-people-fill text-primary fs-3"></i>
             </div>
+            <div>
+                <h3 class="fw-bold mb-0">Student Organizations</h3>
+                <small class="text-info">List of alumni and their organization roles</small>
+            </div>
+        </div>
 
-            <hr class="mb-4" />
+        <!-- Right: Add Button -->
+        @if (User.IsInRole("Admin") || User.IsInRole("Alumni"))
+        {
+            <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                <i class="bi bi-plus-circle-fill me-2"></i>Add Organization
+            </a>
+        }
+    </div>
 
-            <form asp-action="Index" method="get" class="mb-4 row g-3">
+    <hr class="mb-4" />
+
+         <form asp-action="Index" method="get" class="mb-4 row g-3 align-items-stretch">
                 <input type="hidden" name="sortOrder" value="@ViewData["SortOrder"]" />
+
+                <!-- Search Input -->
                 <div class="col-md-8">
-                    <div class="input-group input-group-lg">
+                    <div class="input-group input-group-lg h-100">
                         <span class="input-group-text bg-white">
                             <i class="bi bi-search text-primary"></i>
                         </span>
                         <input type="text" name="searchString"
-                               value="@ViewData["CurrentFilter"]"
-                               class="form-control"
-                               placeholder="Search by name, JAG ID, organization or role..." />
+                            value="@ViewData["CurrentFilter"]"
+                            class="form-control"
+                            placeholder="Search by name, JAG ID, organization or role..." />
                     </div>
                 </div>
+
+                <!-- Search Button -->
                 <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100 btn-lg">Search</button>
+                    <button type="submit" class="btn btn-primary w-100 btn-lg text-nowrap h-100">
+                        Search
+                    </button>
                 </div>
+
+                <!-- Reset Button -->
                 <div class="col-md-2">
-                    <a asp-action="Index" class="btn btn-outline-secondary w-100 btn-lg">
-                        <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Filters
+                    <a asp-action="Index"
+                    class="btn btn-outline-secondary w-100 btn-lg text-nowrap h-100 d-flex align-items-center justify-content-center">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>
+                        Reset Filters
                     </a>
                 </div>
-            </form>
-
-            <!-- Add New Button -->
-            <div class="d-flex justify-content-end mb-3">
-                @if (User.IsInRole("Admin") || User.IsInRole("Alumni"))
-                {
-                    <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
-                        <i class="bi bi-plus-circle-fill me-2"></i>Add Organization
-                    </a>
-                }
-            </div>
-
+        </form>
+        
             <!-- Table -->
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
