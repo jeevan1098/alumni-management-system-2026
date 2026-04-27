@@ -1,6 +1,4 @@
-﻿
-
-@model IEnumerable<Alumni_Management_System.Models.AlumniDegree>
+﻿@model IEnumerable<Alumni_Management_System.Models.AlumniDegree>
 
 @{
     ViewData["Title"] = "Alumni Degrees";
@@ -58,7 +56,7 @@
                             <th><i class="bi bi-person-fill me-1 text-primary"></i>Alumni</th>
                             <th><i class="bi bi-bar-chart-fill me-1 text-primary"></i>University</th>
                             <th><i class="bi bi-mortarboard-fill me-1 text-primary"></i>Degree Program</th>
-                            <th><i class="bi bi-calendar-event me-1 text-primary"></i>Date Conferred</th>
+                            <th><i class="bi bi-calendar-event me-1 text-primary"></i>Year Conferred</th>
                             <th><i class="bi bi-list-task me-2 text-primary"></i>Actions</th>
                         </tr>
                     </thead>
@@ -68,7 +66,9 @@
                             <tr>
                                 <td class="fw-semibold text-center">@item.Alumni.JagId</td>
                                 <td class="text-center">@item.Alumni.FirstName @item.Alumni.LastName</td>
-                                <td class="text-center">@item.Degree.Institution</td>
+                                <td class="text-center">
+                                    @(item.Degree.Institution == "Other University" ? "Other" : item.Degree.Institution)
+                                </td>
                                 <td class="text-center">@item.Degree.DegreeType</td>
                                 <td class="text-center">@item.DateConferred.Year</td>
                                 <td class="text-center">
@@ -80,12 +80,12 @@
                                     @if (User.IsInRole("Admin") || User.IsInRole("Alumni"))
                                     {
                                         <a asp-action="Edit"
-                                        asp-route-id="@item.AlumniDegreeId"
+                                           asp-route-id="@item.AlumniDegreeId"
                                            class="btn btn-sm btn-outline-warning rounded-pill">
                                             <i class="bi bi-pencil-fill"></i>
                                         </a>
                                     }
-                                    @if (User.IsInRole("Admin")||User.IsInRole("Alumni"))
+                                    @if (User.IsInRole("Admin") || User.IsInRole("Alumni"))
                                     {
                                         <a asp-action="Delete"
                                            asp-route-id="@item.AlumniDegreeId"
@@ -108,4 +108,4 @@
 
         </div>
     </div>
-</div> 
+</div>

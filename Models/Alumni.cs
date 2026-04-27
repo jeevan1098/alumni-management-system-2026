@@ -77,7 +77,7 @@ public partial class Alumni
     public string PermanentEmail { get; set; }
 
     [Column("phone")]
-    [StringLength(20, ErrorMessage = "Phone number cannot exceed 20 characters.")]
+    [StringLength(15, ErrorMessage = "Phone number cannot exceed 15 characters.")]
     [Phone(ErrorMessage = "Phone number is not valid.")]
     public string Phone { get; set; }
 

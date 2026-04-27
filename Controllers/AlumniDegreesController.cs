@@ -174,11 +174,11 @@ namespace Alumni_Management_System.Controllers
             {
                 if (alumniDegree.YearsToCompleteDegree < 0)
                     ModelState.AddModelError("YearsToCompleteDegree", "Cannot be negative.");
-                else if (alumniDegree.YearsToCompleteDegree > 10)
-                    ModelState.AddModelError("YearsToCompleteDegree", "Cannot exceed 10 years.");
+                else if (alumniDegree.YearsToCompleteDegree > 20)
+                    ModelState.AddModelError("YearsToCompleteDegree", "Cannot exceed 20 years.");
             }
 
-            if (alumniDegree.Gpa.HasValue && (alumniDegree.Gpa < 0 || alumniDegree.Gpa > 4.00m))
+            if (alumniDegree.Gpa < 0 || alumniDegree.Gpa > 4.00m)
                 ModelState.AddModelError("Gpa", "GPA must be between 0.00 and 4.00.");
 
             if (await _context.AlumniDegrees.AnyAsync(ad =>
@@ -319,11 +319,11 @@ namespace Alumni_Management_System.Controllers
             {
                 if (alumniDegree.YearsToCompleteDegree < 0)
                     ModelState.AddModelError("YearsToCompleteDegree", "Cannot be negative.");
-                else if (alumniDegree.YearsToCompleteDegree > 10)
-                    ModelState.AddModelError("YearsToCompleteDegree", "Cannot exceed 10 years.");
+                else if (alumniDegree.YearsToCompleteDegree > 20)
+                    ModelState.AddModelError("YearsToCompleteDegree", "Cannot exceed 20 years.");
             }
 
-            if (alumniDegree.Gpa.HasValue && (alumniDegree.Gpa < 0 || alumniDegree.Gpa > 4.00m))
+            if (alumniDegree.Gpa < 0 || alumniDegree.Gpa > 4.00m)
                 ModelState.AddModelError("Gpa", "GPA must be between 0.00 and 4.00.");
 
             if (await _context.AlumniDegrees.AnyAsync(ad =>
