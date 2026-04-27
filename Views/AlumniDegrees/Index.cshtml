@@ -1,6 +1,4 @@
-﻿
-
-@model IEnumerable<Alumni_Management_System.Models.AlumniDegree>
+﻿@model IEnumerable<Alumni_Management_System.Models.AlumniDegree>
 
 @{
     ViewData["Title"] = "Alumni Degrees";
@@ -41,6 +39,29 @@
 
             <hr class="mb-4" />
 
+            <form asp-action="Index" method="get" class="mb-4 row g-3">
+                <input type="hidden" name="sortOrder" value="@ViewData["SortOrder"]" />
+                <div class="col-md-8">
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text bg-white">
+                            <i class="bi bi-search text-primary"></i>
+                        </span>
+                        <input type="text" name="searchString"
+                               value="@ViewData["CurrentFilter"]"
+                               class="form-control"
+                               placeholder="Search by JAG ID, name, university or degree..." />
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <button type="submit" class="btn btn-primary w-100 btn-lg">Search</button>
+                </div>
+                <div class="col-md-2">
+                    <a asp-action="Index" class="btn btn-outline-secondary w-100 btn-lg">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Filters
+                    </a>
+                </div>
+            </form>
+
             <div class="d-flex justify-content-end mb-3">
                 @if (User.IsInRole("Admin") || User.IsInRole("Alumni"))
                 {
@@ -53,12 +74,76 @@
             <div class="table-responsive">
                 <table class="table table-hover align-middle">
                     <thead class="table-dark text-center">
+                        @{
+                            var sortOrder = ViewData["SortOrder"]?.ToString() ?? "";
+                            var search = ViewData["CurrentFilter"]?.ToString() ?? "";
+                        }
                         <tr>
-                            <th><i class="bi bi-credit-card-2-front-fill me-1 text-primary"></i>Jag ID</th>
-                            <th><i class="bi bi-person-fill me-1 text-primary"></i>Alumni</th>
-                            <th><i class="bi bi-bar-chart-fill me-1 text-primary"></i>University</th>
-                            <th><i class="bi bi-mortarboard-fill me-1 text-primary"></i>Degree Program</th>
-                            <th><i class="bi bi-calendar-event me-1 text-primary"></i>Date Conferred</th>
+                            <th>
+                                <a href="@Url.Action("Index", new { sortOrder = sortOrder == "jagid" ? "jagid_desc" : "jagid", searchString = search })" class="text-white text-decoration-none">
+                                    <i class="bi bi-credit-card-2-front-fill me-1 text-primary"></i>Jag ID
+                                    @if (sortOrder == "jagid")
+                                    {
+                                        <span>▲</span>
+                                    }
+                                    else if (sortOrder == "jagid_desc")
+                                    {
+                                        <span>▼</span>
+                                    }
+                                </a>
+                            </th>
+                            <th>
+                                <a href="@Url.Action("Index", new { sortOrder = sortOrder == "name" ? "name_desc" : "name", searchString = search })" class="text-white text-decoration-none">
+                                    <i class="bi bi-person-fill me-1 text-primary"></i>Alumni
+                                    @if (sortOrder == "name")
+                                    {
+                                        <span>▲</span>
+                                    }
+                                    else if (sortOrder == "name_desc")
+                                    {
+                                        <span>▼</span>
+                                    }
+                                </a>
+                            </th>
+                            <th>
+                                <a href="@Url.Action("Index", new { sortOrder = sortOrder == "university" ? "university_desc" : "university", searchString = search })" class="text-white text-decoration-none">
+                                    <i class="bi bi-bar-chart-fill me-1 text-primary"></i>University
+                                    @if (sortOrder == "university")
+                                    {
+                                        <span>▲</span>
+                                    }
+                                    else if (sortOrder == "university_desc")
+                                    {
+                                        <span>▼</span>
+                                    }
+                                </a>
+                            </th>
+                            <th>
+                                <a href="@Url.Action("Index", new { sortOrder = sortOrder == "degree" ? "degree_desc" : "degree", searchString = search })" class="text-white text-decoration-none">
+                                    <i class="bi bi-mortarboard-fill me-1 text-primary"></i>Degree Program
+                                    @if (sortOrder == "degree")
+                                    {
+                                        <span>▲</span>
+                                    }
+                                    else if (sortOrder == "degree_desc")
+                                    {
+                                        <span>▼</span>
+                                    }
+                                </a>
+                            </th>
+                            <th>
+                                <a href="@Url.Action("Index", new { sortOrder = sortOrder == "year" ? "year_desc" : "year", searchString = search })" class="text-white text-decoration-none">
+                                    <i class="bi bi-calendar-event me-1 text-primary"></i>Year Conferred
+                                    @if (sortOrder == "year")
+                                    {
+                                        <span>▲</span>
+                                    }
+                                    else if (sortOrder == "year_desc")
+                                    {
+                                        <span>▼</span>
+                                    }
+                                </a>
+                            </th>
                             <th><i class="bi bi-list-task me-2 text-primary"></i>Actions</th>
                         </tr>
                     </thead>
@@ -68,7 +153,7 @@
                             <tr>
                                 <td class="fw-semibold text-center">@item.Alumni.JagId</td>
                                 <td class="text-center">@item.Alumni.FirstName @item.Alumni.LastName</td>
-                                <td class="text-center">@item.Degree.Institution</td>
+                                <td class="text-center">@(item.Degree.Institution == "Other University" ? "Other" : item.Degree.Institution)</td>
                                 <td class="text-center">@item.Degree.DegreeType</td>
                                 <td class="text-center">@item.DateConferred.Year</td>
                                 <td class="text-center">
@@ -80,12 +165,12 @@
                                     @if (User.IsInRole("Admin") || User.IsInRole("Alumni"))
                                     {
                                         <a asp-action="Edit"
-                                        asp-route-id="@item.AlumniDegreeId"
+                                           asp-route-id="@item.AlumniDegreeId"
                                            class="btn btn-sm btn-outline-warning rounded-pill">
                                             <i class="bi bi-pencil-fill"></i>
                                         </a>
                                     }
-                                    @if (User.IsInRole("Admin")||User.IsInRole("Alumni"))
+                                    @if (User.IsInRole("Admin") || User.IsInRole("Alumni"))
                                     {
                                         <a asp-action="Delete"
                                            asp-route-id="@item.AlumniDegreeId"
@@ -108,4 +193,4 @@
 
         </div>
     </div>
-</div> 
+</div>

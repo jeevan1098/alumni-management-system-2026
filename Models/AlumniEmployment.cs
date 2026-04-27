@@ -41,7 +41,7 @@ public partial class AlumniEmployment
 
     [Column("salary_range")]
     [StringLength(50, ErrorMessage = "Salary range cannot exceed 50 characters.")]
-    [RegularExpression(@"^[\$\d,\s\-kKmM]+$", ErrorMessage = "Salary range contains invalid characters.")]
+    [RegularExpression(@"^[\$\d,\s\-kKmMbBa-zA-Z\+]+$", ErrorMessage = "Salary range contains invalid characters.")]
     [Display(Name = "Salary Range")]
     public string SalaryRange { get; set; }
 

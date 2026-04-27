@@ -83,8 +83,9 @@
     @if (isAdmin)
     {
         <!-- Search -->
-            <form asp-action="Index" method="get" class="mb-4 row g-3">
-                <div class="col-md-10">
+        <form asp-action="Index" method="get" class="mb-4 row g-3">
+            <input type="hidden" name="sortOrder" value="@ViewData["SortOrder"]" />
+            <div class="col-md-8">
                 <div class="input-group input-group-lg">
                     <span class="input-group-text bg-white">
                         <i class="bi bi-search text-primary"></i>
@@ -98,6 +99,11 @@
             <div class="col-md-2">
                 <button type="submit" class="btn btn-primary w-100 btn-lg">Search</button>
             </div>
+            <div class="col-md-2">
+                <a asp-action="Index" class="btn btn-outline-secondary w-100 btn-lg">
+                    <i class="bi bi-arrow-counterclockwise me-1"></i> Reset Filters
+                </a>
+            </div>
         </form>
     }
     <!-- ================= TABLE VIEW ================= -->
@@ -106,17 +112,99 @@
             <table class="table table-hover align-middle text-center">
                 <thead class="table-dark">
                     <tr>
-                        @if (isAdmin || isStaff)
-                        {
-                            <th><i class="bi bi-credit-card-2-front-fill me-1 text-primary"></i>Jag ID</th>
+                        @{
+                            var sortOrder = ViewData["SortOrder"]?.ToString() ?? "";
+                            var search = ViewData["CurrentFilter"]?.ToString() ?? "";
                         }
-                        <th><i class="bi bi-person-fill me-1 text-primary"></i>Name</th>
-                        <th><i class="bi bi-envelope-fill me-1 text-primary"></i>Email</th>
-                        <th><i class="bi bi-mortarboard-fill me-1 text-primary"></i>Grad Year</th>
                         @if (isAdmin || isStaff)
                         {
-                            <th><i class="bi bi-building me-1 text-primary"></i>City</th>
-                            <th><i class="bi bi-geo-alt-fill me-1 text-primary"></i>State</th>
+                            <th>
+                                <a href="@Url.Action("Index", new { sortOrder = sortOrder == "jagid" ? "jagid_desc" : "jagid", searchString = search })"
+                                   class="text-white text-decoration-none">
+                                    <i class="bi bi-credit-card-2-front-fill me-1 text-primary"></i>Jag ID
+                                    @if (sortOrder == "jagid")
+                                    {
+                                        <span>▲</span>
+                                    }
+                                    else if (sortOrder == "jagid_desc")
+                                    {
+                                        <span>▼</span>
+                                    }
+                                </a>
+                            </th>
+                        }
+                        <th>
+                            <a href="@Url.Action("Index", new { sortOrder = sortOrder == "name" ? "name_desc" : "name", searchString = search })"
+                               class="text-white text-decoration-none">
+                                <i class="bi bi-person-fill me-1 text-primary"></i>Name
+                                @if (sortOrder == "name")
+                                {
+                                    <span>▲</span>
+                                }
+                                else if (sortOrder == "name_desc")
+                                {
+                                    <span>▼</span>
+                                }
+                            </a>
+                        </th>
+                        <th>
+                            <a href="@Url.Action("Index", new { sortOrder = sortOrder == "email" ? "email_desc" : "email", searchString = search })"
+                               class="text-white text-decoration-none">
+                                <i class="bi bi-envelope-fill me-1 text-primary"></i>Email
+                                @if (sortOrder == "email")
+                                {
+                                    <span>▲</span>
+                                }
+                                else if (sortOrder == "email_desc")
+                                {
+                                    <span>▼</span>
+                                }
+                            </a>
+                        </th>
+                        <th>
+                            <a href="@Url.Action("Index", new { sortOrder = sortOrder == "year" ? "year_desc" : "year", searchString = search })"
+                               class="text-white text-decoration-none">
+                                <i class="bi bi-mortarboard-fill me-1 text-primary"></i>Grad Year
+                                @if (sortOrder == "year")
+                                {
+                                    <span>▲</span>
+                                }
+                                else if (sortOrder == "year_desc")
+                                {
+                                    <span>▼</span>
+                                }
+                            </a>
+                        </th>
+                        @if (isAdmin || isStaff)
+                        {
+                            <th>
+                                <a href="@Url.Action("Index", new { sortOrder = sortOrder == "city" ? "city_desc" : "city", searchString = search })"
+                                   class="text-white text-decoration-none">
+                                    <i class="bi bi-building me-1 text-primary"></i>City
+                                    @if (sortOrder == "city")
+                                    {
+                                        <span>▲</span>
+                                    }
+                                    else if (sortOrder == "city_desc")
+                                    {
+                                        <span>▼</span>
+                                    }
+                                </a>
+                            </th>
+                            <th>
+                                <a href="@Url.Action("Index", new { sortOrder = sortOrder == "state" ? "state_desc" : "state", searchString = search })"
+                                   class="text-white text-decoration-none">
+                                    <i class="bi bi-geo-alt-fill me-1 text-primary"></i>State
+                                    @if (sortOrder == "state")
+                                    {
+                                        <span>▲</span>
+                                    }
+                                    else if (sortOrder == "state_desc")
+                                    {
+                                        <span>▼</span>
+                                    }
+                                </a>
+                            </th>
                         }
                         @if (isAlumni)
                         {
@@ -268,6 +356,12 @@
             }
         </div>
     }
+    <div class="d-flex justify-content-between mt-5">
+        <a asp-action="Index" asp-controller="Home"
+            class="btn btn-outline-primary rounded-pill px-4">
+            <i class="bi bi-house-fill me-2"></i>Home
+        </a>
+    </div>
 
 </div>
 

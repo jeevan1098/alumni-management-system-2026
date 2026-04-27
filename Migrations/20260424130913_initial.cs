@@ -5,10 +5,10 @@ using Microsoft.EntityFrameworkCore.Migrations;
 
 namespace Alumni_Management_System.Migrations
 {
-
-    public partial class InitialCreate : Migration
+    /// <inheritdoc />
+    public partial class initial : Migration
     {
-
+        /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
@@ -20,9 +20,6 @@ namespace Alumni_Management_System.Migrations
                     jag_id = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     first_name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     last_name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    graduation_year = table.Column<int>(type: "int", nullable: true),
-                    degree_program = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
-                    email_on_record = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: true),
                     account_created = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
@@ -49,8 +46,9 @@ namespace Alumni_Management_System.Migrations
                 columns: table => new
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    JagId = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    JagId = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
                     created_at = table.Column<DateTime>(type: "datetime", nullable: false),
+                    is_first_login = table.Column<bool>(type: "bit", nullable: false),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -142,16 +140,16 @@ namespace Alumni_Management_System.Migrations
                 {
                     alumni_id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    user_id = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     jag_id = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    user_id = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: true),
                     prefix = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
                     first_name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     preferred_first_name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     last_name = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     gender = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
-                    date_of_birth = table.Column<DateOnly>(type: "date", nullable: true),
+                    age_at_graduation = table.Column<int>(type: "int", nullable: true),
                     student_email = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: true),
-                    permanent_email = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
+                    permanent_email = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: true),
                     phone = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
                     address = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     city = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
@@ -159,7 +157,7 @@ namespace Alumni_Management_System.Migrations
                     postcode = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
                     country = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     graduation_year = table.Column<int>(type: "int", nullable: false),
-                    solicitation_code = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
+                    solicitation_code = table.Column<bool>(type: "bit", nullable: false),
                     social_media_account = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
                     privacy = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
                     is_active = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
@@ -172,7 +170,8 @@ namespace Alumni_Management_System.Migrations
                         name: "FK_Alumni_AspNetUsers_user_id",
                         column: x => x.user_id,
                         principalTable: "AspNetUsers",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.SetNull);
                 });
 
             migrationBuilder.CreateTable(
@@ -267,9 +266,9 @@ namespace Alumni_Management_System.Migrations
                     message_id = table.Column<int>(type: "int", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     title = table.Column<string>(type: "nvarchar(150)", maxLength: 150, nullable: false),
-                    message_body = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    message_body = table.Column<string>(type: "nvarchar(max)", maxLength: 5000, nullable: false),
                     message_type = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    created_by = table.Column<string>(type: "nvarchar(450)", nullable: true),
+                    created_by = table.Column<string>(type: "nvarchar(450)", maxLength: 450, nullable: true),
                     created_at = table.Column<DateTime>(type: "datetime", nullable: false, defaultValueSql: "(getdate())")
                 },
                 constraints: table =>
@@ -436,11 +435,23 @@ namespace Alumni_Management_System.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_Alumni_permanent_email",
+                table: "Alumni",
+                column: "permanent_email",
+                unique: true,
+                filter: "[permanent_email] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Alumni_student_email",
+                table: "Alumni",
+                column: "student_email",
+                unique: true,
+                filter: "[student_email] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Alumni_user_id",
                 table: "Alumni",
-                column: "user_id",
-                unique: true,
-                filter: "[user_id] IS NOT NULL");
+                column: "user_id");
 
             migrationBuilder.CreateIndex(
                 name: "UQ__Alumni__FBF400ED6AB71E0A",
@@ -537,6 +548,11 @@ namespace Alumni_Management_System.Migrations
                 column: "NormalizedEmail");
 
             migrationBuilder.CreateIndex(
+                name: "IX_AspNetUsers_JagId",
+                table: "AspNetUsers",
+                column: "JagId");
+
+            migrationBuilder.CreateIndex(
                 name: "UserNameIndex",
                 table: "AspNetUsers",
                 column: "NormalizedUserName",
@@ -549,6 +565,7 @@ namespace Alumni_Management_System.Migrations
                 column: "created_by");
         }
 
+        /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(

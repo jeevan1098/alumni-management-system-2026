@@ -87,7 +87,7 @@ namespace Alumni_Management_System.Controllers
         //  INDEX
         // ══════════════════════════════════════════════════════════════
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string searchString, string sortOrder)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
@@ -105,6 +105,38 @@ namespace Alumni_Management_System.Controllers
                 else
                     return View(new List<AlumniInternship>());
             }
+
+            if (!string.IsNullOrWhiteSpace(searchString))
+            {
+                var s = searchString.ToLower();
+                query = query.Where(i =>
+                    i.Alumni.FirstName.ToLower().Contains(s) ||
+                    i.Alumni.LastName.ToLower().Contains(s) ||
+                    i.Alumni.JagId.ToLower().Contains(s) ||
+                    i.Title.ToLower().Contains(s) ||
+                    i.InternshipType.ToLower().Contains(s) ||
+                    i.Employer.EmployerName.ToLower().Contains(s));
+            }
+
+            query = sortOrder switch
+            {
+                "name" => query.OrderBy(i => i.Alumni.LastName).ThenBy(i => i.Alumni.FirstName),
+                "name_desc" => query.OrderByDescending(i => i.Alumni.LastName).ThenByDescending(i => i.Alumni.FirstName),
+                "type" => query.OrderBy(i => i.InternshipType),
+                "type_desc" => query.OrderByDescending(i => i.InternshipType),
+                "title" => query.OrderBy(i => i.Title),
+                "title_desc" => query.OrderByDescending(i => i.Title),
+                "employer" => query.OrderBy(i => i.Employer.EmployerName),
+                "employer_desc" => query.OrderByDescending(i => i.Employer.EmployerName),
+                "start" => query.OrderBy(i => i.StartDate),
+                "start_desc" => query.OrderByDescending(i => i.StartDate),
+                "end" => query.OrderBy(i => i.EndDate),
+                "end_desc" => query.OrderByDescending(i => i.EndDate),
+                _ => query.OrderByDescending(i => i.StartDate),
+            };
+
+            ViewData["CurrentFilter"] = searchString;
+            ViewData["SortOrder"] = sortOrder;
 
             return View(await query.ToListAsync());
         }

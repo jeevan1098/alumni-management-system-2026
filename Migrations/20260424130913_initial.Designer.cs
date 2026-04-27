@@ -12,10 +12,10 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Alumni_Management_System.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260331182734_RevertJagIdFkToUserId")]
-    partial class RevertJagIdFkToUserId
+    [Migration("20260424130913_initial")]
+    partial class initial
     {
-
+        /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
@@ -93,7 +93,6 @@ namespace Alumni_Management_System.Migrations
                         .HasDefaultValueSql("(getdate())");
 
                     b.Property<string>("PermanentEmail")
-                        .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)")
                         .HasColumnName("permanent_email");
@@ -153,6 +152,14 @@ namespace Alumni_Management_System.Migrations
 
                     b.HasIndex("JagId")
                         .IsUnique();
+
+                    b.HasIndex("PermanentEmail")
+                        .IsUnique()
+                        .HasFilter("[permanent_email] IS NOT NULL");
+
+                    b.HasIndex("StudentEmail")
+                        .IsUnique()
+                        .HasFilter("[student_email] IS NOT NULL");
 
                     b.HasIndex("UserId");
 
@@ -585,11 +592,13 @@ namespace Alumni_Management_System.Migrations
                         .HasDefaultValueSql("(getdate())");
 
                     b.Property<string>("CreatedBy")
+                        .HasMaxLength(450)
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("created_by");
 
                     b.Property<string>("MessageBody")
                         .IsRequired()
+                        .HasMaxLength(5000)
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("message_body");
 
