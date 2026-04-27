@@ -711,12 +711,12 @@ else
                         {
                             <span class="ap-avatar-dot"></span>
                         }
-                </div>
-                <h2 class="ap-profile-name">
-                    @string.Join(" ", new[] { Model.Prefix, Model.FirstName, Model.LastName }
-                                        .Where(x => !string.IsNullOrWhiteSpace(x)))
-                </h2>
-                @if (!string.IsNullOrWhiteSpace(Model.PreferredFirstName))
+                    </div>
+                    <h2 class="ap-profile-name">
+                        @string.Join(" ", new[] { Model.Prefix, Model.FirstName, Model.LastName }
+                                 .Where(x => !string.IsNullOrWhiteSpace(x)))
+                    </h2>
+                    @if (!string.IsNullOrWhiteSpace(Model.PreferredFirstName))
                     {
                         <p class="ap-profile-preferred">
                             Goes by <strong>@Model.PreferredFirstName</strong>
@@ -910,12 +910,12 @@ else
                                 <div class="ap-tl-body">
                                     <div class="ap-tl-title">@(deg.Degree?.Department ?? "—")</div>
                                     <div class="ap-tl-sub">
-                                        University of South Alabama · @deg.DateConferred.ToString("yyyy")
+                                        @(deg.Degree?.Institution == "Other University" ? "Other University" : "University of South Alabama") · @deg.DateConferred.ToString("yyyy")
                                     </div>
                                     <div class="ap-tl-meta-row">
-                                        @if (deg.Gpa.HasValue)
+                                        @if (deg.Gpa > 0)
                                         {
-                                            <span class="ap-tl-chip ap-chip-amber">GPA @deg.Gpa.Value.ToString("0.00")</span>
+                                            <span class="ap-tl-chip ap-chip-amber">GPA @deg.Gpa?.ToString("F2")</span>
                                         }
                                         @if (deg.YearsToCompleteDegree.HasValue)
                                         {
@@ -977,7 +977,7 @@ else
                                     <div class="ap-tl-sub">
                                         @emp.Employer?.EmployerName
                                         · @emp.StartDate.ToString("MMM yyyy") —
-                                        @(emp.EndDate.HasValue? emp.EndDate.Value.ToString("MMM yyyy") : "Present")
+                                        @(emp.EndDate.HasValue ? emp.EndDate.Value.ToString("MMM yyyy") : "Present")
                                     </div>
                                     <div class="ap-tl-meta-row">
                                         @if (!emp.EndDate.HasValue)
@@ -1116,4 +1116,4 @@ else
 }
 @section Styles {
     <link rel="stylesheet" href="~/css/alumni-portal.css" asp-append-version="true" />
-}   
+}

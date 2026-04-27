@@ -142,31 +142,36 @@
                 <div class="row">
                     <div class="col-md-4 mb-3">
                         <label asp-for="DateConferred" class="form-label fw-semibold">
-                            <span class="text-danger">*</span> Date Conferred
+                            <span class="text-danger">*</span> Year Conferred
                         </label>
                         <div class="input-group shadow-sm">
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-calendar-event-fill"></i>
                             </span>
-                            <input asp-for="DateConferred" type="date" class="form-control rounded-end-3" />
+                            <input type="text" id="yearConferred" maxlength="4"
+                                   placeholder="e.g. 2023" class="form-control rounded-end-3" />
+                            <input type="hidden" asp-for="DateConferred" id="dateConferredHidden" />
                         </div>
+                        <span id="yearError" class="text-danger" style="font-size:.85rem;"></span>
                         <span asp-validation-for="DateConferred" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-4 mb-3">
-                        <label asp-for="YearsToCompleteDegree" class="form-label fw-semibold"></label>
+                        <label asp-for="YearsToCompleteDegree" class="form-label fw-semibold">Years To Complete Degree</label>
                         <div class="input-group shadow-sm">
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-clock-fill"></i>
                             </span>
-                            <input asp-for="YearsToCompleteDegree" type="number" min="0" max="10"
+                            <input asp-for="YearsToCompleteDegree" type="number" min="1" max="20"
                                    placeholder="e.g. 4" class="form-control rounded-end-3" />
                         </div>
                         <span asp-validation-for="YearsToCompleteDegree" class="text-danger"></span>
                     </div>
 
                     <div class="col-md-4 mb-3">
-                        <label asp-for="Gpa" class="form-label fw-semibold"></label>
+                        <label asp-for="Gpa" class="form-label fw-semibold">
+                            <span class="text-danger">*</span> Grade (GPA)
+                        </label>
                         <div class="input-group shadow-sm">
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-bar-chart-fill"></i>
@@ -266,19 +271,92 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 
+    @if (!isAdmin)
+    {
+        <script>
+            const yearInput = document.getElementById('yearConferred');
+            const hiddenInput = document.getElementById('dateConferredHidden');
+            const yearError = document.getElementById('yearError');
+            const currentYear = new Date().getFullYear();
+
+            function validateYear() {
+                let val = yearInput.value.replace(/\D/g, '').slice(0, 4);
+                yearInput.value = val;
+                const year = parseInt(val);
+                if (!val || isNaN(year)) {
+                    yearError.textContent = 'Year is required.';
+                    hiddenInput.value = '';
+                    return false;
+                } else if (year < 1900) {
+                    yearError.textContent = 'Year must be after 1900.';
+                    hiddenInput.value = '';
+                    return false;
+                } else if (year > currentYear) {
+                    yearError.textContent = 'Year cannot be in the future.';
+                    hiddenInput.value = '';
+                    return false;
+                } else {
+                    yearError.textContent = '';
+                    hiddenInput.value = year + '-01-01';
+                    return true;
+                }
+            }
+
+            yearInput.addEventListener('input', validateYear);
+
+            document.querySelector('form').addEventListener('submit', function (e) {
+                if (!validateYear()) e.preventDefault();
+            });
+        </script>
+    }
     @if (isAdmin)
     {
         <script>
+            // Year validation
+            const yearConferredInput = document.getElementById('yearConferred');
+            const dateConferredHidden = document.getElementById('dateConferredHidden');
+            const yearError = document.getElementById('yearError');
+            const currentYear = new Date().getFullYear();
+
+            function validateYear() {
+                let val = yearConferredInput.value.replace(/\D/g, '').slice(0, 4);
+                yearConferredInput.value = val;
+                const year = parseInt(val);
+                if (!val || isNaN(year)) {
+                    yearError.textContent = 'Year is required.';
+                    dateConferredHidden.value = '';
+                    return false;
+                } else if (year < 1900) {
+                    yearError.textContent = 'Year must be after 1900.';
+                    dateConferredHidden.value = '';
+                    return false;
+                } else if (year > currentYear) {
+                    yearError.textContent = 'Year cannot be in the future.';
+                    dateConferredHidden.value = '';
+                    return false;
+                } else {
+                    yearError.textContent = '';
+                    dateConferredHidden.value = year + '-01-01';
+                    return true;
+                }
+            }
+
+            yearConferredInput.addEventListener('input', validateYear);
+
+            document.querySelector('form').addEventListener('submit', function (e) {
+                if (!validateYear()) e.preventDefault();
+            });
+
             const alumniData = [
             @if (ViewBag.AlumniId != null)
             {
-                    foreach (var item in ViewBag.AlumniId as IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>())
+                foreach (var item in ViewBag.AlumniId as IEnumerable<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem> ?? new List<Microsoft.AspNetCore.Mvc.Rendering.SelectListItem>())
+                {
+                    if (!string.IsNullOrEmpty(item.Value))
                     {
-                            if (!string.IsNullOrEmpty(item.Value))
-                            {
-                                    @:{ id: '@item.Value', text: '@Html.Raw(item.Text?.Replace("'", "\\'"))' },
-                            }
+                        @:{ id: '@item.Value', text: '@Html.Raw(item.Text?.Replace("'", "\\'"))' },
                     }
+                }
             }
             ];
 

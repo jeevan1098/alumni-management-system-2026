@@ -112,22 +112,27 @@
 
                 <div class="row">
                     <div class="col-md-4 mb-3">
-                        <label asp-for="DateConferred" class="form-label fw-semibold"></label>
+                        <label asp-for="DateConferred" class="form-label fw-semibold">Year Conferred</label>
                         <div class="input-group shadow-sm">
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-calendar-event-fill text-warning"></i>
                             </span>
                             @if (lockCoreFields)
                             {
-                                <input asp-for="DateConferred" type="date"
+                                <input type="text" id="yearConferred" maxlength="4"
+                                       value="@Model.DateConferred.Year"
                                        class="form-control rounded-end-3" readonly />
+                                <input type="hidden" asp-for="DateConferred" id="dateConferredHidden" />
                             }
                             else
                             {
-                                <input asp-for="DateConferred" type="date"
-                                       class="form-control rounded-end-3" />
+                                <input type="text" id="yearConferred" maxlength="4"
+                                       value="@Model.DateConferred.Year"
+                                       placeholder="e.g. 2023" class="form-control rounded-end-3" />
+                                <input type="hidden" asp-for="DateConferred" id="dateConferredHidden" />
                             }
                         </div>
+                        <span id="yearError" class="text-danger" style="font-size:.85rem;"></span>
                         <span asp-validation-for="DateConferred" class="text-danger small"></span>
                     </div>
 
@@ -277,4 +282,48 @@
     @{
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
+
+    <script>
+        const yearInput = document.getElementById('yearConferred');
+        const hiddenInput = document.getElementById('dateConferredHidden');
+        const yearError = document.getElementById('yearError');
+        const currentYear = new Date().getFullYear();
+        const lockCoreFields = @lockCoreFields.ToString().ToLower();
+
+        // Pre-populate hidden field from existing year on page load
+        if (yearInput.value) {
+            hiddenInput.value = yearInput.value + '-01-01';
+        }
+
+        if (!lockCoreFields) {
+            function validateYear() {
+                let val = yearInput.value.replace(/\D/g, '').slice(0, 4);
+                yearInput.value = val;
+                const year = parseInt(val);
+                if (!val || isNaN(year)) {
+                    yearError.textContent = 'Year is required.';
+                    hiddenInput.value = '';
+                    return false;
+                } else if (year < 1900) {
+                    yearError.textContent = 'Year must be after 1900.';
+                    hiddenInput.value = '';
+                    return false;
+                } else if (year > currentYear) {
+                    yearError.textContent = 'Year cannot be in the future.';
+                    hiddenInput.value = '';
+                    return false;
+                } else {
+                    yearError.textContent = '';
+                    hiddenInput.value = year + '-01-01';
+                    return true;
+                }
+            }
+
+            yearInput.addEventListener('input', validateYear);
+
+            document.querySelector('form').addEventListener('submit', function (e) {
+                if (!validateYear()) e.preventDefault();
+            });
+        }
+    </script>
 }

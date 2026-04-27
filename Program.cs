@@ -37,7 +37,28 @@ builder.Services.Configure<Microsoft.AspNetCore.Routing.RouteOptions>(options =>
 {
 });
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    // Replace the generic "The value '' is invalid" with field-specific required messages
+    options.ModelBindingMessageProvider.SetValueMustNotBeNullAccessor(
+        _ => "This field is required.");
+    options.ModelBindingMessageProvider.SetMissingBindRequiredValueAccessor(
+        name => $"{name} is required.");
+    options.ModelBindingMessageProvider.SetAttemptedValueIsInvalidAccessor(
+        (value, name) => string.IsNullOrWhiteSpace(value)
+            ? $"{name} is required."
+            : $"The value '{value}' is not valid for {name}.");
+    options.ModelBindingMessageProvider.SetNonPropertyAttemptedValueIsInvalidAccessor(
+        value => string.IsNullOrWhiteSpace(value)
+            ? "This field is required."
+            : $"The value '{value}' is not valid.");
+    options.ModelBindingMessageProvider.SetNonPropertyValueMustBeANumberAccessor(
+        () => "Please enter a valid number.");
+    options.ModelBindingMessageProvider.SetValueMustBeANumberAccessor(
+        name => $"{name} must be a valid number.");
+    options.ModelBindingMessageProvider.SetMissingKeyOrValueAccessor(
+        () => "A value is required.");
+});
 
 var app = builder.Build();
 

@@ -39,6 +39,17 @@ namespace Alumni_Management_System.Controllers
         [Authorize(Roles = "Admin")]
         public async Task<IActionResult> Create([Bind("EmployerId,EmployerName,Location,Industry")] Employer employer)
         {
+            NormalizeEmployer(employer);
+
+            bool isDuplicate = await _context.Employers.AnyAsync(e =>
+                e.EmployerName.ToLower() == employer.EmployerName.ToLower() &&
+                (e.Location ?? "").ToLower() == (employer.Location ?? "").ToLower() &&
+                (e.Industry ?? "").ToLower() == (employer.Industry ?? "").ToLower());
+
+            if (isDuplicate)
+                ModelState.AddModelError(string.Empty,
+                    "An employer with the same Name, Location, and Industry already exists.");
+
             if (ModelState.IsValid)
             {
                 _context.Add(employer);
@@ -64,6 +75,18 @@ namespace Alumni_Management_System.Controllers
         public async Task<IActionResult> Edit(int id, [Bind("EmployerId,EmployerName,Location,Industry")] Employer employer)
         {
             if (id != employer.EmployerId) return NotFound();
+
+            NormalizeEmployer(employer);
+
+            bool isDuplicate = await _context.Employers.AnyAsync(e =>
+                e.EmployerId != employer.EmployerId &&
+                e.EmployerName.ToLower() == employer.EmployerName.ToLower() &&
+                (e.Location ?? "").ToLower() == (employer.Location ?? "").ToLower() &&
+                (e.Industry ?? "").ToLower() == (employer.Industry ?? "").ToLower());
+
+            if (isDuplicate)
+                ModelState.AddModelError(string.Empty,
+                    "An employer with the same Name, Location, and Industry already exists.");
 
             if (ModelState.IsValid)
             {
@@ -132,5 +155,22 @@ namespace Alumni_Management_System.Controllers
 
         private bool EmployerExists(int id)
             => _context.Employers.Any(e => e.EmployerId == id);
+
+        /// <summary>
+        /// Normalizes Employer fields to Title Case to prevent case-variant duplicates.
+        /// </summary>
+        private static void NormalizeEmployer(Employer employer)
+        {
+            employer.EmployerName = ToTitleCase(employer.EmployerName);
+            employer.Location = ToTitleCase(employer.Location);
+            employer.Industry = ToTitleCase(employer.Industry);
+        }
+
+        private static string ToTitleCase(string value)
+        {
+            if (string.IsNullOrWhiteSpace(value)) return value;
+            return System.Globalization.CultureInfo.CurrentCulture
+                         .TextInfo.ToTitleCase(value.Trim().ToLower());
+        }
     }
 }
