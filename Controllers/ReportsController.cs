@@ -43,7 +43,7 @@ namespace Alumni_Management_System.Controllers
             var query = _context.Alumni
                 .AsNoTracking()
                 .Where(a => a.IsActive == true &&
-                            a.SolicitationCode == false)
+                            a.SolicitationCode == true)
                 .AsQueryable();
 
             // year filter

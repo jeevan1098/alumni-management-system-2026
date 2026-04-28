@@ -190,29 +190,29 @@ namespace Alumni_Management_System.Controllers
                 : ToTitleCase(trimmed); // unknown institutions → Title Case
         }
 
-        private static string NormalizeDegreeType(string value)
+       private static string NormalizeDegreeType(string value)
         {
             if (string.IsNullOrWhiteSpace(value)) return value;
+
             var trimmed = value.Trim();
 
-            // Map common words; preserve degree codes (BSCSC, MSCYS, etc.) as-is
             var known = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
             {
-                { "Bachelors",  "Bachelors" },
-                { "Bachelor",   "Bachelors" },
-                { "Masters",    "Masters"   },
-                { "Master",     "Masters"   },
-                { "PhD",        "PhD"       },
-                { "Phd",        "PhD"       },
-                { "PHD",        "PhD"       },
-                { "Doctorate",  "PhD"       },
+                { "Bachelors", "Bachelors" },
+                { "Bachelor", "Bachelors" },
+
+                { "Masters", "Masters" },
+                { "Master", "Masters" },
+
+                { "PhD", "PhD" },
+                { "Doctorate", "PhD" },
+                { "Doctoral", "PhD" }
             };
 
             return known.TryGetValue(trimmed, out var canonical)
                 ? canonical
-                : trimmed.ToUpper(); // degree codes like BSCSC stored as uppercase
+                : trimmed.ToUpper();
         }
-
         /// <summary>
         /// Converts a string to Title Case (e.g. "computer science" → "Computer Science").
         /// Returns null if the input is null or whitespace.

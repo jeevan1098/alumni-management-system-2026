@@ -531,7 +531,7 @@ namespace Alumni_Management_System.Controllers
                         var studentEmail = GetCell(row, "UNIV Email");
                         var permEmail = GetCell(row, "OTH Email");
                         var major = GetCell(row, "Major");
-                        var degreeCode = GetCell(row, "Deg");
+                        var degreeCode = GetCell(row, "Degree");
                         var gradText = GetCell(row, "Grad");
                         var street1 = GetCell(row, "Street Line 1");
                         var street2 = GetCell(row, "Street Line 2");
