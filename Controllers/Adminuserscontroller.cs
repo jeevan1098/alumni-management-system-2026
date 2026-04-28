@@ -97,14 +97,30 @@ namespace Alumni_Management_System.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            // Generate random temp password: Jag@ + 4 random digits + 1 letter
+            var random = new Random();
+            var digits = random.Next(1000, 9999).ToString();
+            var letters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+            var letter = letters[random.Next(letters.Length)];
+            var tempPassword = $"Jag@{digits}{letter}";
+
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
-            var defaultPassword = "Reset@1234";
-            var result = await _userManager.ResetPasswordAsync(user, token, defaultPassword);
+            var result = await _userManager.ResetPasswordAsync(user, token, tempPassword);
 
             if (result.Succeeded)
-                TempData["Success"] = $"Password reset for {user.Email}. Temporary password: {defaultPassword}";
+            {
+                // Force password change on next login
+                user.IsFirstLogin = true;
+                await _userManager.UpdateAsync(user);
+
+                TempData["ResetPasswordSuccess"] = $"Password reset for {user.Email}";
+                TempData["TempPassword"] = tempPassword;
+                TempData["ResetUserId"] = userId;
+            }
             else
+            {
                 TempData["Error"] = "Password reset failed: " + string.Join(", ", result.Errors.Select(e => e.Description));
+            }
 
             return RedirectToAction(nameof(Index));
         }

@@ -82,6 +82,9 @@ namespace Alumni_Management_System.Areas.Identity.Pages.Account
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
+                    var user = await _signInManager.UserManager.FindByNameAsync(Input.Username);
+                    if (user != null && user.IsFirstLogin)
+                        return Redirect("/Account/ChangePassword");
                     return LocalRedirect(returnUrl);
                 }
                 if (result.RequiresTwoFactor)

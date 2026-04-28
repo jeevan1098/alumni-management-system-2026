@@ -29,6 +29,47 @@ namespace Alumni_Management_System.Controllers
         }
 
         [HttpGet]
+        [Authorize]
+        public IActionResult ChangePassword()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ChangePassword(string newPassword, string confirmPassword)
+        {
+            if (string.IsNullOrWhiteSpace(newPassword) || newPassword != confirmPassword)
+            {
+                TempData["ErrorMessage"] = "Passwords do not match or are empty.";
+                return View();
+            }
+
+            var user = await _userManager.GetUserAsync(User);
+            if (user == null) return RedirectToPage("/Account/Login", new { area = "Identity" });
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+
+            if (result.Succeeded)
+            {
+                user.IsFirstLogin = false;
+                await _userManager.UpdateAsync(user);
+                await _signInManager.RefreshSignInAsync(user);
+                TempData["SuccessMessage"] = "Password changed successfully!";
+
+                var roles = await _userManager.GetRolesAsync(user);
+                if (roles.Contains(Constants.AlumniRole))
+                    return RedirectToAction("AlumniPortal", "Home");
+                return RedirectToAction("Index", "Home");
+            }
+
+            TempData["ErrorMessage"] = "Failed: " + string.Join(", ", result.Errors.Select(e => e.Description));
+            return View();
+        }
+
+        [HttpGet]
         public IActionResult VerifyJagId()
         {
             return View();

@@ -531,7 +531,7 @@ namespace Alumni_Management_System.Controllers
                         var studentEmail = GetCell(row, "UNIV Email");
                         var permEmail = GetCell(row, "OTH Email");
                         var major = GetCell(row, "Major");
-                        var degreeCode = GetCell(row, "Degree");
+                        var degreeCode = GetCell(row, "Deg");
                         var gradText = GetCell(row, "Grad");
                         var street1 = GetCell(row, "Street Line 1");
                         var street2 = GetCell(row, "Street Line 2");
@@ -834,6 +834,54 @@ namespace Alumni_Management_System.Controllers
         }
 
         private bool AlumniExists(int id) => _context.Alumni.Any(e => e.AlumniId == id);
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> ResetAlumniPassword(int alumniId)
+        {
+            var alumni = await _context.Alumni
+                .FirstOrDefaultAsync(a => a.AlumniId == alumniId);
+            if (alumni == null)
+            {
+                TempData["ErrorMessage"] = "Alumni not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var user = await _userManager.FindByNameAsync(alumni.JagId)
+                       ?? await _userManager.Users.FirstOrDefaultAsync(u => u.JagId == alumni.JagId);
+
+            if (user == null)
+            {
+                TempData["ErrorMessage"] = $"{alumni.FirstName} {alumni.LastName} does not have an account yet.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Generate random temp password
+            var random = new Random();
+            var digits = random.Next(1000, 9999).ToString();
+            var letters = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+            var letter = letters[random.Next(letters.Length)];
+            var tempPassword = $"Jag@{digits}{letter}";
+
+            var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+            var result = await _userManager.ResetPasswordAsync(user, token, tempPassword);
+
+            if (result.Succeeded)
+            {
+                user.IsFirstLogin = true;
+                await _userManager.UpdateAsync(user);
+
+                TempData["ResetPasswordSuccess"] = $"Password reset for {alumni.FirstName} {alumni.LastName} ({alumni.JagId})";
+                TempData["TempPassword"] = tempPassword;
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Reset failed: " + string.Join(", ", result.Errors.Select(e => e.Description));
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
 
         /// <summary>
         /// Simple email format check used during bulk import validation.

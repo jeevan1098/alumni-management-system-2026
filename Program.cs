@@ -109,18 +109,35 @@ app.Use(async (context, next) =>
     if (context.User.Identity?.IsAuthenticated == true)
     {
         var path = context.Request.Path.Value?.ToLower() ?? "";
-        var skipPaths = new[] { "/alumni/edit", "/identity/account/logout", "/account/logout", "/identity/account/manage" };
+        var skipPaths = new[] { "/account/changepassword", "/alumni/edit", "/identity/account/logout", "/account/logout", "/identity/account/manage" };
         if (!skipPaths.Any(p => path.StartsWith(p)))
         {
             var userManager = context.RequestServices.GetRequiredService<UserManager<AppUser>>();
             var user = await userManager.GetUserAsync(context.User);
-            if (user != null && user.IsFirstLogin && context.User.IsInRole(Constants.AlumniRole))
+            if (user != null && user.IsFirstLogin)
             {
-                var dbContext = context.RequestServices.GetRequiredService<ApplicationDbContext>();
-                var alumni = await dbContext.Alumni.FirstOrDefaultAsync(a => a.UserId == user.Id || a.JagId == user.JagId);
-                if (alumni != null)
+                // Alumni
+                if (context.User.IsInRole(Constants.AlumniRole))
                 {
-                    context.Response.Redirect($"/Alumni/Edit/{alumni.AlumniId}");
+                    var dbContext = context.RequestServices.GetRequiredService<ApplicationDbContext>();
+                    var alumni = await dbContext.Alumni.FirstOrDefaultAsync(a => a.UserId == user.Id || a.JagId == user.JagId);
+                    if (alumni != null)
+                    {
+                        // If UserId is already linked ? existing alumni whose password was reset by admin ? change password
+                        if (!string.IsNullOrEmpty(alumni.UserId))
+                        {
+                            context.Response.Redirect("/Account/ChangePassword");
+                            return;
+                        }
+                        // New registration ? go to Edit profile first
+                        context.Response.Redirect($"/Alumni/Edit/{alumni.AlumniId}");
+                        return;
+                    }
+                }
+                // Admin/Staff ? redirect to change password
+                else
+                {
+                    context.Response.Redirect("/Account/ChangePassword");
                     return;
                 }
             }

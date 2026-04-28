@@ -2,6 +2,9 @@
     ViewData["Title"] = "User Management";
     var userRoles = ViewBag.UserRoles as List<(Alumni_Management_System.Models.AppUser User, string Role)>;
     var allRoles = ViewBag.AllRoles as List<string>;
+
+    var tempPassword = TempData["TempPassword"]?.ToString();
+    var resetUserEmail = TempData["ResetPasswordSuccess"]?.ToString();
 }
 
 <div class="container-fluid px-4">
@@ -36,7 +39,6 @@
                     <tr>
                         <th>Username</th>
                         <th>Current Role</th>
-                        @* <th>Change Role</th> *@
                         <th>Reset Password</th>
                         <th>Delete</th>
                     </tr>
@@ -48,49 +50,25 @@
                         {
                             <tr>
                                 <td>@user.UserName</td>
-                                <td>
-                                    <span class="badge bg-secondary">@role</span>
-                                </td>
-
-                                @* <td>
-                                    <form asp-action="UpdateRole" method="post" class="d-flex gap-2 align-items-center">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="userId" value="@user.Id" />
-                                        <select name="newRole" class="form-select form-select-sm" style="min-width:120px;">
-                                            @if (allRoles != null)
-                                            {
-                                                foreach (var r in allRoles)
-                                                {
-                                                    if (r == role)
-                                                    {
-                                                        <option value="@r" selected>@r</option>
-                                                    }
-                                                    else
-                                                    {
-                                                        <option value="@r">@r</option>
-                                                    }
-                                                }
-                                            }
-                                        </select>
-                                        <button type="submit" class="btn btn-warning btn-sm">Update</button>
-                                    </form>
-                                </td> *@
-
+                                <td><span class="badge bg-secondary">@role</span></td>
                                 <td>
                                     <form asp-action="ResetPassword" method="post"
-                                          onsubmit="return confirm('Reset password for @user.Email?')">
+                                          onsubmit="return confirm('Reset password for @user.UserName?')">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="userId" value="@user.Id" />
-                                        <button type="submit" class="btn btn-secondary btn-sm">Reset</button>
+                                        <button type="submit" class="btn btn-warning btn-sm">
+                                            <i class="bi bi-key-fill me-1"></i>Reset
+                                        </button>
                                     </form>
                                 </td>
-
                                 <td>
                                     <form asp-action="DeleteUser" method="post"
-                                          onsubmit="return confirm('Permanently delete @user.Email?')">
+                                          onsubmit="return confirm('Permanently delete @user.UserName?')">
                                         @Html.AntiForgeryToken()
                                         <input type="hidden" name="userId" value="@user.Id" />
-                                        <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                                        <button type="submit" class="btn btn-danger btn-sm">
+                                            <i class="bi bi-trash-fill me-1"></i>Delete
+                                        </button>
                                     </form>
                                 </td>
                             </tr>
@@ -99,17 +77,71 @@
                     else
                     {
                         <tr>
-                            <td colspan="5" class="text-center text-muted py-4">No admin or viewer users found.</td>
+                            <td colspan="4" class="text-center text-muted py-4">No admin or staff users found.</td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
     </div>
+
     <div class="d-flex justify-content-between mt-5">
-        <a asp-action="Index" asp-controller="Home"
-            class="btn btn-outline-primary rounded-pill px-4">
+        <a asp-action="Index" asp-controller="Home" class="btn btn-outline-primary rounded-pill px-4">
             <i class="bi bi-house-fill me-2"></i>Home
         </a>
     </div>
 </div>
+
+@if (!string.IsNullOrEmpty(tempPassword))
+{
+    <div class="modal fade" id="tempPasswordModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title fw-bold">
+                        <i class="bi bi-key-fill me-2"></i>Temporary Password Generated
+                    </h5>
+                </div>
+                <div class="modal-body text-center py-4">
+                    <div class="alert alert-warning border-0 mb-3">
+                        <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                        <strong>Show this to the user only once.</strong> It will not be displayed again.
+                    </div>
+                    <p class="text-muted mb-2">Password reset for:</p>
+                    <p class="fw-bold mb-3">@resetUserEmail</p>
+                    <p class="text-muted mb-2">Temporary Password:</p>
+                    <div class="d-flex align-items-center justify-content-center gap-2 mb-3">
+                        <code id="tempPwd" class="fs-4 fw-bold px-4 py-2 bg-light border rounded" style="letter-spacing:2px;">
+                            @tempPassword
+                        </code>
+                        <button class="btn btn-outline-secondary btn-sm" onclick="copyPassword()" title="Copy">
+                            <i class="bi bi-clipboard" id="copyIcon"></i>
+                        </button>
+                    </div>
+                    <p class="text-muted small">
+                        <i class="bi bi-info-circle me-1"></i>
+                        The user will be required to change this password on their next login.
+                    </p>
+                </div>
+                <div class="modal-footer justify-content-center">
+                    <button type="button" class="btn btn-warning px-5 fw-bold" data-bs-dismiss="modal">
+                        <i class="bi bi-check-circle me-1"></i>I've noted the password
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        window.addEventListener('DOMContentLoaded', function () {
+            new bootstrap.Modal(document.getElementById('tempPasswordModal')).show();
+        });
+        function copyPassword() {
+            navigator.clipboard.writeText(document.getElementById('tempPwd').innerText.trim()).then(function () {
+                var icon = document.getElementById('copyIcon');
+                icon.classList.replace('bi-clipboard', 'bi-clipboard-check');
+                setTimeout(function () { icon.classList.replace('bi-clipboard-check', 'bi-clipboard'); }, 2000);
+            });
+        }
+    </script>
+}
