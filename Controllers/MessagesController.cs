@@ -202,7 +202,7 @@ namespace Alumni_Management_System.Controllers
                 .ToListAsync();
 
             var data = await _context.Alumni
-                .Where(a => a.SolicitationCode == true)
+                .Where(a => a.SolicitationCode == true && a.IsActive == true)
                 .Include(a => a.AlumniDegrees)
                     .ThenInclude(d => d.Degree)
                 .Select(a => new AlumniMailingViewmodel
@@ -214,30 +214,37 @@ namespace Alumni_Management_System.Controllers
                     PermanentEmail = a.PermanentEmail,
                     GraduationYear = a.GraduationYear,
 
-                    //  All degrees
+                    // ✅ All Degrees
                     Degree = string.Join(", ",
                         a.AlumniDegrees
                             .Select(d => d.Degree.MajorFieldOfStudy)
                             .Distinct()
                     ),
 
-                    //  Degree Type
+                    // ✅ Degree Types
                     DegreeType = string.Join(", ",
                         a.AlumniDegrees
                             .Select(d => d.Degree.DegreeType)
                             .Distinct()
                     ),
 
-                    //  Already mapped logic
+                    // ✅ Already mapped
                     IsAlreadyMapped = mappedAlumniIds.Contains(a.AlumniId),
 
-                    //  Pre-select already mapped
+                    // ✅ Checked by default
                     IsSelected = mappedAlumniIds.Contains(a.AlumniId)
                 })
                 .ToListAsync();
 
+            // ✅ Show checked alumni first
+            data = data
+                .OrderByDescending(x => x.IsAlreadyMapped)   // checked first
+                .ThenBy(x => x.FirstName)                   // then sort name
+                .ToList();
+
             return View(data);
         }
+        
 
 
         [HttpPost]
@@ -294,7 +301,7 @@ namespace Alumni_Management_System.Controllers
         }
         private async Task SendEmailAsync(List<string> emails, string subject, string body)
         {
-            var fromAddress = new MailAddress("socalumnimanagement@southalabama.edu", "Alumni Management System");
+            var fromAddress = new MailAddress("socalumnimanagement@southalabama.edu", "USA Sch of Computing Alumni");
             const string fromPassword = "lmspheqscoortfol";
 
             var smtp = new SmtpClient
