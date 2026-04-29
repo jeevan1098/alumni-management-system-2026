@@ -39,6 +39,9 @@
         .feature-item i { font-size: 24px; margin-right: 15px; color: #ffd700; }
         .link-text { color: #003366; text-decoration: none; font-weight: 500; transition: color 0.2s; }
         .link-text:hover { color: #0066cc; }
+        #togglePassword:hover {
+            background-color: #000000;
+        }
     </style>
 </head>
 <body>
@@ -70,10 +73,26 @@
                             <span asp-validation-for="Input.Username" class="text-danger"></span>
                         </div>
                         <div class="mb-4">
-                            <label asp-for="Input.Password" class="form-label fw-semibold"><i class="bi bi-lock-fill me-2"></i>Password</label>
-                            <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Enter your password" type="password" />
-                            <span asp-validation-for="Input.Password" class="text-danger"></span>
+                            <label asp-for="Input.Password" class="form-label fw-semibold">
+                                <i class="bi bi-lock-fill me-2"></i>Password
+                            </label>
+                        <div class="input-group">
+                            <input asp-for="Input.Password"
+                                id="passwordInput"
+                                class="form-control"
+                                autocomplete="current-password"
+                                placeholder="Enter your password"
+                                type="password" />
+
+                            <button type="button"
+                                    class="btn btn-outline-secondary"
+                                    id="togglePassword">
+                                <i class="bi bi-eye" id="toggleIcon"></i>
+                            </button>
                         </div>
+
+                        <span asp-validation-for="Input.Password" class="text-danger"></span>
+                    </div>
                         <div class="form-check mb-4">
                             <input class="form-check-input" asp-for="Input.RememberMe" />
                             <label class="form-check-label" asp-for="Input.RememberMe">Remember me on this device</label>
@@ -94,3 +113,23 @@
     <partial name="_ValidationScriptsPartial" />
 </body>
 </html>
+
+<script>
+    const toggleBtn = document.getElementById("togglePassword");
+    const passwordInput = document.getElementById("passwordInput");
+    const toggleIcon = document.getElementById("toggleIcon");
+
+    toggleBtn.addEventListener("click", function () {
+        const type = passwordInput.getAttribute("type");
+
+        if (type === "password") {
+            passwordInput.setAttribute("type", "text");
+            toggleIcon.classList.remove("bi-eye");
+            toggleIcon.classList.add("bi-eye-slash");
+        } else {
+            passwordInput.setAttribute("type", "password");
+            toggleIcon.classList.remove("bi-eye-slash");
+            toggleIcon.classList.add("bi-eye");
+        }
+    });
+</script>

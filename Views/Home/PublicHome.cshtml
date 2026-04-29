@@ -40,8 +40,8 @@
             }
 
         .hero-logo-circle {
-            width: 70px;
-            height: 70px;
+            width: 80px;
+            height: 80px;
             border-radius: 50%;
             background: white;
             display: flex;
@@ -213,7 +213,13 @@
 <body>
 
     <div class="hero">
-        <div class="hero-logo-circle">USA</div>
+        @* <div class="hero-logo-circle">USA</div> *@
+        <div class="hero-logo-circle p-0 overflow-hidden">
+    <img src="https://www.freelogovectors.net/wp-content/uploads/2020/11/university-of-south-alabama-logo.png"
+         alt="USA Logo"
+         style="width:100%; height:100%; object-fit:contain;"
+         onerror="this.style.display='none'; this.parentElement.innerHTML='USA';" />
+</div>
         <div class="hero-university">University of South Alabama</div>
         <div class="hero-system">Alumni Management System</div>
         <div class="hero-tagline">Connecting Jaguars &mdash; past, present &amp; future</div>

@@ -364,6 +364,12 @@
             }
         </div>
     }
+              <div class="d-flex justify-content-between mt-5">
+                    <a asp-action="Index" asp-controller="Home"
+                       class="btn btn-outline-primary rounded-pill px-4">
+                        <i class="bi bi-house-fill me-2"></i>Home
+                    </a>
+                </div>
 
 </div>
 
@@ -387,7 +393,7 @@
                         <i class="bi bi-exclamation-triangle-fill me-2"></i>
                         <strong>Show this to the alumni only once.</strong> It will not be displayed again.
                     </div>
-                    <p class="text-muted mb-2">Password reset for:</p>
+                    <p class="text-muted mb-2"></p>
                     <p class="fw-bold mb-3">@resetInfo</p>
                     <p class="text-muted mb-2">Temporary Password:</p>
                     <div class="d-flex align-items-center justify-content-center gap-2 mb-3">
