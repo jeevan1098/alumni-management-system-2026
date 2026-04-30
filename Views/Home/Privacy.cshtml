@@ -1,5 +1,4 @@
-﻿
-@{
+﻿@{
     Layout = "~/Views/Shared/_Layout.cshtml";
     ViewData["Title"] = "Privacy Policy";
 }
@@ -15,49 +14,155 @@
     <p>
         The Alumni Management System is committed to protecting the privacy and personal
         information of all alumni, students, and administrators who use this platform.
-        This policy explains how we collect, use, and safeguard your information.
+        This policy explains how we collect, use, and safeguard your information. By using
+        this system, you agree to the terms outlined in this Privacy Policy.
     </p>
 
     <h5 class="mt-4">2. Information We Collect</h5>
     <ul>
-        <li>Personal details (Name, Email, Phone, Address)</li>
-        <li>Academic information (Degree, Graduation Year, Program)</li>
-        <li>Professional information (Employment, Organization)</li>
-        <li>System activity (Login, Messages, Updates)</li>
+        <li>Personal details (Name, Prefix, Preferred Name, Gender, Email, Phone, Address)</li>
+        <li>Academic information (JAG ID, Degree, Graduation Year, Program)</li>
+        <li>Professional information (Employment history, Internships, Organizations)</li>
+        <li>Social information (Social Media Account links)</li>
+        <li>System activity (Login timestamps, Messages, Profile updates)</li>
     </ul>
 
     <h5 class="mt-4">3. How We Use Your Information</h5>
     <ul>
-        <li>To manage alumni records and communication</li>
-        <li>To provide networking and professional opportunities</li>
-        <li>To improve system functionality and reporting</li>
-        <li>To ensure system security and authentication</li>
+        <li>To manage alumni records and facilitate communication</li>
+        <li>To provide networking and professional opportunities among alumni</li>
+        <li>To generate reports and improve system functionality</li>
+        <li>To ensure system security and proper authentication</li>
+        <li>To send broadcast messages from administrators (if solicitation is enabled)</li>
     </ul>
 
-    <h5 class="mt-4">4. Data Protection</h5>
+    <h5 class="mt-4">4. Alumni Profile Visibility</h5>
     <p>
-        We implement industry-standard security measures including authentication,
-        encrypted communication, and controlled access to ensure your data is protected.
-        Only authorized administrators can access sensitive information.
+        Your profile visibility is controlled by the <strong>Privacy Setting</strong> in your profile.
+        This setting determines what other alumni can see when browsing the Alumni Directory.
     </p>
 
-    <h5 class="mt-4">5. Data Sharing</h5>
+    <div class="row mt-3 mb-2">
+
+        <!-- Public Profile -->
+        <div class="col-md-6 mb-3">
+            <div class="card border-success h-100">
+                <div class="card-header bg-success text-white">
+                    <i class="bi bi-globe me-2"></i>
+                    <strong>Public Profile</strong>
+                    <span class="badge bg-white text-success ms-2">Privacy = OFF</span>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-2">
+                        When your privacy is set to <strong>OFF (Public)</strong>, the following
+                        information is visible to other alumni in the directory:
+                    </p>
+                    <ul class="mb-0">
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Full Name (with Prefix)</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Preferred First Name</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Graduation Year</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Current (Permanent) Email</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Student Email</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>Social Media Profile Link</li>
+                        <li><i class="bi bi-check-circle-fill text-success me-2"></i>City &amp; State</li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-light">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Sensitive details such as your phone number, full address, JAG ID,
+                        and age at graduation are <strong>never</strong> shared with other alumni
+                        regardless of your privacy setting.
+                    </small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Private Profile -->
+        <div class="col-md-6 mb-3">
+            <div class="card border-secondary h-100">
+                <div class="card-header bg-secondary text-white">
+                    <i class="bi bi-lock-fill me-2"></i>
+                    <strong>Private Profile</strong>
+                    <span class="badge bg-white text-secondary ms-2">Privacy = ON</span>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-2">
+                        When your privacy is set to <strong>ON (Private)</strong>, your profile
+                        is fully protected. Other alumni will <strong>not</strong> be able to see
+                        any of your personal information, including:
+                    </p>
+                    <ul class="mb-0">
+                        <li><i class="bi bi-x-circle-fill text-danger me-2"></i>Name &amp; Prefix</li>
+                        <li><i class="bi bi-x-circle-fill text-danger me-2"></i>Graduation Year</li>
+                        <li><i class="bi bi-x-circle-fill text-danger me-2"></i>Email Addresses</li>
+                        <li><i class="bi bi-x-circle-fill text-danger me-2"></i>Social Media Profile</li>
+                        <li><i class="bi bi-x-circle-fill text-danger me-2"></i>City &amp; State</li>
+                        <li><i class="bi bi-x-circle-fill text-danger me-2"></i>Any other profile details</li>
+                    </ul>
+                </div>
+                <div class="card-footer bg-light">
+                    <small class="text-muted">
+                        <i class="bi bi-info-circle me-1"></i>
+                        Only authorized Admins and Staff can view your profile when
+                        privacy is enabled. Your data remains safely within the system.
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alert alert-info mt-2">
+        <i class="bi bi-shield-lock-fill me-2"></i>
+        <strong>Note:</strong> Regardless of your privacy setting, your <strong>JAG ID, phone number,
+        full address, postcode, country, and age at graduation</strong> are <strong>never</strong> visible
+        to other alumni. These fields are strictly accessible only by Admin and Staff.
+    </div>
+
+    <h5 class="mt-4">5. Data Protection</h5>
+    <p>
+        We implement industry-standard security measures including authentication,
+        encrypted communication, and role-based access control to ensure your data is
+        protected at all times. Only authorized administrators and staff can access
+        sensitive information. All data transmissions are secured and access is
+        logged for audit purposes.
+    </p>
+
+    <h5 class="mt-4">6. Data Sharing</h5>
     <p>
         Your personal data is never sold or shared with third parties. Information is
         only used within the Alumni Management System for official university purposes.
+        Administrators may send broadcast messages to alumni who have enabled their
+        solicitation setting.
     </p>
 
-    <h5 class="mt-4">6. Your Rights</h5>
+    <h5 class="mt-4">7. Your Rights</h5>
     <ul>
-        <li>You may update your profile at any time</li>
-        <li>You may request data correction</li>
-        <li>You may request account deactivation</li>
+        <li>You may update your profile information at any time via the Edit Profile page</li>
+        <li>You may toggle your Privacy setting to control your visibility in the Alumni Directory</li>
+        <li>You may enable or disable solicitation to control whether you receive broadcast messages</li>
+        <li>You may request data correction by contacting the system administrator</li>
+        <li>You may request account deactivation through the administrator</li>
     </ul>
 
-    <h5 class="mt-4">7. Contact</h5>
+    <h5 class="mt-4">8. Cookies &amp; Session Data</h5>
     <p>
-        For privacy-related concerns, contact the system administrator or university
-        IT department.
+        This system uses session cookies strictly for authentication and security purposes.
+        No tracking or advertising cookies are used. Sessions expire automatically after
+        a period of inactivity to protect your account.
+    </p>
+
+    <h5 class="mt-4">9. Changes to This Policy</h5>
+    <p>
+        This Privacy Policy may be updated periodically to reflect changes in system
+        functionality or legal requirements. Users will be notified of significant changes
+        upon their next login.
+    </p>
+
+    <h5 class="mt-4">10. Contact</h5>
+    <p>
+        For privacy-related concerns, requests, or questions about your data, please
+        contact the system administrator or the university IT department directly.
     </p>
 
     <hr />

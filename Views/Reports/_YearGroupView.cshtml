@@ -122,6 +122,27 @@
     }
 </style>
 
+@functions {
+    private int GetDegreeSortOrder(string degreeType)
+    {
+        if (string.IsNullOrWhiteSpace(degreeType))
+            return 99;
+
+        var value = degreeType.Trim().ToLower();
+
+        if (value.Contains("bachelor"))
+            return 1;
+
+        if (value.Contains("master"))
+            return 2;
+
+        if (value.Contains("phd") || value.Contains("doctor"))
+            return 3;
+
+        return 99;
+    }
+}
+
 <div class="container report-page mt-4">
 
     <!-- Header -->
@@ -243,11 +264,15 @@
                                     </td>
                                 </tr>
 
-                                var degreeGroups = yearGroup.GroupBy(x => x.DegreeType);
+                                var degreeGroups = yearGroup
+                                    .GroupBy(x => x.DegreeType)
+                                    .OrderBy(g => GetDegreeSortOrder(g.Key))
+                                    .ThenBy(g => g.Key);
 
                                 foreach (var degreeGroup in degreeGroups)
                                 {
                                     int degreeTotal = 0;
+                                    bool showDegreeType = true;
 
                                     foreach (var item in degreeGroup
                                         .OrderBy(x => x.Department)
@@ -255,7 +280,15 @@
                                     {
                                         <tr>
                                             <td></td>
-                                            <td>@item.DegreeType</td>
+
+                                            <td>
+                                                @if (showDegreeType)
+                                                {
+                                                    @item.DegreeType
+                                                    showDegreeType = false;
+                                                }
+                                            </td>
+
                                             <td>@item.Department</td>
                                             <td>@item.Major</td>
                                             <td class="text-end">@item.Count</td>

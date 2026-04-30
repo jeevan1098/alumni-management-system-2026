@@ -122,6 +122,27 @@
     }
 </style>
 
+@functions {
+    private int GetDegreeSortOrder(string degreeType)
+    {
+        if (string.IsNullOrWhiteSpace(degreeType))
+            return 99;
+
+        var value = degreeType.Trim().ToLower();
+
+        if (value.Contains("bachelor"))
+            return 1;
+
+        if (value.Contains("master"))
+            return 2;
+
+        if (value.Contains("phd") || value.Contains("doctor"))
+            return 3;
+
+        return 99;
+    }
+}
+
 <div class="container report-page mt-4">
 
     <!-- Header -->
@@ -206,7 +227,7 @@
             @if (Model != null && Model.Any())
             {
                 <span class="badge bg-primary rounded-pill px-3 py-2">
-                    @Model.Count() Record(s)
+                    @Model.Sum(x => (int)x.Count) Alumni Total
                 </span>
             }
         </div>
@@ -230,7 +251,7 @@
                             int grandTotal = 0;
 
                             var deptGroups = Model
-                                .GroupBy(x => x.Department)
+                                .GroupBy(x => Convert.ToString(x.Department)?.Trim())
                                 .OrderBy(x => x.Key);
 
                             foreach (var deptGroup in deptGroups)
@@ -243,19 +264,31 @@
                                     </td>
                                 </tr>
 
-                                var degreeGroups = deptGroup.GroupBy(x => x.DegreeType);
+                                var degreeGroups = deptGroup
+                                    .GroupBy(x => Convert.ToString(x.DegreeType)?.Trim())
+                                    .OrderBy(g => GetDegreeSortOrder(g.Key))
+                                    .ThenBy(g => g.Key);
 
                                 foreach (var degreeGroup in degreeGroups)
                                 {
                                     int degreeTotal = 0;
+                                    bool showDegreeType = true;
 
                                     foreach (var item in degreeGroup
-                                        .OrderBy(x => x.Major)
+                                        .OrderBy(x => Convert.ToString(x.Major)?.Trim())
                                         .ThenBy(x => x.Year))
                                     {
                                         <tr>
                                             <td></td>
-                                            <td>@item.DegreeType</td>
+
+                                            <td>
+                                                @if (showDegreeType)
+                                                {
+                                                    @degreeGroup.Key
+                                                    showDegreeType = false;
+                                                }
+                                            </td>
+
                                             <td>@item.Major</td>
                                             <td>@item.Year</td>
                                             <td class="text-end">@item.Count</td>
