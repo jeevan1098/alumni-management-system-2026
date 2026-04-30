@@ -1,15 +1,17 @@
-﻿using System;
+﻿using Alumni_Management_System.Data;
+using Alumni_Management_System.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using OfficeOpenXml;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Net.Mail;
 using System.Threading.Tasks;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Alumni_Management_System.Data;
-using Alumni_Management_System.Models;
-using Microsoft.AspNetCore.Identity;
-using OfficeOpenXml;
 
 namespace Alumni_Management_System.Controllers
 {
@@ -874,6 +876,8 @@ namespace Alumni_Management_System.Controllers
 
                 TempData["ResetPasswordSuccess"] = $"Password reset for {alumni.FirstName} {alumni.LastName} ({alumni.JagId})";
                 TempData["TempPassword"] = tempPassword;
+                TempData["AlumniName"]= $"{alumni.FirstName} {alumni.LastName}";
+                TempData["ResetEmail"] = alumni.PermanentEmail;
             }
             else
             {
@@ -928,6 +932,80 @@ namespace Alumni_Management_System.Controllers
                 "FEMALE" => "Female",
                 _ => null
             };
+        }
+        [HttpPost]
+        public async Task<IActionResult> SendTempPassword(string toEmail, string alumniName, string tempPassword)
+        {
+            if (string.IsNullOrWhiteSpace(toEmail))
+            {
+                TempData["ErrorMessage"] = "Email address is required.";
+                return RedirectToAction("Index");
+            }
+            
+            try
+            {
+                var fromAddress = new MailAddress(
+                    "socalumnimanagement@southalabama.edu",
+                    "USA Sch of Computing Alumni");
+
+                const string fromPassword = "lmspheqscoortfol";
+
+                var smtp = new SmtpClient
+                {
+                    Host = "smtp.gmail.com",
+                    Port = 587,
+                    EnableSsl = true,
+                    DeliveryMethod = SmtpDeliveryMethod.Network,
+                    UseDefaultCredentials = false,
+                    Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
+                };
+
+                var subject = "Temporary Password - Alumni Management System";
+
+                var body = $@"
+                           <p>Hello {alumniName},</p>
+                             <p>Your temporary password has been generated for the Alumni Management System.</p>
+
+                              <p>
+                                 <strong>Temporary Password:</strong><br/>
+                                  <span style='font-size:20px; color:#0d6efd; font-weight:bold;'>
+                                 {tempPassword}
+                                 </span>
+                              </p>
+
+                               <p>
+                                   Please use this password to log in.  
+                                   You will be required to change your password after login.
+                               </p>
+
+                            <br/>
+
+                            <p>
+                            Thanks,<br/>
+                            Alumni Management System<br/>
+                             University of South Alabama
+                            </p>";
+
+                var toAddress = new MailAddress(toEmail);
+
+                using (var message = new MailMessage(fromAddress, toAddress)
+                {
+                    Subject = subject,
+                    Body = body,
+                    IsBodyHtml = true
+                })
+                {
+                    await smtp.SendMailAsync(message);
+                }
+
+                TempData["SuccessMessage"] = $"Temporary password sent successfully to {toEmail}.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Failed to send email: {ex.Message}";
+            }
+
+            return RedirectToAction("Index");
         }
     }
 }

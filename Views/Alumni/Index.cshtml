@@ -376,44 +376,91 @@
 @{
     var tempPassword = TempData["TempPassword"]?.ToString();
     var resetInfo = TempData["ResetPasswordSuccess"]?.ToString();
+    var alumniName = TempData["AlumniName"]?.ToString();
+    var alumniEmail = TempData["ResetEmail"]?.ToString();   // set from controller
 }
 
 @if (!string.IsNullOrEmpty(tempPassword))
 {
-    <div class="modal fade" id="tempPasswordModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal fade" id="tempPasswordModal" tabindex="-1"
+         data-bs-backdrop="static" data-bs-keyboard="false">
+
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg">
+
                 <div class="modal-header bg-warning text-dark">
                     <h5 class="modal-title fw-bold">
-                        <i class="bi bi-key-fill me-2"></i>Temporary Password Generated
+                        <i class="bi bi-key-fill me-2"></i>
+                        Temporary Password Generated
                     </h5>
                 </div>
+
                 <div class="modal-body text-center py-4">
+
                     <div class="alert alert-warning border-0 mb-3">
                         <i class="bi bi-exclamation-triangle-fill me-2"></i>
-                        <strong>Show this to the alumni only once.</strong> It will not be displayed again.
+                        <strong>Password ready to email.</strong>
                     </div>
-                    <p class="text-muted mb-2"></p>
+
                     <p class="fw-bold mb-3">@resetInfo</p>
+
                     <p class="text-muted mb-2">Temporary Password:</p>
-                    <div class="d-flex align-items-center justify-content-center gap-2 mb-3">
-                        <code id="tempPwd" class="fs-4 fw-bold px-4 py-2 bg-light border rounded" style="letter-spacing:2px;">
+
+                    <div class="d-flex align-items-center justify-content-center gap-2 mb-4">
+                        <code id="tempPwd"
+                              class="fs-4 fw-bold px-4 py-2 bg-light border rounded"
+                              style="letter-spacing:2px;">
                             @tempPassword
                         </code>
-                        <button class="btn btn-outline-secondary btn-sm" onclick="copyPassword()" title="Copy">
+
+                        <button class="btn btn-outline-secondary btn-sm"
+                                onclick="copyPassword()" type="button">
                             <i class="bi bi-clipboard" id="copyIcon"></i>
                         </button>
                     </div>
-                    <p class="text-muted small">
-                        <i class="bi bi-info-circle me-1"></i>
-                        The alumni will be required to change this password on their next login.
-                    </p>
+
+                    <!-- EMAIL INPUT -->
+                    <div class="text-start">
+                        <label class="form-label fw-semibold">
+                            Send To Email
+                        </label>
+
+                        <input type="email"
+                               id="toEmail"
+                               class="form-control"
+                               value="@alumniEmail"
+                               placeholder="Enter email address" />
+
+                        <small class="text-muted">
+                            Default email loaded from alumni record. You may edit it.
+                        </small>
+                    </div>
+
                 </div>
+
                 <div class="modal-footer justify-content-center">
-                    <button type="button" class="btn btn-warning px-5 fw-bold" data-bs-dismiss="modal">
-                        <i class="bi bi-check-circle me-1"></i>I've noted the password
-                    </button>
+
+                    <form asp-action="SendTempPassword"
+                          asp-controller="Alumni"
+                          method="post"
+                          id="emailForm">
+
+                        <input type="hidden" name="toEmail" id="hiddenToEmail" />
+
+                        <input type="hidden" name="alumniName" value="@alumniName" />
+
+                        <input type="hidden" name="tempPassword" value="@tempPassword" />
+
+                        <button type="submit" class="btn btn-warning px-5 fw-bold"
+                                onclick="setEmailValue()">
+                            <i class="bi bi-envelope-fill me-1"></i>
+                            Send Email
+                        </button>
+
+                    </form>
+
                 </div>
+
             </div>
         </div>
     </div>
@@ -424,42 +471,35 @@
         @if (!string.IsNullOrEmpty(tempPassword))
         {
             <text>
-                window.addEventListener('DOMContentLoaded', function () {
-                    new bootstrap.Modal(document.getElementById('tempPasswordModal')).show();
-                });
-                function copyPassword() {
-                    navigator.clipboard.writeText(document.getElementById('tempPwd').innerText.trim()).then(function () {
-                        var icon = document.getElementById('copyIcon');
-                        icon.classList.replace('bi-clipboard', 'bi-clipboard-check');
-                        setTimeout(function () { icon.classList.replace('bi-clipboard-check', 'bi-clipboard'); }, 2000);
-                    });
-                }
+            window.addEventListener('DOMContentLoaded', function () {
+                new bootstrap.Modal(
+                    document.getElementById('tempPasswordModal')
+                ).show();
+            });
             </text>
         }
 
-        function toggleView(viewType) {
-            const cardView = document.getElementById('cardView');
-            const tableView = document.getElementById('tableView');
-            const cardBtn = document.getElementById('cardViewBtn');
-            const tableBtn = document.getElementById('tableViewBtn');
-
-            if (!cardView) return;
-
-            if (viewType === 'card') {
-                tableView.style.display = 'none';
-                cardView.style.display = 'flex';
-                cardBtn.classList.add('active');
-                tableBtn.classList.remove('active');
-            } else {
-                tableView.style.display = 'block';
-                cardView.style.display = 'none';
-                tableBtn.classList.add('active');
-                cardBtn.classList.remove('active');
-            }
+        function setEmailValue() {
+            document.getElementById("hiddenToEmail").value =
+                document.getElementById("toEmail").value;
         }
 
-        document.addEventListener('DOMContentLoaded', function () {
-            toggleView('table');
-        });
+        function copyPassword() {
+            navigator.clipboard.writeText(
+                document.getElementById('tempPwd').innerText.trim()
+            ).then(function () {
+
+                let icon = document.getElementById("copyIcon");
+
+                icon.classList.replace("bi-clipboard", "bi-clipboard-check");
+
+                setTimeout(function () {
+                    icon.classList.replace(
+                        "bi-clipboard-check",
+                        "bi-clipboard"
+                    );
+                }, 2000);
+            });
+        }
     </script>
 }
