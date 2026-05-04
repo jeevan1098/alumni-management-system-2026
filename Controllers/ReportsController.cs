@@ -137,16 +137,14 @@ namespace Alumni_Management_System.Controllers
             return View(data);
         }
         //Report 2
-        public async Task<IActionResult> AlumniCount(
-    int fromYear,
-    int toYear,
-    string groupBy = "year",
-    bool download = false)
+        public async Task<IActionResult> AlumniCount(int? fromYear, int? toYear, string groupBy = "year", bool download = false)
         {
+            int startYear = fromYear ?? 1900;
+        int endYear = toYear ?? 2100;
             var data = await _context.AlumniDegrees
                 .Where(ad =>
-                    ad.DateConferred.Year >= fromYear &&
-                    ad.DateConferred.Year <= toYear
+                    ad.DateConferred.Year >= startYear &&
+                    ad.DateConferred.Year <= endYear    
                 )
                 .Select(ad => new
                 {
@@ -161,8 +159,7 @@ namespace Alumni_Management_System.Controllers
                 })
                 .ToListAsync();
 
-            var result = data
-                .GroupBy(x => new
+            var result = data .GroupBy(x => new
                 {
                     x.Year,
                     x.Department,

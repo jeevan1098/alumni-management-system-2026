@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Alumni_Management_System.Controllers
 {
-    [AllowAnonymous]
     public class AccountController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -70,6 +69,8 @@ namespace Alumni_Management_System.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
+
         public IActionResult VerifyJagId()
         {
             return View();
@@ -112,6 +113,8 @@ namespace Alumni_Management_System.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
+
         public IActionResult RegisterAlumni()
         {
 
@@ -133,6 +136,7 @@ namespace Alumni_Management_System.Controllers
         }
 
         [HttpPost]
+        [AllowAnonymous]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> RegisterAlumni(AlumniRegisterViewModel model)
         {
