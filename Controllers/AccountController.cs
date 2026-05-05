@@ -94,7 +94,7 @@ namespace Alumni_Management_System.Controllers
 
             if (registryEntry == null)
             {
-                ModelState.AddModelError("JagId", "JAG ID not found. Please contact the administrator for assistance.");
+                ModelState.AddModelError("JagId", "Invalid JAG ID or Last Name. Please contact the administrator for assistance.");
                 return View(model);
             }
 

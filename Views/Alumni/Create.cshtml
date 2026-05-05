@@ -187,7 +187,8 @@
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-telephone-fill"></i>
                             </span>
-                            <input asp-for="Phone" type="tel" class="form-control rounded-end-3" placeholder="+1 (555) 123-4567" />
+                            <input asp-for="Phone" maxlength="10"
+                            pattern="\d{10}"class="form-control rounded-end-3" placeholder="Please enter 10-digit phone number" />
                         </div>
                         <span asp-validation-for="Phone" class="text-danger"></span>
                     </div>

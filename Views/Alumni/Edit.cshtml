@@ -213,12 +213,12 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label asp-for="Phone" class="form-label"></label>
-                            <input asp-for="Phone" class="form-control" type="tel" />
+                            <input asp-for="Phone" class="form-control" maxlength="10" pattern="\d{10}"/>
                             <span asp-validation-for="Phone" class="text-danger"></span>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label asp-for="SocialMediaAccount" class="form-label"></label>
-                            <input asp-for="SocialMediaAccount" class="form-control" placeholder="LinkedIn, Twitter, etc." />
+                            <input asp-for="SocialMediaAccount" class="form-control" placeholder="LinkedIn, Github, etc." />
                             <span asp-validation-for="SocialMediaAccount" class="text-danger"></span>
                         </div>
                     </div>
