@@ -17,8 +17,8 @@
                 <select asp-for="AlumniId" class ="form-control" asp-items="ViewBag.AlumniId"></select>
             </div>
             <div class="form-group">
-                <label asp-for="OrganizationTypeId" class="control-label"></label>
-                <select asp-for="OrganizationTypeId" class ="form-control" asp-items="ViewBag.OrganizationTypeId"></select>
+                <label asp-for="OrganizationId" class="control-label"></label>
+                <select asp-for="OrganizationId" class ="form-control" asp-items="ViewBag.OrganizationId"></select>
             </div>
             <div class="form-group">
                 <label asp-for="OfficerRoles" class="control-label"></label>
@@ -89,11 +89,11 @@
                     <label class="form-label fw-semibold"><span class="text-danger">*</span> Organization Type</label>
                     <div class="input-group shadow-sm mb-3">
                         <span class="input-group-text bg-light"><i class="bi bi-building"></i></span>
-                        <select asp-for="OrganizationTypeId" class="form-select rounded-end-3" asp-items="ViewBag.OrganizationTypeId">
+                        <select asp-for="OrganizationId" class="form-select rounded-end-3" asp-items="ViewBag.OrganizationId">
                             <option value="">-- Select Organization Type --</option>
                         </select>
                     </div>
-                    <span asp-validation-for="OrganizationTypeId" class="text-danger"></span>
+                    <span asp-validation-for="OrganizationId" class="text-danger"></span>
 
                     <div class="mb-3">
                         <label asp-for="OfficerRoles" class="form-label fw-semibold">

@@ -22,8 +22,11 @@ public partial class Alumni
     [Display(Name = "JAG ID")]
     public string JagId { get; set; }
 
-    // Navigation property to AppUser (one-to-one relationship via JagId)
-    [ForeignKey(nameof(JagId))]
+    // Logical link to AppUser via JagId, not a DB foreign key - this Alumni
+    // row can exist (bulk-imported) before any login account is created for
+    // it, and JagId doubles as the identifier for non-Alumni accounts too.
+    // Set manually where needed; never eager-loaded.
+    [NotMapped]
     public virtual AppUser User { get; set; }
 
     [Column("prefix")]
@@ -41,20 +44,33 @@ public partial class Alumni
     [Display(Name = "Preferred First Name")]
     public string PreferredFirstName { get; set; }
 
+    [Column("middle_name")]
+    [StringLength(50)]
+    [Display(Name = "Middle Name")]
+    public string MiddleName { get; set; }
+
     [Required]
     [Column("last_name")]
     [StringLength(50)]
     [Display(Name = "Last Name")]
     public string LastName { get; set; }
 
+    [Column("suffix")]
+    [StringLength(10)]
+    [Display(Name = "Suffix")]
+    public string Suffix { get; set; }
+
     [Column("gender")]
     [StringLength(20)]
     public string Gender { get; set; }
 
-    [Column("age_at_graduation")]
-    [Range(15, 150, ErrorMessage = "Age at graduation must be between 15 and 150.")]
-    [Display(Name = "Age at Graduation")]
-    public int? AgeAtGraduation { get; set; }
+    [Column("date_of_birth")]
+    [Display(Name = "Date of Birth")]
+    public DateOnly? DateOfBirth { get; set; }
+
+    [Column("college_id")]
+    [Display(Name = "College")]
+    public int? CollegeId { get; set; }
 
     [Column("student_email")]
     [StringLength(150)]
@@ -92,7 +108,7 @@ public partial class Alumni
     public string Country { get; set; }
 
     [Column("graduation_year")]
-    [Display(Name = "Graduation Year")]
+    [Display(Name = "Most Recent Graduation Year")]
     public int GraduationYear { get; set; }
 
     [Column("solicitation_code")]
@@ -114,6 +130,10 @@ public partial class Alumni
     [Column("last_updated", TypeName = "datetime")]
     [Display(Name = "Last Updated")]
     public DateTime LastUpdated { get; set; }
+
+    [ForeignKey("CollegeId")]
+    [InverseProperty("Alumni")]
+    public virtual College College { get; set; }
 
     [InverseProperty("Alumni")]
     public virtual ICollection<AlumniDegree> AlumniDegrees { get; set; } = new List<AlumniDegree>();

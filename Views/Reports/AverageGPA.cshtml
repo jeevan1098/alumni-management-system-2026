@@ -1,0 +1,351 @@
+@model IEnumerable<Alumni_Management_System.Models.ViewModels.AverageGpaReportRowViewModel>
+
+@{
+    ViewData["Title"] = "Average GPA Report";
+}
+
+<style>
+    .report-page {
+        padding-bottom: 40px;
+    }
+
+    .report-header {
+        background: linear-gradient(135deg, #003366 0%, #0066cc 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 28px;
+        box-shadow: 0 12px 30px rgba(0, 51, 102, 0.25);
+    }
+
+    .report-header h2 {
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .report-header p {
+        margin-bottom: 0;
+        opacity: 0.9;
+    }
+
+    .filter-card,
+    .table-card {
+        background: white;
+        border-radius: 18px;
+        border: 1px solid rgba(0,0,0,0.08);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        padding: 24px;
+        margin-bottom: 28px;
+    }
+
+    .section-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #003366;
+        margin-bottom: 18px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .form-control {
+        border-radius: 10px;
+        padding: 10px 14px;
+        border: 1px solid #d8dee9;
+    }
+
+    .form-control:focus {
+        border-color: #0066cc;
+        box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.15);
+    }
+
+    .btn-report {
+        border-radius: 50px;
+        padding: 10px 20px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .table thead {
+        background: #003366;
+        color: white;
+    }
+
+    .table th,
+    .table td {
+        vertical-align: middle;
+    }
+
+    .year-row {
+        background: #d9edf7;
+        font-weight: 700;
+        color: #003366;
+    }
+
+    .degree-summary-row {
+        background: #eef5ff;
+        color: #1a237e;
+        font-weight: 600;
+    }
+
+    .year-summary-row {
+        background: #e3f2fd;
+        color: #0d47a1;
+        font-weight: 700;
+    }
+
+    .grand-total-row {
+        background: #c8e6c9;
+        font-weight: 700;
+    }
+
+    .empty-state {
+        background: #f5f8fc;
+        border: 1px dashed #b8c7dc;
+        border-radius: 16px;
+        padding: 35px;
+        text-align: center;
+        color: #555;
+    }
+
+    .empty-state i {
+        font-size: 42px;
+        color: #0066cc;
+        margin-bottom: 12px;
+    }
+
+    .back-btn {
+        border-radius: 50px;
+        padding: 10px 22px;
+    }
+</style>
+
+<div class="container report-page mt-4">
+
+    <!-- Header -->
+    <div class="report-header">
+        <div class="d-flex align-items-center">
+            <div class="me-3">
+                <i class="bi bi-graph-up-arrow fs-1"></i>
+            </div>
+            <div>
+                <h2>Average GPA Report</h2>
+                <p>Analyze average GPA grouped by year, degree type, and major field of study.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-card">
+        <div class="section-title">
+            <i class="bi bi-funnel-fill me-2"></i>Report Filters
+        </div>
+
+        <form asp-controller="Reports" asp-action="AverageGPA" method="get" onsubmit="return validateYears();">
+            <div class="row align-items-end g-3">
+
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label">From Year</label>
+                    <input type="number"
+                           id="fromYear"
+                           name="fromYear"
+                           class="form-control"
+                           min="1900"
+                           max="2100"
+                           placeholder="e.g. 2000"
+                           value="@Context.Request.Query["fromYear"]" />
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label">To Year</label>
+                    <input type="number"
+                           id="toYear"
+                           name="toYear"
+                           class="form-control"
+                           min="1900"
+                           max="2100"
+                           placeholder="e.g. 2024"
+                           value="@Context.Request.Query["toYear"]" />
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <button type="submit" class="btn btn-primary btn-report w-100">
+                        <i class="bi bi-search me-2"></i>Generate Report
+                    </button>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <button type="submit" name="download" value="true" class="btn btn-outline-success btn-report w-100">
+                        <i class="bi bi-file-earmark-excel-fill me-2"></i>Download Excel
+                    </button>
+                </div>
+
+            </div>
+
+            <div id="yearValidationMessage" class="text-danger mt-2 fw-semibold"></div>
+        </form>
+    </div>
+
+    <!-- Results -->
+    <div class="table-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="section-title mb-0">
+                <i class="bi bi-table me-2"></i>Average GPA Results
+            </div>
+
+            @if (Model != null && Model.Any())
+            {
+                <span class="badge bg-primary rounded-pill px-3 py-2">
+                    @Model.Count() Record(s)
+                </span>
+            }
+        </div>
+
+        @if (Model != null && Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Year</th>
+                            <th>Degree Type</th>
+                            <th>Major Field of Study</th>
+                            <th class="text-end">Degree Count</th>
+                            <th class="text-end">Average GPA</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @{
+                            int grandCount = 0;
+                            decimal grandTotalGpa = 0;
+
+                            var yearGroups = Model
+                                .GroupBy(x => x.Year)
+                                .OrderBy(x => x.Key);
+
+                            foreach (var yearGroup in yearGroups)
+                            {
+                                int yearCount = 0;
+                                decimal yearTotalGpa = 0;
+
+                                <tr class="year-row">
+                                    <td colspan="5">
+                                        <i class="bi bi-calendar3 me-2"></i>@yearGroup.Key
+                                    </td>
+                                </tr>
+
+                                var degreeGroups = yearGroup.GroupBy(x => x.DegreeType);
+
+                                foreach (var degreeGroup in degreeGroups)
+                                {
+                                    int degreeCount = 0;
+                                    decimal degreeTotalGpa = 0;
+
+                                    foreach (var item in degreeGroup.OrderBy(x => x.Major))
+                                    {
+                                        <tr>
+                                            <td></td>
+                                            <td>@item.DegreeType</td>
+                                            <td>@item.Major</td>
+                                            <td class="text-end">@item.DegreeCount</td>
+                                            <td class="text-end">@item.AverageGpa</td>
+                                        </tr>
+
+                                        degreeCount += item.DegreeCount;
+                                        degreeTotalGpa += item.AverageGpa * item.DegreeCount;
+
+                                        yearCount += item.DegreeCount;
+                                        yearTotalGpa += item.AverageGpa * item.DegreeCount;
+
+                                        grandCount += item.DegreeCount;
+                                        grandTotalGpa += item.AverageGpa * item.DegreeCount;
+                                    }
+
+                                    <tr class="degree-summary-row">
+                                        <td></td>
+                                        <td>Summary @degreeGroup.Key</td>
+                                        <td></td>
+                                        <td class="text-end">@degreeCount</td>
+                                        <td class="text-end">
+                                            @(degreeCount == 0 ? 0 : Math.Round(degreeTotalGpa / degreeCount, 2))
+                                        </td>
+                                    </tr>
+                                }
+
+                                <tr class="year-summary-row">
+                                    <td colspan="3">Year Summary @yearGroup.Key</td>
+                                    <td class="text-end">@yearCount</td>
+                                    <td class="text-end">
+                                        @(yearCount == 0 ? 0 : Math.Round(yearTotalGpa / yearCount, 2))
+                                    </td>
+                                </tr>
+
+                                <tr>
+                                    <td colspan="5" style="border:none;height:10px;"></td>
+                                </tr>
+                            }
+                        }
+
+                        <tr class="grand-total-row">
+                            <td colspan="3">Grand Total</td>
+                            <td class="text-end">@grandCount</td>
+                            <td class="text-end">
+                                @(grandCount == 0 ? 0 : Math.Round(grandTotalGpa / grandCount, 2))
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="bi bi-inbox-fill d-block"></i>
+                <h5 class="fw-bold mb-2">No GPA records found</h5>
+                <p class="mb-0">Use the filters above and click Generate Report to view results.</p>
+            </div>
+        }
+    </div>
+
+    <!-- Back Button -->
+    <div class="d-flex justify-content-between mt-5 mb-4">
+        <a asp-action="Home" asp-controller="Reports"
+           class="btn btn-outline-primary back-btn">
+            <i class="bi bi-arrow-left me-2"></i>Back to Reports
+        </a>
+    </div>
+
+</div>
+
+<script>
+    function validateYears() {
+        const fromInput = document.getElementById("fromYear");
+        const toInput = document.getElementById("toYear");
+        const message = document.getElementById("yearValidationMessage");
+
+        const fromYear = parseInt(fromInput.value);
+        const toYear = parseInt(toInput.value);
+
+        message.innerText = "";
+
+        if (fromInput.value && (fromYear < 1900 || fromYear > 2100)) {
+            message.innerText = "From Year must be between 1900 and 2100.";
+            return false;
+        }
+
+        if (toInput.value && (toYear < 1900 || toYear > 2100)) {
+            message.innerText = "To Year must be between 1900 and 2100.";
+            return false;
+        }
+
+        if (fromInput.value && toInput.value && fromYear > toYear) {
+            message.innerText = "From Year cannot be greater than To Year.";
+            return false;
+        }
+
+        return true;
+    }
+</script>

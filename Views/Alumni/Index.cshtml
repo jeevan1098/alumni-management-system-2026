@@ -604,6 +604,23 @@ else
 
 <div class="container mt-5 mb-5">
 
+    @if (TempData["SuccessMessage"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @Html.Raw(TempData["SuccessMessage"])
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessages"] != null)
+    {
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <strong>Import Errors:</strong><br />
+            @Html.Raw(TempData["ErrorMessages"])
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
     <!-- Header -->
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div class="d-flex align-items-center">
@@ -655,8 +672,33 @@ else
                     <i class="bi bi-plus-lg me-2"></i>Add New Alumni
                 </a>
             </div>
+            <div class="d-flex justify-content-end mb-3">
+                <a asp-controller="AlumniRegistries" asp-action="BulkImport" class="btn btn-outline-success rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-upload me-2"></i>Bulk Import
+                </a>
+            </div>
         }
     </div>
+
+    @if (ViewData["ScopeLabel"] != null)
+    {
+        <div class="alert alert-warning">
+            <i class="bi bi-shield-lock me-2"></i>
+            Your access is scoped to: <strong>@ViewData["ScopeLabel"]</strong>. You're only seeing alumni from this college.
+        </div>
+    }
+
+    @if (currentAlumniId.HasValue)
+    {
+        <!-- Also matters for an Admin/Staff account that ALSO holds the
+             Alumni role (see UsersController.AddRole) - the table below
+             doesn't highlight which row is theirs, so this is the direct path. -->
+        <div class="d-flex justify-content-end mb-3">
+            <a asp-action="MyProfile" class="btn btn-outline-primary rounded-pill px-4 shadow-sm">
+                <i class="bi bi-person-badge me-2"></i>My Alumni Profile
+            </a>
+        </div>
+    }
 
     <!-- Search -->
     <form asp-action="Index" method="get" class="mb-4 row g-3">
@@ -780,6 +822,30 @@ else
                                        title="View">
                                         <i class="bi bi-eye-fill text-primary"></i>
                                     </a>
+                                </td>
+                            }
+                            else
+                            {
+                                <!-- Staff (read-only), including a Staff account
+                                     that also holds the Alumni role - they can
+                                     still edit their OWN record (see
+                                     AlumniController.Edit's own-profile check). -->
+                                <td>
+                                    <a asp-action="Details"
+                                       asp-route-id="@item.AlumniId"
+                                       class="btn btn-sm btn-outline-primary rounded-circle me-1"
+                                       title="View">
+                                        <i class="bi bi-eye-fill text-primary"></i>
+                                    </a>
+                                    @if (currentAlumniId.HasValue && item.AlumniId == currentAlumniId.Value)
+                                    {
+                                        <a asp-action="Edit"
+                                           asp-route-id="@item.AlumniId"
+                                           class="btn btn-sm btn-outline-warning rounded-circle"
+                                           title="Edit your profile">
+                                            <i class="bi bi-pencil-fill text-warning"></i>
+                                        </a>
+                                    }
                                 </td>
                             }
                         </tr>

@@ -19,7 +19,7 @@
                 @Html.DisplayNameFor(model => model.Alumni)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.OrganizationType)
+                @Html.DisplayNameFor(model => model.Organization)
             </th>
             <th></th>
         </tr>
@@ -34,7 +34,7 @@
                 @Html.DisplayFor(modelItem => item.Alumni.FirstName)
             </td>
             <td>
-                @Html.DisplayFor(modelItem => item.OrganizationType.OrganizationName)
+                @Html.DisplayFor(modelItem => item.Organization.OrganizationName)
             </td>
             <td>
                 <a asp-action="Edit" asp-route-id="@item.AlumniOrganizationId">Edit</a> |
@@ -92,7 +92,7 @@
                             <tr class="text-center">
                                 <td>@item.OfficerRoles</td>
                                 <td>@item.Alumni.FirstName @item.Alumni.LastName</td>
-                                <td>@item.OrganizationType.OrganizationName</td>
+                                <td>@item.Organization.OrganizationName</td>
                                 <td>
                                     <a asp-action="Details" asp-route-id="@item.AlumniOrganizationId" class="btn btn-sm btn-outline-primary rounded-pill">
                                         <i class="bi bi-eye-fill"></i>

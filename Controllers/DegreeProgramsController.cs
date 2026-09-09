@@ -24,7 +24,7 @@ namespace Alumni_Management_System.Controllers
         // GET: DegreePrograms
         public async Task<IActionResult> Index()
         {
-            return View(await _context.DegreePrograms.ToListAsync());
+            return View(await _context.DegreePrograms.Include(d => d.Department).ThenInclude(dp => dp.College).ToListAsync());
         }
 
         // GET: DegreePrograms/Details/5
@@ -36,6 +36,7 @@ namespace Alumni_Management_System.Controllers
             }
 
             var degreeProgram = await _context.DegreePrograms
+                .Include(d => d.Department).ThenInclude(dp => dp.College)
                 .FirstOrDefaultAsync(m => m.DegreeId == id);
             if (degreeProgram == null)
             {
@@ -46,8 +47,10 @@ namespace Alumni_Management_System.Controllers
         }
 
         // GET: DegreePrograms/Create
-        public IActionResult Create()
+        [Authorize(Roles = "Admin")] // Staff/Alumni have read-only access
+        public async Task<IActionResult> Create()
         {
+            ViewData["DepartmentId"] = new SelectList(await _context.Departments.Where(d => d.IsActive).Include(d => d.College).ToListAsync(), "DepartmentId", "DepartmentName");
             return View();
         }
 
@@ -56,7 +59,8 @@ namespace Alumni_Management_System.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("DegreeId,Institution,DegreeType,MajorFieldOfStudy,Department")] DegreeProgram degreeProgram)
+        [Authorize(Roles = "Admin")] // Staff/Alumni have read-only access
+        public async Task<IActionResult> Create([Bind("DegreeId,Institution,DegreeType,MajorFieldOfStudy,DepartmentId,IsActive")] DegreeProgram degreeProgram)
         {
             if (ModelState.IsValid)
             {
@@ -64,10 +68,12 @@ namespace Alumni_Management_System.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction(nameof(Index));
             }
+            ViewData["DepartmentId"] = new SelectList(await _context.Departments.Where(d => d.IsActive).ToListAsync(), "DepartmentId", "DepartmentName", degreeProgram.DepartmentId);
             return View(degreeProgram);
         }
 
         // GET: DegreePrograms/Edit/5
+        [Authorize(Roles = "Admin")] // Staff/Alumni have read-only access
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -80,6 +86,7 @@ namespace Alumni_Management_System.Controllers
             {
                 return NotFound();
             }
+            ViewData["DepartmentId"] = new SelectList(await _context.Departments.Where(d => d.IsActive).ToListAsync(), "DepartmentId", "DepartmentName", degreeProgram.DepartmentId);
             return View(degreeProgram);
         }
 
@@ -88,7 +95,8 @@ namespace Alumni_Management_System.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("DegreeId,Institution,DegreeType,MajorFieldOfStudy,Department")] DegreeProgram degreeProgram)
+        [Authorize(Roles = "Admin")] // Staff/Alumni have read-only access
+        public async Task<IActionResult> Edit(int id, [Bind("DegreeId,Institution,DegreeType,MajorFieldOfStudy,DepartmentId,IsActive")] DegreeProgram degreeProgram)
         {
             if (id != degreeProgram.DegreeId)
             {
@@ -115,10 +123,12 @@ namespace Alumni_Management_System.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
+            ViewData["DepartmentId"] = new SelectList(await _context.Departments.Where(d => d.IsActive).ToListAsync(), "DepartmentId", "DepartmentName", degreeProgram.DepartmentId);
             return View(degreeProgram);
         }
 
         // GET: DegreePrograms/Delete/5
+        [Authorize(Roles = "Admin")] // Staff/Alumni have read-only access
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -127,6 +137,7 @@ namespace Alumni_Management_System.Controllers
             }
 
             var degreeProgram = await _context.DegreePrograms
+                .Include(d => d.Department).ThenInclude(dp => dp.College)
                 .FirstOrDefaultAsync(m => m.DegreeId == id);
             if (degreeProgram == null)
             {
@@ -139,6 +150,7 @@ namespace Alumni_Management_System.Controllers
         // POST: DegreePrograms/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")] // Staff/Alumni have read-only access
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var degreeProgram = await _context.DegreePrograms.FindAsync(id);

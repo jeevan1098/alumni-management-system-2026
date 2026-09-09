@@ -1,0 +1,381 @@
+@model IEnumerable<Alumni_Management_System.Models.AppUser>
+@using Microsoft.AspNetCore.Mvc.Rendering
+
+@{
+    ViewData["Title"] = "Manage Users";
+    var rolesByUserId = (Dictionary<string, IList<string>>)ViewData["RolesByUserId"];
+    var scopeByUserId = (Dictionary<string, Alumni_Management_System.Models.UserAccessScope>)ViewData["ScopeByUserId"];
+    var colleges = (SelectList)ViewData["Colleges"];
+    var assignableRoles = new[] { "Admin", "Staff" };
+
+    var adminUsers = Model.Where(u => rolesByUserId[u.Id].Contains("Admin")).ToList();
+    var staffUsers = Model.Where(u => rolesByUserId[u.Id].Contains("Staff")).ToList();
+    var alumniUsers = Model.Where(u => rolesByUserId[u.Id].Contains("Alumni")).ToList();
+    // Cross-account detection: the SAME person can end up as two separate
+    // accounts (e.g. registered once as Staff, once as Alumni) sharing an
+    // email or JagId. That's effectively one person holding multiple roles,
+    // even though no single account row has Count > 1 - surface it too.
+    var crossAccountReason = new Dictionary<string, string>();
+
+    var emailGroups = Model
+        .Where(u => !string.IsNullOrWhiteSpace(u.NormalizedEmail))
+        .GroupBy(u => u.NormalizedEmail.Trim());
+    var jagIdGroups = Model
+        .Where(u => !string.IsNullOrWhiteSpace(u.JagId))
+        .GroupBy(u => u.JagId.Trim().ToUpperInvariant());
+
+    void FlagGroups(IEnumerable<IGrouping<string, Alumni_Management_System.Models.AppUser>> groups, string sharedLabel)
+    {
+        foreach (var g in groups)
+        {
+            var members = g.ToList();
+            if (members.Count < 2) continue;
+            var distinctRoleSets = members.Select(u => string.Join(",", rolesByUserId[u.Id].OrderBy(r => r))).Distinct().Count();
+            if (distinctRoleSets < 2) continue; // same roles everywhere - not a "different roles" case
+
+            foreach (var u in members)
+            {
+                var others = members.Where(o => o.Id != u.Id)
+                    .Select(o => $"{o.UserName} ({string.Join("/", rolesByUserId[o.Id])})");
+                var reason = $"Shares {sharedLabel} with {string.Join(", ", others)}";
+                crossAccountReason[u.Id] = crossAccountReason.TryGetValue(u.Id, out var existing) ? existing + "; " + reason : reason;
+            }
+        }
+    }
+
+    FlagGroups(emailGroups, "email");
+    FlagGroups(jagIdGroups, "JAG ID");
+
+    var multiRoleUsers = Model.Where(u => rolesByUserId[u.Id].Count > 1 || crossAccountReason.ContainsKey(u.Id)).ToList();
+
+    async Task RenderRow(Alumni_Management_System.Models.AppUser item)
+    {
+        var roles = rolesByUserId[item.Id];
+        var canScope = roles.Contains("Admin") || roles.Contains("Staff");
+        var addableRoles = assignableRoles.Where(r => !roles.Contains(r)).ToList();
+        scopeByUserId.TryGetValue(item.Id, out var scope);
+        <tr class="user-row" data-search="@($"{item.UserName} {item.Email}".ToLower())">
+            <td>@item.UserName</td>
+            <td>@item.Email</td>
+            <td>
+                @foreach (var r in roles)
+                {
+                    <span class="badge bg-primary-subtle text-primary-emphasis me-1 mb-1">
+                        @r
+                        @if (roles.Count > 1)
+                        {
+                            <button type="button" class="btn-close btn-close-sm ms-1" style="font-size:.55rem;"
+                                    title="Remove @r role"
+                                    onclick="removeRole('@item.Id', '@r', '@item.UserName')"></button>
+                        }
+                    </span>
+                }
+                @if (addableRoles.Any())
+                {
+                    <div class="dropdown d-inline-block">
+                        <button class="btn btn-sm btn-outline-secondary rounded-pill dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-plus-lg"></i> Add Role
+                        </button>
+                        <ul class="dropdown-menu">
+                            @foreach (var r in addableRoles)
+                            {
+                                <li>
+                                    <a class="dropdown-item" href="#" onclick="addRole('@item.Id', '@r', '@item.UserName'); return false;">@r</a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
+                @if (crossAccountReason.TryGetValue(item.Id, out var reason))
+                {
+                    <div class="small text-warning-emphasis mt-1"><i class="bi bi-exclamation-triangle-fill me-1"></i>@reason</div>
+                }
+            </td>
+            <td>
+                @if (item.TwoFactorEnabled)
+                {
+                    <span class="badge bg-success">Enabled</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Disabled</span>
+                }
+            </td>
+            <td>
+                @if (item.IsFirstLogin)
+                {
+                    <span class="badge bg-warning text-dark">Pending</span>
+                }
+                else
+                {
+                    <span class="badge bg-success">Complete</span>
+                }
+            </td>
+            <td>
+                @if (canScope)
+                {
+                    @if (scope != null)
+                    {
+                        <span class="badge bg-warning text-dark">@(scope.College?.CollegeName ?? "System-wide")</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-light text-dark border">System-wide</span>
+                    }
+                    <button type="button" class="btn btn-sm btn-outline-primary rounded-pill mt-1"
+                            data-bs-toggle="modal" data-bs-target="#scopeModal"
+                            data-user-id="@item.Id"
+                            data-user-name="@item.UserName"
+                            data-scope-id="@scope?.UserAccessScopeId"
+                            data-college-id="@scope?.CollegeId"
+                            data-access-level="@(scope?.AccessLevel ?? "Full")">
+                        <i class="bi bi-shield-lock"></i> Manage Scope
+                    </button>
+                }
+                else
+                {
+                    <span class="text-muted">—</span>
+                }
+            </td>
+            <td>
+                <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill me-1"
+                        onclick="resetPassword('@item.Id', '@item.UserName')" title="Reset Password">
+                    <i class="bi bi-key-fill"></i>
+                </button>
+                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger rounded-pill" title="Delete">
+                    <i class="bi bi-trash-fill"></i>
+                </a>
+            </td>
+        </tr>
+    }
+
+    async Task RenderTable(List<Alumni_Management_System.Models.AppUser> users, string emptyText)
+    {
+        if (!users.Any())
+        {
+            <div class="alert alert-info mb-0">@emptyText</div>
+            return;
+        }
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-dark text-center">
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Role(s)</th>
+                        <th>2FA</th>
+                        <th>Setup</th>
+                        <th>Scope</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="text-center">
+                    @foreach (var item in users)
+                    {
+                        await RenderRow(item);
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                    <i class="bi bi-people-fill text-primary fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0">Manage Users</h3>
+                    <small class="text-info">Create Admin/Staff accounts (Alumni accounts self-register via JAG ID)</small>
+                </div>
+            </div>
+
+            <hr class="mb-4" />
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+            }
+
+            <div class="d-flex justify-content-between align-items-center mb-3 gap-3">
+                <div class="input-group" style="max-width: 360px;">
+                    <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
+                    <input type="text" id="userSearch" class="form-control" placeholder="Search by username or email...">
+                </div>
+                <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm text-nowrap">
+                    <i class="bi bi-person-plus-fill me-2"></i>Create User
+                </a>
+            </div>
+
+            <ul class="nav nav-tabs mb-4" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#adminsTab" type="button">
+                        <i class="bi bi-shield-fill-check me-1"></i>Admins <span class="badge bg-secondary ms-1">@adminUsers.Count</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#staffTab" type="button">
+                        <i class="bi bi-person-badge-fill me-1"></i>Staff <span class="badge bg-secondary ms-1">@staffUsers.Count</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#alumniTab" type="button">
+                        <i class="bi bi-mortarboard-fill me-1"></i>Alumni <span class="badge bg-secondary ms-1">@alumniUsers.Count</span>
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" data-bs-toggle="tab" data-bs-target="#multiRoleTab" type="button">
+                        <i class="bi bi-people-fill me-1"></i>Multiple Roles <span class="badge bg-secondary ms-1">@multiRoleUsers.Count</span>
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content">
+                <div class="tab-pane fade show active" id="adminsTab">
+                    @{ await RenderTable(adminUsers, "No Admin accounts."); }
+                </div>
+                <div class="tab-pane fade" id="staffTab">
+                    @{ await RenderTable(staffUsers, "No Staff accounts."); }
+                </div>
+                <div class="tab-pane fade" id="alumniTab">
+                    @{ await RenderTable(alumniUsers, "No Alumni accounts have registered yet."); }
+                </div>
+                <div class="tab-pane fade" id="multiRoleTab">
+                    @{ await RenderTable(multiRoleUsers, "No accounts currently hold more than one role, and no person shares an email or JAG ID across accounts with different roles."); }
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-between mt-5">
+                <a asp-action="Index" asp-controller="Home" class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="bi bi-house-fill me-2"></i>Home
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!-- Shared modal for inline access-scope management - one form, JS fills it
+     in per-row so admins never have to leave this page to grant/change one. -->
+<div class="modal fade" id="scopeModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="SetScope" method="post">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="bi bi-shield-lock me-2"></i>Manage Scope - <span id="scopeModalUserName"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" name="userId" id="scopeModalUserId" />
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">College (blank = system-wide)</label>
+                        <select name="collegeId" id="scopeModalCollegeId" class="form-select" asp-items="colleges">
+                            <option value="">-- System-wide --</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Access Level</label>
+                        <select name="accessLevel" id="scopeModalAccessLevel" class="form-select">
+                            <option value="Full">Full</option>
+                            <option value="ReadOnly">Read Only</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer justify-content-between">
+                    <button type="button" id="scopeModalRemoveBtn" class="btn btn-outline-danger rounded-pill px-3">
+                        <i class="bi bi-x-circle me-1"></i>Remove Scope
+                    </button>
+                    <div>
+                        <button type="button" class="btn btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-primary rounded-pill px-3">
+                            <i class="bi bi-check-circle me-1"></i>Save
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Separate form for Remove, since it posts to a different action -->
+<form asp-action="RemoveScope" method="post" id="scopeRemoveForm">
+    <input type="hidden" name="id" id="scopeRemoveId" />
+</form>
+
+<!-- Hidden forms for the role add/remove buttons above -->
+<form asp-action="AddRole" method="post" id="addRoleForm">
+    <input type="hidden" name="userId" id="addRoleUserId" />
+    <input type="hidden" name="role" id="addRoleRole" />
+</form>
+<form asp-action="RemoveRole" method="post" id="removeRoleForm">
+    <input type="hidden" name="userId" id="removeRoleUserId" />
+    <input type="hidden" name="role" id="removeRoleRole" />
+</form>
+<form asp-action="ResetPassword" method="post" id="resetPasswordForm">
+    <input type="hidden" name="userId" id="resetPasswordUserId" />
+</form>
+
+@section Scripts {
+    <script>
+        function addRole(userId, role, userName) {
+            if (!confirm('Add the ' + role + ' role to ' + userName + '?')) return;
+            document.getElementById('addRoleUserId').value = userId;
+            document.getElementById('addRoleRole').value = role;
+            document.getElementById('addRoleForm').submit();
+        }
+
+        function removeRole(userId, role, userName) {
+            if (!confirm('Remove the ' + role + ' role from ' + userName + '?')) return;
+            document.getElementById('removeRoleUserId').value = userId;
+            document.getElementById('removeRoleRole').value = role;
+            document.getElementById('removeRoleForm').submit();
+        }
+
+        function resetPassword(userId, userName) {
+            if (!confirm('Reset ' + userName + '\'s password? A new temporary password will be emailed to them.')) return;
+            document.getElementById('resetPasswordUserId').value = userId;
+            document.getElementById('resetPasswordForm').submit();
+        }
+
+        // Filters rows in every tab at once (by username/email) so switching
+        // tabs keeps the same search applied.
+        document.getElementById('userSearch').addEventListener('input', function (e) {
+            var term = e.target.value.trim().toLowerCase();
+            document.querySelectorAll('tr.user-row').forEach(function (row) {
+                var matches = row.getAttribute('data-search').includes(term);
+                row.hidden = !matches;
+            });
+        });
+    </script>
+    <script>
+        document.getElementById('scopeModal').addEventListener('show.bs.modal', function (event) {
+            const button = event.relatedTarget;
+            document.getElementById('scopeModalUserId').value = button.getAttribute('data-user-id');
+            document.getElementById('scopeModalUserName').textContent = button.getAttribute('data-user-name');
+            document.getElementById('scopeModalCollegeId').value = button.getAttribute('data-college-id') || '';
+            document.getElementById('scopeModalAccessLevel').value = button.getAttribute('data-access-level') || 'Full';
+
+            const scopeId = button.getAttribute('data-scope-id');
+            const removeBtn = document.getElementById('scopeModalRemoveBtn');
+            if (scopeId && scopeId !== '') {
+                removeBtn.hidden = false;
+                removeBtn.onclick = function () {
+                    document.getElementById('scopeRemoveId').value = scopeId;
+                    document.getElementById('scopeRemoveForm').submit();
+                };
+            } else {
+                removeBtn.hidden = true;
+            }
+        });
+    </script>
+}

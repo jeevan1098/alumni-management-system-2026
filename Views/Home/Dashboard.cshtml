@@ -1,5 +1,18 @@
-﻿@{
+﻿@using Alumni_Management_System.Services
+@{
     ViewData["Title"] = "Dashboard";
+
+    var isAdmin = User.IsInRole("Admin");
+
+    string TimeAgo(DateTime dt)
+    {
+        var span = DateTime.Now - dt;
+        if (span.TotalMinutes < 1) return "just now";
+        if (span.TotalMinutes < 60) return $"{(int)span.TotalMinutes}m ago";
+        if (span.TotalHours < 24) return $"{(int)span.TotalHours}h ago";
+        if (span.TotalDays < 30) return $"{(int)span.TotalDays}d ago";
+        return dt.ToString("MMM d, yyyy");
+    }
 }
 
 <!-- ===== PAGE STYLE (RESTORE COLORS) ===== -->
@@ -69,6 +82,43 @@
     body.dark .stat6 {
         background: #2a2a2a;
     }
+
+    .stat-link {
+        text-decoration: none;
+        color: inherit;
+        display: block;
+    }
+
+    .activity-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 8px 0;
+        border-bottom: 1px solid #eee;
+    }
+
+    .activity-item:last-child {
+        border-bottom: none;
+    }
+
+    body.dark .activity-item {
+        border-bottom: 1px solid #333;
+    }
+
+    .activity-icon {
+        width: 30px;
+        height: 30px;
+        border-radius: 50%;
+        background: #f1f5f9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+
+    body.dark .activity-icon {
+        background: #2a2a2a;
+    }
 </style>
 
 <!-- ===== HEADER ===== -->
@@ -77,61 +127,131 @@
     <p class="mb-0">Manage alumni, programs, employment and system activity</p>
 </div>
 
-<!-- ===== STATS ===== -->
+@if (ViewData["ScopeLabel"] != null)
+{
+    <div class="alert alert-warning mt-3">
+        <i class="bi bi-shield-lock me-2"></i>
+        Your access is scoped to: <strong>@ViewData["ScopeLabel"]</strong>. Alumni counts below only reflect this college.
+    </div>
+}
+
+<!-- ===== STATS (click through to the underlying list) ===== -->
 <div class="row g-3 mb-4">
 
     <div class="col-md-2">
-        <div class="card-soft stat1 text-center">
-            <div class="stat-number">@ViewData["TotalAlumni"]</div>
-            Alumni
-        </div>
+        <a asp-controller="Alumni" asp-action="Index" class="stat-link">
+            <div class="card-soft stat1 text-center">
+                <div class="stat-number">@ViewData["TotalAlumni"]</div>
+                Alumni
+            </div>
+        </a>
     </div>
 
     <div class="col-md-2">
-        <div class="card-soft stat2 text-center">
-            <div class="stat-number">@ViewData["TotalRegistry"]</div>
-            Registry
-        </div>
+        <a asp-controller="AlumniRegistries" asp-action="Index" class="stat-link">
+            <div class="card-soft stat2 text-center">
+                <div class="stat-number">@ViewData["TotalRegistry"]</div>
+                Registry
+            </div>
+        </a>
     </div>
 
     <div class="col-md-2">
-        <div class="card-soft stat3 text-center">
-            <div class="stat-number">@ViewData["TotalUsers"]</div>
-            Users
-        </div>
+        @if (isAdmin)
+        {
+            <a asp-controller="Users" asp-action="Index" class="stat-link">
+                <div class="card-soft stat3 text-center">
+                    <div class="stat-number">@ViewData["TotalUsers"]</div>
+                    Users
+                </div>
+            </a>
+        }
+        else
+        {
+            <div class="card-soft stat3 text-center">
+                <div class="stat-number">@ViewData["TotalUsers"]</div>
+                Users
+            </div>
+        }
     </div>
 
     <div class="col-md-2">
-        <div class="card-soft stat4 text-center">
-            <div class="stat-number">@ViewData["TotalMessages"]</div>
-            Messages
-        </div>
+        @if (isAdmin)
+        {
+            <a asp-controller="Messages" asp-action="Index" class="stat-link">
+                <div class="card-soft stat4 text-center">
+                    <div class="stat-number">@ViewData["TotalMessages"]</div>
+                    Messages
+                </div>
+            </a>
+        }
+        else
+        {
+            <div class="card-soft stat4 text-center">
+                <div class="stat-number">@ViewData["TotalMessages"]</div>
+                Messages
+            </div>
+        }
     </div>
 
     <div class="col-md-2">
-        <div class="card-soft stat5 text-center">
-            <div class="stat-number">@ViewData["TotalEmployments"]</div>
-            Employments
-        </div>
+        @if (isAdmin)
+        {
+            <a asp-controller="AlumniEmployments" asp-action="Index" class="stat-link">
+                <div class="card-soft stat5 text-center">
+                    <div class="stat-number">@ViewData["TotalEmployments"]</div>
+                    Employments
+                </div>
+            </a>
+        }
+        else
+        {
+            <div class="card-soft stat5 text-center">
+                <div class="stat-number">@ViewData["TotalEmployments"]</div>
+                Employments
+            </div>
+        }
     </div>
 
     <div class="col-md-2">
-        <div class="card-soft stat6 text-center">
-            <div class="stat-number">@ViewData["PendingApprovals"]</div>
-            Pending
-        </div>
+        @if (isAdmin)
+        {
+            <a asp-controller="Colleges" asp-action="Index" class="stat-link">
+                <div class="card-soft stat6 text-center">
+                    <div class="stat-number">@ViewData["TotalColleges"]</div>
+                    Colleges
+                </div>
+            </a>
+        }
+        else
+        {
+            <div class="card-soft stat6 text-center">
+                <div class="stat-number">@ViewData["TotalColleges"]</div>
+                Colleges
+            </div>
+        }
     </div>
 
 </div>
 
-<!-- ===== CHART + ACTIVITY ===== -->
+<!-- ===== CHARTS + ACTIVITY ===== -->
 <div class="row g-3 mb-4">
 
-    <!-- Chart -->
+    <!-- Charts -->
     <div class="col-lg-8">
-        <div class="card-soft p-3">
-            <h6>Alumni Growth</h6>
-            <canvas id="chart" height="110"></canvas>
+        <div class="row g-3">
+            <div class="col-md-7">
+                <div class="card-soft p-3">
+                    <h6>Alumni by Graduation Year</h6>
+                    <canvas id="chart" height="180"></canvas>
+                </div>
+            </div>
+            <div class="col-md-5">
+                <div class="card-soft p-3">
+                    <h6>Alumni by College</h6>
+                    <canvas id="collegeChart" height="180"></canvas>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -139,19 +259,33 @@
     <div class="col-lg-4">
         <div class="card-soft p-3">
             <h6>Recent Activity</h6>
-            <ul class="small mb-0">
-                @if (ViewBag.RecentActivity != null && ViewBag.RecentActivity.Count > 0)
-                {
-                    foreach (var item in ViewBag.RecentActivity)
+            @{ var recentActivity = ViewBag.RecentActivity as List<RecentActivityItem>; }
+            @if (recentActivity != null && recentActivity.Count > 0)
+            {
+                <div>
+                    @foreach (var item in recentActivity)
                     {
-                        <li>@item</li>
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="bi @item.Icon"></i>
+                            </div>
+                            <div class="flex-grow-1">
+                                <div>
+                                    <span class="badge @item.BadgeClass">@item.ActionType</span>
+                                    <span class="small">@item.Summary</span>
+                                </div>
+                                <div class="text-muted" style="font-size:.75rem;">
+                                    by @(item.ChangedBy ?? "System") &middot; @TimeAgo(item.ChangedAt)
+                                </div>
+                            </div>
+                        </div>
                     }
-                }
-                else
-                {
-                    <li>No recent activity</li>
-                }
-            </ul>
+                </div>
+            }
+            else
+            {
+                <p class="text-muted small mb-0">No recent activity yet.</p>
+            }
         </div>
     </div>
 
@@ -238,45 +372,62 @@
 <script>
     var labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ChartLabels ?? new List<int>()));
     var alumniData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.AlumniData ?? new List<int>()));
-    var registryData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.RegistryData ?? new List<int>()));
+    var collegeLabels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.CollegeLabels ?? new List<string>()));
+    var collegeData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.CollegeData ?? new List<int>()));
+
+    var palette = ['#4facfe', '#00c9a7', '#f6ad55', '#845ef7', '#ff6b6b', '#20c997', '#fab005', '#5c7cfa'];
 
     if (labels.length > 0) {
         new Chart(document.getElementById('chart'), {
-            type: 'line',
+            type: 'bar',
             data: {
                 labels: labels,
                 datasets: [
                     {
                         label: "Alumni",
                         data: alumniData,
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.3
-                    },
-                    {
-                        label: "Registry",
-                        data: registryData,
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.3
+                        backgroundColor: '#4facfe',
+                        borderRadius: 6,
+                        maxBarThickness: 40
                     }
                 ]
             },
             options: {
                 plugins: {
-                    legend: { display: true }
+                    legend: { display: false }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
-                        ticks: {
-                            stepSize: 1,
-                            precision: 0
-                        }
+                        ticks: { stepSize: 1, precision: 0 }
                     }
                 }
             }
         });
+    } else {
+        document.getElementById('chart').insertAdjacentHTML('afterend', '<p class="text-muted small mb-0">No graduation-year data yet.</p>');
+    }
+
+    if (collegeLabels.length > 0) {
+        new Chart(document.getElementById('collegeChart'), {
+            type: 'doughnut',
+            data: {
+                labels: collegeLabels,
+                datasets: [
+                    {
+                        data: collegeData,
+                        backgroundColor: collegeLabels.map((_, i) => palette[i % palette.length])
+                    }
+                ]
+            },
+            options: {
+                plugins: {
+                    legend: { position: 'bottom', labels: { boxWidth: 12, font: { size: 11 } } }
+                }
+            }
+        });
+    } else {
+        document.getElementById('collegeChart').insertAdjacentHTML('afterend', '<p class="text-muted small mb-0">No college data yet.</p>');
     }
 </script>
 

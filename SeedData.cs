@@ -43,7 +43,9 @@ namespace Alumni_Management_System
                     Email = "admin@university.edu",
                     EmailConfirmed = true,
                     JagId = "J0000001",
-                    CreatedAt = DateTime.Now
+                    CreatedAt = DateTime.Now,
+                    IsFirstLogin = false, // not a placeholder account - real username chosen up front
+                    TwoFactorEnabled = false // opt-in - user can enable it later in Two-Factor Auth settings
                 };
                 await userManager.CreateAsync(admin, "Admin@123");
                 await userManager.AddToRoleAsync(admin, Constants.AdminRole);
@@ -58,7 +60,9 @@ namespace Alumni_Management_System
                     Email = "staff@university.edu",
                     EmailConfirmed = true,
                     JagId = "J0000002",
-                    CreatedAt = DateTime.Now
+                    CreatedAt = DateTime.Now,
+                    IsFirstLogin = false, // not a placeholder account - real username chosen up front
+                    TwoFactorEnabled = false // opt-in - user can enable it later in Two-Factor Auth settings
                 };
                 await userManager.CreateAsync(staff, "Staff@123");
                 await userManager.AddToRoleAsync(staff, Constants.StaffRole);
@@ -94,18 +98,56 @@ namespace Alumni_Management_System
 
         public static async Task EnsureSampleDataAsync(ApplicationDbContext context, UserManager<AppUser> userManager)
         {
+            // Seed Colleges (idempotent per-college: the initial migration already
+            // creates a default "School of Computing" college for backfill purposes)
+            if (!await context.Colleges.AnyAsync(c => c.CollegeName == "School of Computing"))
+            {
+                await context.Colleges.AddAsync(new College { CollegeName = "School of Computing", IsInternal = true, IsActive = true });
+                await context.SaveChangesAsync();
+            }
+            if (!await context.Colleges.AnyAsync(c => c.CollegeName == "Mitchell College of Business"))
+            {
+                await context.Colleges.AddAsync(new College { CollegeName = "Mitchell College of Business", IsInternal = true, IsActive = true });
+                await context.SaveChangesAsync();
+            }
+
+            var soc = await context.Colleges.FirstAsync(c => c.CollegeName == "School of Computing");
+            var mcob = await context.Colleges.FirstAsync(c => c.CollegeName == "Mitchell College of Business");
+
+            // Seed Departments (idempotent per-department)
+            var departmentsToSeed = new[]
+            {
+                new Department { CollegeId = soc.CollegeId, DepartmentName = "Computer Science", IsActive = true },
+                new Department { CollegeId = soc.CollegeId, DepartmentName = "Information Technology", IsActive = true },
+                new Department { CollegeId = soc.CollegeId, DepartmentName = "Engineering", IsActive = true },
+                new Department { CollegeId = mcob.CollegeId, DepartmentName = "Business", IsActive = true }
+            };
+            foreach (var dept in departmentsToSeed)
+            {
+                if (!await context.Departments.AnyAsync(d => d.DepartmentName == dept.DepartmentName && d.CollegeId == dept.CollegeId))
+                {
+                    await context.Departments.AddAsync(dept);
+                    await context.SaveChangesAsync();
+                }
+            }
+
+            var csDept = await context.Departments.FirstAsync(d => d.DepartmentName == "Computer Science");
+            var itDept = await context.Departments.FirstAsync(d => d.DepartmentName == "Information Technology");
+            var engDept = await context.Departments.FirstAsync(d => d.DepartmentName == "Engineering");
+            var bizDept = await context.Departments.FirstAsync(d => d.DepartmentName == "Business");
+
             // Seed Degree Programs
             if (!await context.DegreePrograms.AnyAsync())
             {
                 var degreePrograms = new[]
                 {
-                    new DegreeProgram { Institution = "University", DegreeType = "BS", MajorFieldOfStudy = "Computer Science", Department = "Computer Science" },
-                    new DegreeProgram { Institution = "University", DegreeType = "MS", MajorFieldOfStudy = "Computer Science", Department = "Computer Science" },
-                    new DegreeProgram { Institution = "University", DegreeType = "BBA", MajorFieldOfStudy = "Business Administration", Department = "Business" },
-                    new DegreeProgram { Institution = "University", DegreeType = "MBA", MajorFieldOfStudy = "Business Administration", Department = "Business" },
-                    new DegreeProgram { Institution = "University", DegreeType = "BE", MajorFieldOfStudy = "Engineering", Department = "Engineering" },
-                    new DegreeProgram { Institution = "University", DegreeType = "MS", MajorFieldOfStudy = "Data Science", Department = "Computer Science" },
-                    new DegreeProgram { Institution = "University", DegreeType = "BIT", MajorFieldOfStudy = "Information Technology", Department = "Information Technology" }
+                    new DegreeProgram { Institution = "University", DegreeType = "BS", MajorFieldOfStudy = "Computer Science", DepartmentId = csDept.DepartmentId },
+                    new DegreeProgram { Institution = "University", DegreeType = "MS", MajorFieldOfStudy = "Computer Science", DepartmentId = csDept.DepartmentId },
+                    new DegreeProgram { Institution = "University", DegreeType = "BBA", MajorFieldOfStudy = "Business Administration", DepartmentId = bizDept.DepartmentId },
+                    new DegreeProgram { Institution = "University", DegreeType = "MBA", MajorFieldOfStudy = "Business Administration", DepartmentId = bizDept.DepartmentId },
+                    new DegreeProgram { Institution = "University", DegreeType = "BE", MajorFieldOfStudy = "Engineering", DepartmentId = engDept.DepartmentId },
+                    new DegreeProgram { Institution = "University", DegreeType = "MS", MajorFieldOfStudy = "Data Science", DepartmentId = csDept.DepartmentId },
+                    new DegreeProgram { Institution = "University", DegreeType = "BIT", MajorFieldOfStudy = "Information Technology", DepartmentId = itDept.DepartmentId }
                 };
                 await context.DegreePrograms.AddRangeAsync(degreePrograms);
                 await context.SaveChangesAsync();
@@ -128,18 +170,18 @@ namespace Alumni_Management_System
                 await context.SaveChangesAsync();
             }
 
-            // Seed Organization Types
-            if (!await context.OrganizationTypes.AnyAsync())
+            // Seed Student Organizations
+            if (!await context.StudentOrganizations.AnyAsync())
             {
-                var orgTypes = new[]
+                var studentOrgs = new[]
                 {
-                    new OrganizationType { OrganizationName = "Student Government Association" },
-                    new OrganizationType { OrganizationName = "Computer Science Club" },
-                    new OrganizationType { OrganizationName = "Business Leaders Society" },
-                    new OrganizationType { OrganizationName = "Volunteer Corps" },
-                    new OrganizationType { OrganizationName = "Athletics Association" }
+                    new StudentOrganization { OrganizationName = "Student Government Association", CollegeId = soc.CollegeId, IsActive = true },
+                    new StudentOrganization { OrganizationName = "Computer Science Club", CollegeId = soc.CollegeId, DepartmentId = csDept.DepartmentId, IsActive = true },
+                    new StudentOrganization { OrganizationName = "Business Leaders Society", CollegeId = mcob.CollegeId, DepartmentId = bizDept.DepartmentId, IsActive = true },
+                    new StudentOrganization { OrganizationName = "Volunteer Corps", CollegeId = soc.CollegeId, IsActive = true },
+                    new StudentOrganization { OrganizationName = "Athletics Association", CollegeId = soc.CollegeId, IsActive = true }
                 };
-                await context.OrganizationTypes.AddRangeAsync(orgTypes);
+                await context.StudentOrganizations.AddRangeAsync(studentOrgs);
                 await context.SaveChangesAsync();
             }
 

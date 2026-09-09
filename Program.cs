@@ -1,16 +1,22 @@
 using Alumni_Management_System;
 using Alumni_Management_System.Data;
 using Alumni_Management_System.Models;
+using Alumni_Management_System.Services;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+builder.Services.AddHttpContextAccessor();
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
+
+builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp"));
+builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
 
 //builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
 //    .AddEntityFrameworkStores<ApplicationDbContext>();
@@ -97,12 +103,21 @@ app.Use(async (context, next) =>
     {
         // Skip redirect for certain paths
         var path = context.Request.Path.Value?.ToLower() ?? "";
-        var skipPaths = new[] { "/alumni/edit", "/identity/account/logout", "/account/logout", "/identity/account/manage" };
+        var skipPaths = new[] { "/alumni/edit", "/identity/account/logout", "/account/logout", "/identity/account/manage", "/account/completesetup", "/account/changetemppassword" };
 
         if (!skipPaths.Any(p => path.StartsWith(p)))
         {
             var userManager = context.RequestServices.GetRequiredService<UserManager<AppUser>>();
             var user = await userManager.GetUserAsync(context.User);
+
+            // An admin reset this account's password (forgot-password
+            // request) - highest priority, since nothing else matters until
+            // they're off the temporary password.
+            if (user != null && user.MustChangePassword)
+            {
+                context.Response.Redirect("/Account/ChangeTempPassword");
+                return;
+            }
 
             if (user != null && user.IsFirstLogin && context.User.IsInRole(Constants.AlumniRole))
             {
@@ -115,6 +130,20 @@ app.Use(async (context, next) =>
                     return;
                 }
             }
+
+            // Admin/Staff accounts created with a placeholder username +
+            // temp password must pick their own username/password before
+            // going any further.
+            if (user != null && user.IsFirstLogin &&
+                (context.User.IsInRole(Constants.AdminRole) || context.User.IsInRole(Constants.StaffRole)))
+            {
+                context.Response.Redirect("/Account/CompleteSetup");
+                return;
+            }
+
+            // 2FA is opt-in for every role (Admin/Staff included) - see
+            // TwoFactorSettingsController. No forced-enrollment redirect here;
+            // a future per-user "force 2FA" flag would plug in at this point.
         }
     }
     await next();

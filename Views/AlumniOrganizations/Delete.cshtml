@@ -24,10 +24,10 @@
             @Html.DisplayFor(model => model.Alumni.FirstName)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.OrganizationType)
+            @Html.DisplayNameFor(model => model.Organization)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.OrganizationType.OrganizationName)
+            @Html.DisplayFor(model => model.Organization.OrganizationName)
         </dd>
     </dl>
     
@@ -74,7 +74,7 @@
                 <dd class="col-sm-9">@Html.DisplayFor(model => model.OfficerRoles)</dd>
 
                 <dt class="col-sm-3"><i class="bi bi-building me-1"></i>Organization Type</dt>
-                <dd class="col-sm-9">@Html.DisplayFor(model => model.OrganizationType.OrganizationName)</dd>
+                <dd class="col-sm-9">@Html.DisplayFor(model => model.Organization.OrganizationName)</dd>
             </dl>
 
             <!-- Delete Confirmation Buttons -->

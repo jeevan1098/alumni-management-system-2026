@@ -29,6 +29,15 @@
                             </div>
                         </div>
 
+                        <div class="mb-3">
+                            <label asp-for="LastName" class="form-label"></label>
+                            <input asp-for="LastName" class="form-control form-control-lg" placeholder="Doe" />
+                            <span asp-validation-for="LastName" class="text-danger"></span>
+                            <div class="form-text">
+                                <i class="bi bi-info-circle"></i> Must match the last name on file in the Alumni Registry
+                            </div>
+                        </div>
+
                         <div class="d-grid gap-2">
                             <button type="submit" class="btn btn-primary btn-lg">
                                 <i class="bi bi-arrow-right-circle"></i> Verify JAG ID

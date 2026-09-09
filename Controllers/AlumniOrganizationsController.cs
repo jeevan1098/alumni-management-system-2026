@@ -30,7 +30,7 @@ namespace Alumni_Management_System.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
 
-            IQueryable<AlumniOrganization> query = _context.AlumniOrganizations.Include(a => a.Alumni).Include(a => a.OrganizationType);
+            IQueryable<AlumniOrganization> query = _context.AlumniOrganizations.Include(a => a.Alumni).Include(a => a.Organization);
 
             // Alumni can only see their own organization records
             if (roles.Contains(Constants.AlumniRole))
@@ -59,7 +59,7 @@ namespace Alumni_Management_System.Controllers
 
             var alumniOrganization = await _context.AlumniOrganizations
                 .Include(a => a.Alumni)
-                .Include(a => a.OrganizationType)
+                .Include(a => a.Organization)
                 .FirstOrDefaultAsync(m => m.AlumniOrganizationId == id);
             if (alumniOrganization == null)
             {
@@ -108,14 +108,14 @@ namespace Alumni_Management_System.Controllers
                 ViewData["UserRole"] = "Admin";
             }
 
-            ViewData["OrganizationTypeId"] = new SelectList(_context.OrganizationTypes, "OrganizationTypeId", "OrganizationName");
+            ViewData["OrganizationId"] = new SelectList(_context.StudentOrganizations, "OrganizationId", "OrganizationName");
             return View();
         }
 
         // POST: AlumniOrganizations/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("AlumniOrganizationId,AlumniId,OrganizationTypeId,OfficerRoles")] AlumniOrganization alumniOrganization)
+        public async Task<IActionResult> Create([Bind("AlumniOrganizationId,AlumniId,OrganizationId,OfficerRoles")] AlumniOrganization alumniOrganization)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
@@ -150,7 +150,7 @@ namespace Alumni_Management_System.Controllers
             {
                 ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniOrganization.AlumniId);
             }
-            ViewData["OrganizationTypeId"] = new SelectList(_context.OrganizationTypes, "OrganizationTypeId", "OrganizationName", alumniOrganization.OrganizationTypeId);
+            ViewData["OrganizationId"] = new SelectList(_context.StudentOrganizations, "OrganizationId", "OrganizationName", alumniOrganization.OrganizationId);
             return View(alumniOrganization);
         }
 
@@ -187,14 +187,14 @@ namespace Alumni_Management_System.Controllers
                 ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniOrganization.AlumniId);
             }
 
-            ViewData["OrganizationTypeId"] = new SelectList(_context.OrganizationTypes, "OrganizationTypeId", "OrganizationName", alumniOrganization.OrganizationTypeId);
+            ViewData["OrganizationId"] = new SelectList(_context.StudentOrganizations, "OrganizationId", "OrganizationName", alumniOrganization.OrganizationId);
             return View(alumniOrganization);
         }
 
         // POST: AlumniOrganizations/Edit/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("AlumniOrganizationId,AlumniId,OrganizationTypeId,OfficerRoles")] AlumniOrganization alumniOrganization)
+        public async Task<IActionResult> Edit(int id, [Bind("AlumniOrganizationId,AlumniId,OrganizationId,OfficerRoles")] AlumniOrganization alumniOrganization)
         {
             if (id != alumniOrganization.AlumniOrganizationId)
             {
@@ -248,7 +248,7 @@ namespace Alumni_Management_System.Controllers
             {
                 ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniOrganization.AlumniId);
             }
-            ViewData["OrganizationTypeId"] = new SelectList(_context.OrganizationTypes, "OrganizationTypeId", "OrganizationName", alumniOrganization.OrganizationTypeId);
+            ViewData["OrganizationId"] = new SelectList(_context.StudentOrganizations, "OrganizationId", "OrganizationName", alumniOrganization.OrganizationId);
             return View(alumniOrganization);
         }
 
@@ -262,7 +262,7 @@ namespace Alumni_Management_System.Controllers
 
             var alumniOrganization = await _context.AlumniOrganizations
                 .Include(a => a.Alumni)
-                .Include(a => a.OrganizationType)
+                .Include(a => a.Organization)
                 .FirstOrDefaultAsync(m => m.AlumniOrganizationId == id);
             if (alumniOrganization == null)
             {

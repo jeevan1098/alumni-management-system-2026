@@ -50,6 +50,17 @@ namespace Alumni_Management_System.Areas.Identity.Pages.Account
             public string Email { get; set; }
         }
 
+        // Superseded by AccountController.ForgotPassword (admin-mediated
+        // reset - see that controller for why). Kept only so this default
+        // Identity-scaffolded URL doesn't 404 if someone hits it directly;
+        // it just forwards to the real flow instead of running its own
+        // email-link logic (which also isn't safe once two accounts can
+        // share an email - see AccountController.ForgotPassword's comments).
+        public IActionResult OnGet()
+        {
+            return RedirectToAction("ForgotPassword", "Account");
+        }
+
         public async Task<IActionResult> OnPostAsync()
         {
             if (ModelState.IsValid)

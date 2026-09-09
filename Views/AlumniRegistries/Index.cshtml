@@ -129,15 +129,11 @@
                 </div>
             }
 
-            <!-- Buttons -->
-            <div class="d-flex justify-content-end mb-3 gap-2">
-                <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
-                    <i class="bi bi-plus-circle-fill me-2"></i>Create New
-                </a>
-                <a asp-action="BulkImport" class="btn btn-success rounded-pill px-4 shadow-sm">
-                    <i class="bi bi-upload me-2"></i>Bulk Import
-                </a>
-            </div>
+            <!-- New Registry+Alumni records are created from the Alumni page
+                 (Add New Alumni / Bulk Import) - both of those also create
+                 the matching Registry entry, unlike a lone Registry entry
+                 created here would (see AlumniController.Create's comments). -->
+            <p class="text-muted small text-end mb-3">New alumni are added from the <a asp-controller="Alumni" asp-action="Index">Alumni page</a> (individually or via Bulk Import).</p>
 
             <!-- Table -->
             <div class="table-responsive">

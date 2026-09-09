@@ -23,10 +23,10 @@
             @Html.DisplayFor(model => model.Alumni.FirstName)
         </dd>
         <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.OrganizationType)
+            @Html.DisplayNameFor(model => model.Organization)
         </dt>
         <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.OrganizationType.OrganizationName)
+            @Html.DisplayFor(model => model.Organization.OrganizationName)
         </dd>
     </dl>
 </div>
@@ -82,9 +82,9 @@
                     <dl class="row mb-4">
                         <dt class="col-sm-5">Organization Type</dt>
                         <dd class="col-sm-7">
-                            @if (Model.OrganizationType != null && !string.IsNullOrEmpty(Model.OrganizationType.OrganizationName))
+                            @if (Model.Organization != null && !string.IsNullOrEmpty(Model.Organization.OrganizationName))
                             {
-                                @Model.OrganizationType.OrganizationName
+                                @Model.Organization.OrganizationName
                             }
                             else
                             {

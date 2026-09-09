@@ -324,7 +324,10 @@
                     <span class="sidebar-text">Dashboard</span>
                 </a>
 
-                <!-- Admin Accessible Entities -->
+                <!-- Admin entities (some of these Staff can also reach from
+                     their own sidebar, but this is the Admin nav, so just
+                     one merged heading rather than splitting "who else can
+                     access this" out into its own section) -->
                 <div class="sidebar-section-title">ADMIN ENTITIES</div>
                 <a asp-controller="Alumni" asp-action="Index">
                     <i class="bi bi-people"></i>
@@ -334,29 +337,55 @@
                     <i class="bi bi-journal-text"></i>
                     <span class="sidebar-text">Registry</span>
                 </a>
-                <a asp-controller="Messages" asp-action="Index">
-                    <i class="bi bi-envelope"></i>
-                    <span class="sidebar-text">Messages</span>
-                </a>
                 <a asp-controller="DegreePrograms" asp-action="Index">
                     <i class="bi bi-mortarboard"></i>
-                    <span class="sidebar-text">Programs</span>
+                    <span class="sidebar-text">Degree Programs</span>
                 </a>
                 <a asp-controller="Employers" asp-action="Index">
                     <i class="bi bi-building"></i>
                     <span class="sidebar-text">Employers</span>
                 </a>
-                <a asp-controller="OrganizationTypes" asp-action="Index">
+                <a asp-controller="StudentOrganizations" asp-action="Index">
                     <i class="bi bi-diagram-2"></i>
-                    <span class="sidebar-text">Org Types</span>
+                    <span class="sidebar-text">Student Orgs</span>
+                </a>
+                <a asp-controller="AlumniMessages" asp-action="Index">
+                    <i class="bi bi-chat-dots"></i>
+                    <span class="sidebar-text">Alumni Messages</span>
                 </a>
                 <a asp-controller="Reports" asp-action="Home">
                     <i class="bi bi-pie-chart"></i>
                     <span class="sidebar-text">Reports</span>
                 </a>
+                <a asp-controller="Messages" asp-action="Index">
+                    <i class="bi bi-envelope"></i>
+                    <span class="sidebar-text">Messages</span>
+                </a>
+                <a asp-controller="Colleges" asp-action="Index">
+                    <i class="bi bi-bank"></i>
+                    <span class="sidebar-text">Colleges</span>
+                </a>
+                <a asp-controller="Departments" asp-action="Index">
+                    <i class="bi bi-columns-gap"></i>
+                    <span class="sidebar-text">Departments</span>
+                </a>
+                <a asp-controller="UserAccessScopes" asp-action="Index">
+                    <i class="bi bi-shield-lock"></i>
+                    <span class="sidebar-text">Access Scopes</span>
+                </a>
+                <a asp-controller="Users" asp-action="Index">
+                    <i class="bi bi-person-plus"></i>
+                    <span class="sidebar-text">Manage Users</span>
+                </a>
+                <a asp-controller="AuditLogs" asp-action="Index">
+                    <i class="bi bi-clock-history"></i>
+                    <span class="sidebar-text">Audit Logs</span>
+                </a>
 
-                <!-- Alumni Manipulation Entities -->
-                <div class="sidebar-section-title">ALUMNI DATA</div>
+                <!-- Alumni's own data (Degrees/Employments/Internships/Orgs) -
+                     Admin can manage any record here, Staff cannot (read-only
+                     elsewhere) so these controllers don't authorize Staff. -->
+                <div class="sidebar-section-title">ALUMNI ENTITIES</div>
                 <a asp-controller="AlumniDegrees" asp-action="Index">
                     <i class="bi bi-award"></i>
                     <span class="sidebar-text">Degrees</span>
@@ -372,10 +401,6 @@
                 <a asp-controller="AlumniOrganizations" asp-action="Index">
                     <i class="bi bi-diagram-3"></i>
                     <span class="sidebar-text">Organizations</span>
-                </a>
-                <a asp-controller="AlumniMessages" asp-action="Index">
-                    <i class="bi bi-chat-dots"></i>
-                    <span class="sidebar-text">Alumni Messages</span>
                 </a>
 
                 <div class="sidebar-section-title">SYSTEM</div>
@@ -447,6 +472,14 @@
                                        asp-area="Identity"
                                        asp-page="/Account/Manage/Index">
                                         <i class="bi bi-person"></i> Profile
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item"
+                                       asp-controller="TwoFactorSettings"
+                                       asp-action="Index">
+                                        <i class="bi bi-shield-lock"></i> Two-Factor Auth
                                     </a>
                                 </li>
 
@@ -528,6 +561,206 @@
                     </div>
                 </footer>
 
+
+            </div>
+        </div>
+    }
+    else if (User.Identity.IsAuthenticated && User.IsInRole("Staff"))
+    {
+        <!-- ================= STAFF ================= -->
+        <div class="layout">
+
+            <!-- SIDEBAR -->
+            <div class="sidebar" id="sidebar">
+                <button class="sidebar-toggle" onclick="toggleSidebar()">
+                    <i class="bi bi-list"></i>
+                </button>
+
+                <h5 class="mb-4 sidebar-text">Staff</h5>
+
+                <a asp-controller="Home" asp-action="Dashboard">
+                    <i class="bi bi-speedometer2"></i>
+                    <span class="sidebar-text">Dashboard</span>
+                </a>
+
+                <div class="sidebar-section-title">STAFF ENTITIES</div>
+                <a asp-controller="Alumni" asp-action="Index">
+                    <i class="bi bi-people"></i>
+                    <span class="sidebar-text">Alumni</span>
+                </a>
+                <a asp-controller="AlumniRegistries" asp-action="Index">
+                    <i class="bi bi-journal-text"></i>
+                    <span class="sidebar-text">Registry</span>
+                </a>
+                <a asp-controller="DegreePrograms" asp-action="Index">
+                    <i class="bi bi-mortarboard"></i>
+                    <span class="sidebar-text">Degree Programs</span>
+                </a>
+                <a asp-controller="Employers" asp-action="Index">
+                    <i class="bi bi-building"></i>
+                    <span class="sidebar-text">Employers</span>
+                </a>
+                <a asp-controller="StudentOrganizations" asp-action="Index">
+                    <i class="bi bi-diagram-2"></i>
+                    <span class="sidebar-text">Student Orgs</span>
+                </a>
+                <a asp-controller="AlumniMessages" asp-action="Index">
+                    <i class="bi bi-chat-dots"></i>
+                    <span class="sidebar-text">Alumni Messages</span>
+                </a>
+                <a asp-controller="Messages" asp-action="Index">
+                    <i class="bi bi-envelope"></i>
+                    <span class="sidebar-text">Messages</span>
+                </a>
+                <a asp-controller="Reports" asp-action="Home">
+                    <i class="bi bi-pie-chart"></i>
+                    <span class="sidebar-text">Reports</span>
+                </a>
+
+                <div class="sidebar-section-title">SYSTEM</div>
+                <a asp-controller="Home" asp-action="Privacy">
+                    <i class="bi bi-shield-lock"></i>
+                    <span class="sidebar-text">Privacy</span>
+                </a>
+                <a asp-controller="Help" asp-action="Index">
+                    <i class="bi bi-question-circle"></i>
+                    <span class="sidebar-text">Help</span>
+                </a>
+            </div>
+
+            <!-- MAIN -->
+            <div class="main">
+
+                <!-- TOP BAR -->
+                <div class="navbar-custom d-flex justify-content-between align-items-center">
+
+                    <strong>Alumni Management System</strong>
+
+                    <div class="d-flex align-items-center gap-3">
+
+                        <!-- Dark Mode -->
+                        <button class="btn btn-sm btn-outline-secondary" onclick="toggleDark()">
+                            <i class="bi bi-moon-stars"></i>
+                        </button>
+
+                        @{
+                            var currentUser = await UserManager.GetUserAsync(User);
+                        }
+
+                        <!-- USER DROPDOWN -->
+                        <div class="dropdown">
+
+                            <button class="btn btn-light dropdown-toggle d-flex align-items-center gap-2"
+                                    type="button"
+                                    data-bs-toggle="dropdown">
+
+                                <i class="bi bi-person-circle fs-5"></i>
+                                @currentUser?.UserName
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end shadow">
+
+                                <li>
+                                    <a class="dropdown-item"
+                                       asp-area="Identity"
+                                       asp-page="/Account/Manage/Index">
+                                        <i class="bi bi-person"></i> Profile
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item"
+                                       asp-controller="TwoFactorSettings"
+                                       asp-action="Index">
+                                        <i class="bi bi-shield-lock"></i> Two-Factor Auth
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item"
+                                       asp-controller="Home"
+                                       asp-action="Dashboard">
+                                        <i class="bi bi-speedometer2"></i> Dashboard
+                                    </a>
+                                </li>
+
+                                @if (User.IsInRole("Alumni"))
+                                {
+                                    <li>
+                                        <a class="dropdown-item"
+                                           asp-controller="Alumni"
+                                           asp-action="MyProfile">
+                                            <i class="bi bi-person-badge"></i> My Alumni Profile
+                                        </a>
+                                    </li>
+                                }
+
+                                <li><hr class="dropdown-divider"></li>
+
+                                <li>
+                                    <form asp-area="Identity"
+                                          asp-page="/Account/Logout"
+                                          asp-route-returnUrl="@Url.Content("~/")"
+                                          method="post">
+                                        <button type="submit"
+                                                class="dropdown-item text-danger">
+                                            <i class="bi bi-box-arrow-right"></i> Logout
+                                        </button>
+                                    </form>
+                                </li>
+
+                            </ul>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="p-4">
+                    @RenderBody()
+                </div>
+
+                <footer class="footer-pro">
+                    <div class="container-fluid">
+
+                        <div class="row align-items-center gy-2">
+
+                            <div class="col-md-4 text-md-start text-center">
+                                <div class="footer-brand">
+                                    <i class="bi bi-mortarboard-fill"></i>
+                                    Alumni Management System
+                                </div>
+                                <div class="footer-tagline">
+                                    Connecting Alumni • Building Futures
+                                </div>
+                            </div>
+
+                            <div class="col-md-4 text-center footer-links">
+                                <a asp-controller="Home" asp-action="Dashboard">
+                                    <i class="bi bi-speedometer2"></i> Dashboard
+                                </a>
+                                <span>•</span>
+                                <a asp-controller="Home" asp-action="Privacy">
+                                    <i class="bi bi-shield-lock"></i> Privacy
+                                </a>
+                                <span>•</span>
+                                <a asp-controller="Help" asp-action="Index">
+                                    <i class="bi bi-question-circle"></i> Help
+                                </a>
+                            </div>
+
+                            <div class="col-md-4 text-md-end text-center">
+                                <div class="footer-meta">
+                                    © @DateTime.Now.Year AMS
+                                </div>
+                                <div class="footer-version">
+                                    Version 1.0 • Secure Portal
+                                </div>
+                            </div>
+
+                        </div>
+
+                    </div>
+                </footer>
 
             </div>
         </div>
@@ -784,6 +1017,15 @@
                                    asp-page="/Account/Manage/Index">
                                     <i class="bi bi-person me-2"></i>
                                     Profile
+                                </a>
+                            </li>
+
+                            <li>
+                                <a class="dropdown-item"
+                                   asp-controller="TwoFactorSettings"
+                                   asp-action="Index">
+                                    <i class="bi bi-shield-lock me-2"></i>
+                                    Two-Factor Auth
                                 </a>
                             </li>
 

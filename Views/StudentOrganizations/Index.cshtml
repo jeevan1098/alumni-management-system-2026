@@ -1,42 +1,7 @@
-﻿@* @model IEnumerable<Alumni_Management_System.Models.OrganizationType>
+@model IEnumerable<Alumni_Management_System.Models.StudentOrganization>
 
 @{
-    ViewData["Title"] = "Index";
-}
-
-<h1>Index</h1>
-
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
-<table class="table">
-    <thead>
-        <tr>
-            <th>
-                @Html.DisplayNameFor(model => model.OrganizationName)
-            </th>
-            <th></th>
-        </tr>
-    </thead>
-    <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.OrganizationName)
-            </td>
-            <td>
-                <a asp-action="Edit" asp-route-id="@item.OrganizationTypeId">Edit</a> |
-                <a asp-action="Details" asp-route-id="@item.OrganizationTypeId">Details</a> |
-                <a asp-action="Delete" asp-route-id="@item.OrganizationTypeId">Delete</a>
-            </td>
-        </tr>
-}
-    </tbody>
-</table> *@
-@model IEnumerable<Alumni_Management_System.Models.OrganizationType>
-
-@{
-    ViewData["Title"] = "Organization Types";
+    ViewData["Title"] = "Student Organizations";
 }
 
 <div class="container mt-5 mb-5">
@@ -46,11 +11,11 @@
             <!-- Header -->
             <div class="d-flex align-items-center mb-4">
                 <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
-                    <i class="bi bi-building text-primary fs-3"></i>
+                    <i class="bi bi-diagram-2 text-primary fs-3"></i>
                 </div>
                 <div>
-                    <h3 class="fw-bold mb-0">Organization Types</h3>
-                    <small class="text-info">Manage all organization types</small>
+                    <h3 class="fw-bold mb-0">Student Organizations</h3>
+                    <small class="text-info">Manage all student organizations</small>
                 </div>
             </div>
 
@@ -68,7 +33,9 @@
                 <table class="table table-hover align-middle">
                     <thead class="table-dark text-center">
                         <tr>
-                            <th><i class="bi bi-building me-1 text-primary"></i>Organization Name</th>
+                            <th><i class="bi bi-diagram-2 me-1 text-primary"></i>Organization Name</th>
+                            <th><i class="bi bi-bank me-1 text-primary"></i>College</th>
+                            <th><i class="bi bi-columns-gap me-1 text-primary"></i>Department</th>
                             <th><i class="bi bi-list-task me-1 text-primary"></i>Actions</th>
                         </tr>
                     </thead>
@@ -77,19 +44,21 @@
                         {
                             <tr>
                                 <td>@item.OrganizationName</td>
+                                <td>@item.College?.CollegeName</td>
+                                <td>@item.Department?.DepartmentName</td>
                                 <td>
                                     <a asp-action="Details"
-                                       asp-route-id="@item.OrganizationTypeId"
+                                       asp-route-id="@item.OrganizationId"
                                        class="btn btn-sm btn-outline-primary rounded-pill me-2">
                                         <i class="bi bi-eye-fill"></i>
                                     </a>
                                     <a asp-action="Edit"
-                                       asp-route-id="@item.OrganizationTypeId"
+                                       asp-route-id="@item.OrganizationId"
                                        class="btn btn-sm btn-outline-warning rounded-pill me-2">
                                         <i class="bi bi-pencil-fill"></i>
                                     </a>
                                     <a asp-action="Delete"
-                                       asp-route-id="@item.OrganizationTypeId"
+                                       asp-route-id="@item.OrganizationId"
                                        class="btn btn-sm btn-outline-danger rounded-pill">
                                         <i class="bi bi-trash-fill"></i>
                                     </a>

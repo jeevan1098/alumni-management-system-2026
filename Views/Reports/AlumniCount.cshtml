@@ -1,0 +1,10 @@
+@model IEnumerable<Alumni_Management_System.Models.ViewModels.AlumniCountReportRowViewModel>
+
+@if (ViewBag.GroupBy == "year")
+{
+    @await Html.PartialAsync("_YearGroupView", Model)
+}
+else
+{
+    @await Html.PartialAsync("_DepartmentGroupView", Model)
+}

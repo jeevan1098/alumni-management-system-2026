@@ -110,13 +110,13 @@ namespace Alumni_Management_System.Controllers
             }
 
             //ViewData["DegreeId"] = new SelectList(_context.DegreePrograms, "DegreeId", "DegreeType");
-            ViewData["DegreeId"] = new SelectList( _context.DegreePrograms .Select(d => new
+            ViewData["DegreeId"] = new SelectList( _context.DegreePrograms.Include(d => d.Department).Select(d => new
             {
                 d.DegreeId,
                 DisplayText = d.DegreeType + ", " +
                               d.Institution + ", " +
                               d.MajorFieldOfStudy + ", " +
-                              d.Department
+                              d.Department.DepartmentName
             }),
                 "DegreeId",
                 "DisplayText");

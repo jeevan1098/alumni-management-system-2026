@@ -243,7 +243,23 @@ namespace Alumni_Management_System.Controllers
                                     continue;
                                 }
 
+                                // A JAG ID already tied to an existing account
+                                // (e.g. an Admin/Staff account) can't be
+                                // reused for a bulk-imported Alumni - it's a
+                                // one-JAG-ID-per-account system.
+                                if (await _context.Users.AnyAsync(u => u.JagId == registry.JagId))
+                                {
+                                    errors.Add($"JAG ID {registry.JagId} is already in use by an existing account - skipped");
+                                    errorCount++;
+                                    continue;
+                                }
+
                                 _context.AlumniRegistries.Add(registry);
+
+                                var gradYear = values.Length > 3 ? values[3].Trim() : null;
+                                var emailOnRecord = values.Length > 5 ? values[5].Trim() : null;
+                                await AddAlumniRecordIfMissingAsync(registry, gradYear, emailOnRecord);
+
                                 successCount++;
                             }
                             catch (Exception ex)
@@ -306,7 +322,23 @@ namespace Alumni_Management_System.Controllers
                                         continue;
                                     }
 
+                                    // A JAG ID already tied to an existing
+                                    // account (e.g. an Admin/Staff account)
+                                    // can't be reused for a bulk-imported
+                                    // Alumni - one JAG ID per account.
+                                    if (await _context.Users.AnyAsync(u => u.JagId == registry.JagId))
+                                    {
+                                        errors.Add($"Row {row}: JAG ID {registry.JagId} is already in use by an existing account - skipped");
+                                        errorCount++;
+                                        continue;
+                                    }
+
                                     _context.AlumniRegistries.Add(registry);
+
+                                    var gradYear = worksheet.Cells[row, 4].Value?.ToString()?.Trim();
+                                    var emailOnRecord = worksheet.Cells[row, 6].Value?.ToString()?.Trim();
+                                    await AddAlumniRecordIfMissingAsync(registry, gradYear, emailOnRecord);
+
                                     successCount++;
                                 }
                                 catch (Exception ex)
@@ -332,13 +364,41 @@ namespace Alumni_Management_System.Controllers
                     TempData["ErrorMessages"] = string.Join("<br/>", errors);
                 }
 
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction("Index", "Alumni");
             }
             catch (Exception ex)
             {
                 ModelState.AddModelError("", $"Error processing file: {ex.Message}");
                 return View();
             }
+        }
+
+        // Bulk import used to populate the actual Alumni table too (not just
+        // the Registry stub) - restoring that: each imported person gets a
+        // real Alumni record so the JagId -> RegisterAlumni self-service
+        // flow (which requires an existing Alumni row) actually works, and
+        // so Admin/Staff can see them under Alumni immediately.
+        private async Task AddAlumniRecordIfMissingAsync(AlumniRegistry registry, string gradYearRaw, string emailOnRecord)
+        {
+            if (await _context.Alumni.AnyAsync(a => a.JagId == registry.JagId))
+            {
+                return;
+            }
+
+            int.TryParse(gradYearRaw, out var gradYear);
+
+            _context.Alumni.Add(new Alumni
+            {
+                JagId = registry.JagId,
+                FirstName = registry.FirstName,
+                LastName = registry.LastName,
+                PermanentEmail = string.IsNullOrWhiteSpace(emailOnRecord) ? $"{registry.JagId.ToLower()}@pending.import" : emailOnRecord,
+                GraduationYear = gradYear,
+                IsActive = false,
+                Privacy = true,
+                SolicitationCode = false,
+                LastUpdated = DateTime.Now
+            });
         }
 
         private string[] ParseCsvLine(string line)

@@ -17,7 +17,7 @@
     if (!string.IsNullOrEmpty(Model.PermanentEmail)) completedFields++;
     if (!string.IsNullOrEmpty(Model.Phone)) completedFields++;
     if (!string.IsNullOrEmpty(Model.Gender)) completedFields++;
-    if (Model.AgeAtGraduation.HasValue) completedFields++;
+    if (Model.DateOfBirth.HasValue) completedFields++;
     if (!string.IsNullOrEmpty(Model.Address)) completedFields++;
     if (!string.IsNullOrEmpty(Model.City)) completedFields++;
     if (!string.IsNullOrEmpty(Model.State)) completedFields++;
@@ -124,6 +124,18 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
+                            <label asp-for="MiddleName" class="form-label"></label>
+                            <input asp-for="MiddleName" class="form-control" />
+                            <span asp-validation-for="MiddleName" class="text-danger"></span>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="Suffix" class="form-label"></label>
+                            <input asp-for="Suffix" class="form-control" placeholder="Jr., Sr., III" />
+                            <span asp-validation-for="Suffix" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
                             <label asp-for="Gender" class="form-label"></label>
                             <select asp-for="Gender" class="form-select">
                                 <option value="">Select...</option>
@@ -135,10 +147,9 @@
                             <span asp-validation-for="Gender" class="text-danger"></span>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label asp-for="AgeAtGraduation" class="form-label"></label>
-                            <input asp-for="AgeAtGraduation" class="form-control" type="number" min="15" placeholder="e.g., 22" />
-                            <span asp-validation-for="AgeAtGraduation" class="text-danger"></span>
-                            <small class="text-muted">Minimum age: 15</small>
+                            <label asp-for="DateOfBirth" class="form-label"></label>
+                            <input asp-for="DateOfBirth" class="form-control" type="date" />
+                            <span asp-validation-for="DateOfBirth" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="row">
@@ -148,9 +159,53 @@
                             <span asp-validation-for="GraduationYear" class="text-danger"></span>
                             <small class="form-text text-info"><i class="bi bi-lock"></i> From Registry</small>
                         </div>
+                        <div class="col-md-6 mb-3">
+                            <label asp-for="CollegeId" class="form-label"></label>
+                            <select asp-for="CollegeId" class="form-select" asp-items="ViewBag.CollegeId">
+                                <option value="">Select College...</option>
+                            </select>
+                            <span asp-validation-for="CollegeId" class="text-danger"></span>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <!-- Colleges & Departments (from earned degrees - view only,
+                 since a person can hold several, unlike the single College
+                 field above) -->
+            @{ var degreeColleges = ViewData["DegreeColleges"] as List<Alumni_Management_System.Models.ViewModels.AlumniDegreeCollegeViewModel>; }
+            @if (degreeColleges != null && degreeColleges.Any())
+            {
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0"><i class="bi bi-bank2"></i> My Colleges &amp; Departments</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Based on your degrees on file - view only.</p>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-borderless mb-0">
+                                <thead>
+                                    <tr class="text-muted small text-uppercase">
+                                        <th>Degree</th>
+                                        <th>College</th>
+                                        <th>Department</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var dc in degreeColleges)
+                                    {
+                                        <tr>
+                                            <td>@dc.DegreeType, @dc.MajorFieldOfStudy</td>
+                                            <td><span class="badge bg-info-subtle text-info-emphasis">@dc.CollegeName</span></td>
+                                            <td><span class="badge bg-light text-dark border">@dc.DepartmentName</span></td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            }
 
             <!-- Contact Information -->
             <div class="card mb-4">

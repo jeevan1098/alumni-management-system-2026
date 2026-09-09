@@ -3,30 +3,33 @@ using Alumni_Management_System.Models;
 using Alumni_Management_System.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net;
-using System.Net.Mail;
 using System.Threading.Tasks;
 
 
 
 namespace Alumni_Management_System.Controllers
 {
-    [Authorize(Roles = "Admin")]
+    // Staff can compose/send messages (Create, Edit, and the send-mail flow
+    // below); only Delete stays Admin-only (see its own [Authorize] override).
+    [Authorize(Roles = "Admin,Staff")]
     public class MessagesController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly UserManager<AppUser> _userManager;
+        private readonly IEmailSender _emailSender;
 
-        public MessagesController(ApplicationDbContext context, UserManager<AppUser> userManager)
+        public MessagesController(ApplicationDbContext context, UserManager<AppUser> userManager, IEmailSender emailSender)
         {
             _context = context;
             _userManager = userManager;
+            _emailSender = emailSender;
         }
 
         // GET: Messages
@@ -282,23 +285,20 @@ namespace Alumni_Management_System.Controllers
                     message.MessageBody
                 );
             }
+            else
+            {
+                TempData["ErrorMessage"] = "No alumni were selected (or none have an email on file) - nothing was sent.";
+            }
 
             return RedirectToAction("Index");
         }
         private async Task SendEmailAsync(List<string> emails, string subject, string body)
         {
-            var fromAddress = new MailAddress("socalumnimanagement@southalabama.edu", "Alumni Management System");
-            const string fromPassword = "lmspheqscoortfol";
-
-            var smtp = new SmtpClient
-            {
-                Host = "smtp.gmail.com",
-                Port = 587,
-                EnableSsl = true,
-                DeliveryMethod = SmtpDeliveryMethod.Network,
-                UseDefaultCredentials = false,
-                Credentials = new NetworkCredential(fromAddress.Address, fromPassword)
-            };
+            var htmlBody = $@"
+                    <p>Hello,</p>
+                    <p>{body}</p>
+                    <br/>
+                    <p>Thanks,<br/>Alumni Management System,<br/>University of South Alabama</p>";
 
             int successCount = 0;
             int failCount = 0;
@@ -307,22 +307,8 @@ namespace Alumni_Management_System.Controllers
             {
                 try
                 {
-                    var toAddress = new MailAddress(email);
-
-                    using (var message = new MailMessage(fromAddress, toAddress)
-                    {
-                        Subject = subject,
-                        Body = $@"
-                    <p>Hello,</p>
-                    <p>{body}</p>
-                    <br/>
-                    <p>Thanks,<br/>Alumni Management System,<br/>University of South Alabama</p>",
-                        IsBodyHtml = true
-                    })
-                    {
-                        await smtp.SendMailAsync(message);
-                        successCount++;
-                    }
+                    await _emailSender.SendEmailAsync(email, subject, htmlBody);
+                    successCount++;
                 }
                 catch
                 {

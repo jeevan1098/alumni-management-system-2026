@@ -1,0 +1,82 @@
+@page
+@model LoginWith2faModel
+
+@{
+    ViewData["Title"] = "Verify Your Identity - Alumni Management System";
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"]</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" />
+    <style>
+        body {
+            background: linear-gradient(135deg, #003366 0%, #0066cc 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .login-container { max-width: 480px; width: 100%; margin: 20px; }
+        .login-card { background: white; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; padding: 50px 40px; }
+        .login-title { font-size: 26px; font-weight: 700; margin-bottom: 10px; color: #003366; }
+        .login-subtitle { color: #666; margin-bottom: 30px; }
+        .form-control { border-radius: 10px; padding: 12px 20px; border: 2px solid #e0e0e0; transition: all 0.3s; letter-spacing: 2px; text-align: center; font-size: 20px; }
+        .form-control:focus { border-color: #003366; box-shadow: 0 0 0 0.2rem rgba(0,51,102,0.15); }
+        .btn-login { background: linear-gradient(135deg, #003366 0%, #0066cc 100%); border: none; border-radius: 10px; padding: 14px; font-weight: 600; font-size: 16px; }
+        .link-text { color: #003366; text-decoration: none; font-weight: 500; background: none; border: none; padding: 0; }
+        .link-text:hover { color: #0066cc; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="text-center mb-3">
+                <i class="bi bi-envelope-check-fill" style="font-size: 48px; color: #003366;"></i>
+            </div>
+            <h2 class="login-title text-center">Check Your Email</h2>
+            <p class="login-subtitle text-center">We sent a verification code to your email address. Enter it below to finish signing in.</p>
+
+            @if (ViewData["ResentMessage"] != null)
+            {
+                <div class="alert alert-success">@ViewData["ResentMessage"]</div>
+            }
+
+            <form method="post">
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+                <input type="hidden" asp-for="RememberMe" />
+                <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+
+                <div class="mb-4">
+                    <label asp-for="Input.Code" class="form-label fw-semibold">Verification Code</label>
+                    <input asp-for="Input.Code" class="form-control" autocomplete="one-time-code" placeholder="000000" maxlength="8" />
+                    <span asp-validation-for="Input.Code" class="text-danger"></span>
+                </div>
+
+                <button type="submit" class="w-100 btn btn-primary btn-login mb-3">
+                    <i class="bi bi-check-circle me-2"></i>Verify
+                </button>
+            </form>
+
+            <form method="post" asp-page-handler="Resend">
+                <input type="hidden" asp-for="RememberMe" />
+                <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+                <div class="text-center">
+                    <button type="submit" class="link-text">
+                        <i class="bi bi-arrow-repeat me-1"></i>Didn't get a code? Resend
+                    </button>
+                </div>
+            </form>
+        </div>
+        <div class="text-center mt-4"><p class="text-white"><small>&copy; @DateTime.Now.Year University of South Alabama. All rights reserved.</small></p></div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+</body>
+</html>

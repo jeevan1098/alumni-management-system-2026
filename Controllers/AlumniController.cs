@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Alumni_Management_System.Data;
 using Alumni_Management_System.Models;
+using Alumni_Management_System.Models.ViewModels;
 using Microsoft.AspNetCore.Identity;
 
 namespace Alumni_Management_System.Controllers
@@ -35,15 +36,35 @@ namespace Alumni_Management_System.Controllers
 
             var roles = await _userManager.GetRolesAsync(currentUser);
 
-            IQueryable<Alumni> alumniQuery = _context.Alumni.Include(a => a.User);
+            IQueryable<Alumni> alumniQuery = _context.Alumni.Include(a => a.College);
 
-            // Role-based filtering
-            if (roles.Contains(Constants.AlumniRole))
+            // Role-based filtering. Checked Admin/Staff-first so an account
+            // that holds both Alumni and Staff/Admin (see UsersController.AddRole)
+            // gets its full Staff/Admin visibility, not the restricted
+            // Alumni-only view - Alumni-only restriction applies only to
+            // accounts that don't also hold a Staff/Admin role.
+            var hasElevatedRole = roles.Contains(Constants.AdminRole) || roles.Contains(Constants.StaffRole);
+            if (roles.Contains(Constants.AlumniRole) && !hasElevatedRole)
             {
                 // Alumni can only see other alumni who have SolicitationCode = true
                 alumniQuery = alumniQuery.Where(a => a.SolicitationCode == true);
             }
-            // Admin and Staff can see all alumni (no filtering)
+            else
+            {
+                // Admin/Staff see everything, unless an admin has scoped them
+                // to specific college(s) via Access Scopes.
+                var allowedCollegeIds = await Services.AccessScopeService.GetAllowedCollegeIdsAsync(_context, currentUser, roles);
+                if (allowedCollegeIds != null)
+                {
+                    alumniQuery = alumniQuery.Where(a => a.CollegeId != null && allowedCollegeIds.Contains(a.CollegeId.Value));
+
+                    var scopedCollegeNames = await _context.Colleges
+                        .Where(c => allowedCollegeIds.Contains(c.CollegeId))
+                        .Select(c => c.CollegeName)
+                        .ToListAsync();
+                    ViewData["ScopeLabel"] = string.Join(", ", scopedCollegeNames);
+                }
+            }
 
             // Search functionality
             if (!string.IsNullOrEmpty(searchString))
@@ -56,7 +77,12 @@ namespace Alumni_Management_System.Controllers
             }
 
             ViewData["CurrentFilter"] = searchString;
-            ViewData["UserRole"] = roles.FirstOrDefault();
+            // Same priority as the filtering above - Admin > Staff > Alumni -
+            // so the page renders the admin/staff layout for a dual-role
+            // account instead of picking whichever role happened to load first.
+            ViewData["UserRole"] = roles.Contains(Constants.AdminRole) ? Constants.AdminRole
+                : roles.Contains(Constants.StaffRole) ? Constants.StaffRole
+                : roles.FirstOrDefault();
 
             // Pass current user's alumni ID for "My Profile" button
             var currentAlumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
@@ -93,7 +119,7 @@ namespace Alumni_Management_System.Controllers
             }
 
             var alumni = await _context.Alumni
-                .Include(a => a.User)
+                .Include(a => a.College)
                 .FirstOrDefaultAsync(m => m.AlumniId == id);
             if (alumni == null)
             {
@@ -105,9 +131,10 @@ namespace Alumni_Management_System.Controllers
 
         // GET: Alumni/Create
         [Authorize(Roles = "Admin")] // Only Admin can create alumni manually
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
             // No need for IdentityUserId dropdown since we're using JagId now
+            ViewData["CollegeId"] = new SelectList(await _context.Colleges.Where(c => c.IsActive).ToListAsync(), "CollegeId", "CollegeName");
             return View();
         }
 
@@ -117,7 +144,7 @@ namespace Alumni_Management_System.Controllers
         [HttpPost]
         [ValidateAntiForgeryToken]
         [Authorize(Roles = "Admin")] // Only Admin can create alumni manually
-        public async Task<IActionResult> Create([Bind("AlumniId,JagId,Prefix,FirstName,PreferredFirstName,LastName,Gender,AgeAtGraduation,StudentEmail,PermanentEmail,Phone,Address,City,State,Postcode,Country,GraduationYear,SolicitationCode,SocialMediaAccount,Privacy,IsActive,LastUpdated")] Alumni alumni)
+        public async Task<IActionResult> Create([Bind("AlumniId,JagId,Prefix,FirstName,PreferredFirstName,MiddleName,LastName,Suffix,Gender,DateOfBirth,CollegeId,StudentEmail,PermanentEmail,Phone,Address,City,State,Postcode,Country,GraduationYear,SolicitationCode,SocialMediaAccount,Privacy,IsActive,LastUpdated")] Alumni alumni)
         {
 
             if (ModelState.IsValid)
@@ -125,10 +152,27 @@ namespace Alumni_Management_System.Controllers
                 alumni.LastUpdated = DateTime.Now;
                 alumni.IsActive = false;
                 _context.Add(alumni);
+
+                // Every Alumni record needs a matching Registry entry, or
+                // this person can never self-register a login (VerifyJagId
+                // checks the Registry, not the Alumni table - see the same
+                // fix already applied to bulk import).
+                if (!await _context.AlumniRegistries.AnyAsync(r => r.JagId == alumni.JagId))
+                {
+                    _context.AlumniRegistries.Add(new AlumniRegistry
+                    {
+                        JagId = alumni.JagId,
+                        FirstName = alumni.FirstName,
+                        LastName = alumni.LastName,
+                        AccountCreated = false
+                    });
+                }
+
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Alumni created successfully!";
                 return RedirectToAction(nameof(Index));
             }
+            ViewData["CollegeId"] = new SelectList(await _context.Colleges.Where(c => c.IsActive).ToListAsync(), "CollegeId", "CollegeName", alumni.CollegeId);
             return View(alumni);
         }
 
@@ -140,7 +184,7 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
-            var alumni = await _context.Alumni.Include(a => a.User).FirstOrDefaultAsync(a => a.AlumniId == id);
+            var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.AlumniId == id);
             if (alumni == null)
             {
                 return NotFound();
@@ -173,6 +217,23 @@ namespace Alumni_Management_System.Controllers
             // Admin can edit any profile
 
             // No need for IdentityUserId since we're using JagId now
+            ViewData["CollegeId"] = new SelectList(await _context.Colleges.Where(c => c.IsActive).ToListAsync(), "CollegeId", "CollegeName", alumni.CollegeId);
+
+            // A person can hold several degrees, each tied to its own
+            // Department/College via the DegreeProgram - that can differ
+            // from (and outnumber) the single "College" field above, so
+            // show them separately as a read-only summary.
+            ViewData["DegreeColleges"] = await _context.AlumniDegrees
+                .Where(ad => ad.AlumniId == alumni.AlumniId)
+                .Select(ad => new AlumniDegreeCollegeViewModel
+                {
+                    DegreeType = ad.Degree.DegreeType,
+                    MajorFieldOfStudy = ad.Degree.MajorFieldOfStudy,
+                    DepartmentName = ad.Degree.Department.DepartmentName,
+                    CollegeName = ad.Degree.Department.College.CollegeName
+                })
+                .ToListAsync();
+
             return View(alumni);
         }
 
@@ -181,7 +242,7 @@ namespace Alumni_Management_System.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("AlumniId,JagId,Prefix,FirstName,PreferredFirstName,LastName,Gender,AgeAtGraduation,StudentEmail,PermanentEmail,Phone,Address,City,State,Postcode,Country,GraduationYear,SolicitationCode,SocialMediaAccount,Privacy,IsActive,LastUpdated")] Alumni alumni)
+        public async Task<IActionResult> Edit(int id, [Bind("AlumniId,JagId,Prefix,FirstName,PreferredFirstName,MiddleName,LastName,Suffix,Gender,DateOfBirth,CollegeId,StudentEmail,PermanentEmail,Phone,Address,City,State,Postcode,Country,GraduationYear,SolicitationCode,SocialMediaAccount,Privacy,IsActive,LastUpdated")] Alumni alumni)
         {
             if (id != alumni.AlumniId)
             {
@@ -250,6 +311,7 @@ namespace Alumni_Management_System.Controllers
                 return RedirectToAction(nameof(Index));
             }
             // No need for ViewData["IdentityUserId"] since we're using JagId now
+            ViewData["CollegeId"] = new SelectList(await _context.Colleges.Where(c => c.IsActive).ToListAsync(), "CollegeId", "CollegeName", alumni.CollegeId);
             return View(alumni);
         }
 
@@ -263,12 +325,17 @@ namespace Alumni_Management_System.Controllers
             }
 
             var alumni = await _context.Alumni
-                .Include(a => a.User)
+                .Include(a => a.College)
                 .FirstOrDefaultAsync(m => m.AlumniId == id);
             if (alumni == null)
             {
                 return NotFound();
             }
+
+            // JagId<->AppUser is a logical link, not a DB relationship - look
+            // it up manually so the Delete confirmation page can still show
+            // which login account (if any) will be removed alongside it.
+            alumni.User = await _userManager.Users.FirstOrDefaultAsync(u => u.JagId == alumni.JagId);
 
             return View(alumni);
         }
@@ -279,9 +346,8 @@ namespace Alumni_Management_System.Controllers
         [Authorize(Roles = "Admin")] // Only Admin can delete
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            // 1. Fetch the Alumni record and include the associated User
             var alumni = await _context.Alumni
-                .Include(a => a.User)
+                .Include(a => a.College)
                 .FirstOrDefaultAsync(m => m.AlumniId == id);
 
             if (alumni == null)
@@ -293,8 +359,8 @@ namespace Alumni_Management_System.Controllers
             {
                 try
                 {
-                    // 2. Identify the linked AppUser
-                    var user = alumni.User;
+                    // 2. Identify the linked AppUser (logical link via JagId)
+                    var user = await _userManager.Users.FirstOrDefaultAsync(u => u.JagId == alumni.JagId);
 
                     // 3. Remove the Alumni profile first
                     // This triggers the database CASCADE to history tables (Degrees, etc.)

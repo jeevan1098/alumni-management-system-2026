@@ -88,7 +88,7 @@
                 <dt class="col-md-3 fw-semibold">
                     <i class="bi bi-building-fill-check me-2 text-danger"></i>Department
                 </dt>
-                <dd class="col-md-9">@Html.DisplayFor(model => model.Department)</dd>
+                <dd class="col-md-9">@Model.Department?.DepartmentName</dd>
             </dl>
 
             <!-- Delete Confirmation Buttons -->

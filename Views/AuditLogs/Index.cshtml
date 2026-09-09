@@ -1,0 +1,109 @@
+@model IEnumerable<Alumni_Management_System.Models.ViewModels.AuditLogEntryViewModel>
+
+@{
+    ViewData["Title"] = "Audit Logs";
+    var entities = (List<string>)ViewData["Entities"];
+    var selected = (string)ViewData["SelectedEntity"];
+    var search = ViewData["Search"] as string;
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                    <i class="bi bi-clock-history text-primary fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0">Audit Logs</h3>
+                    <small class="text-info">Who changed what, and when (most recent 300 shown)</small>
+                </div>
+            </div>
+
+            <hr class="mb-4" />
+
+            <form method="get" class="row g-2 mb-4">
+                <div class="col-md-4">
+                    <select name="entity" class="form-select" onchange="this.form.submit()">
+                        @foreach (var e in entities)
+                        {
+                            @if (e == selected)
+                            {
+                                <option value="@e" selected>@e</option>
+                            }
+                            else
+                            {
+                                <option value="@e">@e</option>
+                            }
+                        }
+                    </select>
+                </div>
+                <div class="col-md-5">
+                    <input type="text" name="search" value="@search" class="form-control" placeholder="Search by user or changed value..." />
+                </div>
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search me-2"></i>Filter
+                    </button>
+                </div>
+            </form>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-dark text-center">
+                        <tr>
+                            <th>Record ID</th>
+                            <th>Action</th>
+                            <th>Changed By</th>
+                            <th>Changed At</th>
+                            <th>Old Values</th>
+                            <th>New Values</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td class="text-center">@item.RecordId</td>
+                                <td class="text-center">
+                                    @{
+                                        var badgeClass = item.ActionType switch
+                                        {
+                                            "Added" => "bg-success",
+                                            "Modified" => "bg-warning text-dark",
+                                            "Deleted" => "bg-danger",
+                                            _ => "bg-secondary"
+                                        };
+                                    }
+                                    <span class="badge @badgeClass">@item.ActionType</span>
+                                </td>
+                                <td class="text-center">@item.ChangedBy</td>
+                                <td class="text-center text-nowrap">@item.ChangedAt.ToString("MMM dd, yyyy hh:mm:ss tt")</td>
+                                <td style="max-width:300px;">
+                                    <pre class="mb-0 small text-muted" style="white-space:pre-wrap;">@item.OldValues</pre>
+                                </td>
+                                <td style="max-width:300px;">
+                                    <pre class="mb-0 small" style="white-space:pre-wrap;">@item.NewValues</pre>
+                                </td>
+                            </tr>
+                        }
+                        @if (!Model.Any())
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">No audit history for this entity yet.</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">
+                <a asp-action="Index" asp-controller="Home" class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="bi bi-house-fill me-2"></i>Home
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>

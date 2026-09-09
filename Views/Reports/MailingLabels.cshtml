@@ -1,0 +1,282 @@
+@model IEnumerable<Alumni_Management_System.Models.ViewModels.MailingLabelViewModel>
+
+@{
+    ViewData["Title"] = "Mailing Labels Report";
+}
+
+<style>
+    .report-page {
+        padding-bottom: 40px;
+    }
+
+    .report-header {
+        background: linear-gradient(135deg, #003366 0%, #0066cc 100%);
+        color: white;
+        border-radius: 20px;
+        padding: 30px;
+        margin-bottom: 28px;
+        box-shadow: 0 12px 30px rgba(0, 51, 102, 0.25);
+    }
+
+    .report-header h2 {
+        font-weight: 700;
+        margin-bottom: 6px;
+    }
+
+    .report-header p {
+        margin-bottom: 0;
+        opacity: 0.9;
+    }
+
+    .filter-card {
+        background: white;
+        border-radius: 18px;
+        border: 1px solid rgba(0,0,0,0.08);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        padding: 24px;
+        margin-bottom: 28px;
+    }
+
+    .filter-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #003366;
+        margin-bottom: 18px;
+    }
+
+    .form-label {
+        font-weight: 600;
+        color: #333;
+    }
+
+    .form-control {
+        border-radius: 10px;
+        padding: 10px 14px;
+        border: 1px solid #d8dee9;
+    }
+
+    .form-control:focus {
+        border-color: #0066cc;
+        box-shadow: 0 0 0 0.2rem rgba(0, 102, 204, 0.15);
+    }
+
+    .btn-report {
+        border-radius: 50px;
+        padding: 10px 20px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+
+    .table-card {
+        background: white;
+        border-radius: 18px;
+        border: 1px solid rgba(0,0,0,0.08);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+        padding: 24px;
+    }
+
+    .table-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #003366;
+        margin-bottom: 16px;
+    }
+
+    .table thead {
+        background: #003366;
+        color: white;
+    }
+
+    .table th {
+        font-weight: 600;
+        vertical-align: middle;
+    }
+
+    .table td {
+        vertical-align: middle;
+    }
+
+    .empty-state {
+        background: #f5f8fc;
+        border: 1px dashed #b8c7dc;
+        border-radius: 16px;
+        padding: 35px;
+        text-align: center;
+        color: #555;
+    }
+
+    .empty-state i {
+        font-size: 42px;
+        color: #0066cc;
+        margin-bottom: 12px;
+    }
+
+    .back-btn {
+        border-radius: 50px;
+        padding: 10px 22px;
+    }
+</style>
+
+<div class="container report-page mt-4">
+
+    <!-- Header -->
+    <div class="report-header">
+        <div class="d-flex align-items-center">
+            <div class="me-3">
+                <i class="bi bi-envelope-paper-fill fs-1"></i>
+            </div>
+            <div>
+                <h2>Mailing Labels Report</h2>
+                <p>Generate alumni mailing label information by major, degree type, and graduation year.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filters -->
+    <div class="filter-card">
+        <div class="filter-title">
+            <i class="bi bi-funnel-fill me-2"></i>Report Filters
+        </div>
+
+        <form asp-action="MailingLabels" method="get" onsubmit="return validateYear();">
+            <div class="row align-items-end g-3">
+
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label">Major</label>
+                    <select name="major" class="form-control">
+                        <option value="">All Majors</option>
+
+                        @foreach (var m in ViewBag.Majors)
+                        {
+                            <option value="@m" selected="@(Context.Request.Query["major"] == m)">
+                                @m
+                            </option>
+                        }
+                    </select>
+                </div>
+
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label">Degree Type</label>
+                    <select name="degreeType" class="form-control">
+                        <option value="ALL" selected="@(Context.Request.Query["degreeType"] == "ALL" || string.IsNullOrEmpty(Context.Request.Query["degreeType"]))">All Degree Types</option>
+                        <option value="BS" selected="@(Context.Request.Query["degreeType"] == "BS")">BS</option>
+                        <option value="MS" selected="@(Context.Request.Query["degreeType"] == "MS")">MS</option>
+                        <option value="PhD" selected="@(Context.Request.Query["degreeType"] == "PhD")">PhD</option>
+                        <option value="BBA" selected="@(Context.Request.Query["degreeType"] == "BBA")">BBA</option>
+                    </select>
+                </div>
+
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label">Year</label>
+                    <input type="number"
+                           id="year"
+                           name="year"
+                           class="form-control"
+                           min="1900"
+                           max="2100"
+                           placeholder="e.g. 2024"
+                           value="@Context.Request.Query["year"]" />
+                </div>
+
+                <div class="col-lg-2 col-md-3">
+                    <button type="submit" class="btn btn-primary btn-report w-100">
+                        <i class="bi bi-search me-2"></i>Generate
+                    </button>
+                </div>
+
+                <div class="col-lg-2 col-md-3">
+                    <button type="submit" name="download" value="true" class="btn btn-outline-success btn-report w-100">
+                        <i class="bi bi-file-earmark-excel-fill me-2"></i>Excel
+                    </button>
+                </div>
+
+            </div>
+
+            <div id="yearValidationMessage" class="text-danger mt-2 fw-semibold"></div>
+        </form>
+    </div>
+
+    <!-- Results -->
+    <div class="table-card">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="table-title mb-0">
+                <i class="bi bi-table me-2"></i>Mailing Label Results
+            </div>
+
+            @if (Model != null && Model.Any())
+            {
+                <span class="badge bg-primary rounded-pill px-3 py-2">
+                    @Model.Count() Record(s)
+                </span>
+            }
+        </div>
+
+        @if (Model != null && Model.Any())
+        {
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>Prefix</th>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>Address</th>
+                            <th>City</th>
+                            <th>State</th>
+                            <th>Postcode</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.Prefix</td>
+                                <td>@item.FirstName</td>
+                                <td>@item.LastName</td>
+                                <td>@item.Address</td>
+                                <td>@item.City</td>
+                                <td>@item.State</td>
+                                <td>@item.Postcode</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            <div class="empty-state">
+                <i class="bi bi-inbox-fill d-block"></i>
+                <h5 class="fw-bold mb-2">No mailing label records found</h5>
+                <p class="mb-0">Use the filters above and click Generate to view report results.</p>
+            </div>
+        }
+    </div>
+
+    <!-- Back Button -->
+    <div class="d-flex justify-content-between mt-5 mb-4">
+        <a asp-action="Home" asp-controller="Reports"
+           class="btn btn-outline-primary back-btn">
+            <i class="bi bi-arrow-left me-2"></i>Back to Reports
+        </a>
+    </div>
+
+</div>
+
+<script>
+    function validateYear() {
+        const yearInput = document.getElementById("year");
+        const message = document.getElementById("yearValidationMessage");
+
+        const year = parseInt(yearInput.value);
+        message.innerText = "";
+
+        if (yearInput.value && (year < 1900 || year > 2100)) {
+            message.innerText = "Year must be between 1900 and 2100.";
+            return false;
+        }
+
+        return true;
+    }
+</script>

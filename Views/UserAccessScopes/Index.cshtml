@@ -1,0 +1,94 @@
+@model IEnumerable<Alumni_Management_System.Models.UserAccessScope>
+
+@{
+    ViewData["Title"] = "User Access Scopes";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                    <i class="bi bi-shield-lock text-primary fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0">User Access Scopes</h3>
+                    <small class="text-info">Grant a user's role system-wide or college/department-scoped access</small>
+                </div>
+            </div>
+
+            <hr class="mb-4" />
+
+            <div class="d-flex justify-content-end mb-3">
+                <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                    <i class="bi bi-plus-circle-fill me-2"></i>Grant Access
+                </a>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead class="table-dark text-center">
+                        <tr>
+                            <th>User</th>
+                            <th>Role</th>
+                            <th>Scope</th>
+                            <th>Access Level</th>
+                            <th>Active</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-center">
+                        @foreach (var item in Model)
+                        {
+                            <tr>
+                                <td>@item.User?.UserName</td>
+                                <td>@item.Role?.Name</td>
+                                <td>
+                                    @if (item.College == null)
+                                    {
+                                        <span class="badge bg-info text-dark">System-wide</span>
+                                    }
+                                    else
+                                    {
+                                        @item.College.CollegeName
+                                        @if (item.Department != null)
+                                        {
+                                            <text> / @item.Department.DepartmentName</text>
+                                        }
+                                    }
+                                </td>
+                                <td>@item.AccessLevel</td>
+                                <td>
+                                    @if (item.IsActive)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    }
+                                </td>
+                                <td>
+                                    <a asp-action="Edit" asp-route-id="@item.UserAccessScopeId" class="btn btn-sm btn-outline-warning rounded-pill me-2">
+                                        <i class="bi bi-pencil-fill"></i>
+                                    </a>
+                                    <a asp-action="Delete" asp-route-id="@item.UserAccessScopeId" class="btn btn-sm btn-outline-danger rounded-pill">
+                                        <i class="bi bi-trash-fill"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="d-flex justify-content-between mt-5">
+                <a asp-action="Index" asp-controller="Home" class="btn btn-outline-secondary rounded-pill px-4">
+                    <i class="bi bi-house-fill me-2"></i>Home
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>

@@ -36,19 +36,23 @@ namespace Alumni_Management_System.Migrations
                         .HasColumnType("nvarchar(255)")
                         .HasColumnName("address");
 
-                    b.Property<int?>("AgeAtGraduation")
-                        .HasColumnType("int")
-                        .HasColumnName("age_at_graduation");
-
                     b.Property<string>("City")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)")
                         .HasColumnName("city");
 
+                    b.Property<int?>("CollegeId")
+                        .HasColumnType("int")
+                        .HasColumnName("college_id");
+
                     b.Property<string>("Country")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)")
                         .HasColumnName("country");
+
+                    b.Property<DateOnly?>("DateOfBirth")
+                        .HasColumnType("date")
+                        .HasColumnName("date_of_birth");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
@@ -88,6 +92,11 @@ namespace Alumni_Management_System.Migrations
                         .HasColumnType("datetime")
                         .HasColumnName("last_updated")
                         .HasDefaultValueSql("(getdate())");
+
+                    b.Property<string>("MiddleName")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasColumnName("middle_name");
 
                     b.Property<string>("PermanentEmail")
                         .IsRequired()
@@ -140,8 +149,15 @@ namespace Alumni_Management_System.Migrations
                         .HasColumnType("nvarchar(150)")
                         .HasColumnName("student_email");
 
+                    b.Property<string>("Suffix")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasColumnName("suffix");
+
                     b.HasKey("AlumniId")
                         .HasName("PK__Alumni__BB1DF35C3C7BFE94");
+
+                    b.HasIndex("CollegeId");
 
                     b.HasIndex("JagId")
                         .IsUnique();
@@ -356,16 +372,16 @@ namespace Alumni_Management_System.Migrations
                         .HasColumnType("nvarchar(150)")
                         .HasColumnName("officer_roles");
 
-                    b.Property<int>("OrganizationTypeId")
+                    b.Property<int>("OrganizationId")
                         .HasColumnType("int")
-                        .HasColumnName("organization_type_id");
+                        .HasColumnName("organization_id");
 
                     b.HasKey("AlumniOrganizationId")
                         .HasName("PK__Alumni_O__8366569D1933C852");
 
                     b.HasIndex("AlumniId");
 
-                    b.HasIndex("OrganizationTypeId");
+                    b.HasIndex("OrganizationId");
 
                     b.ToTable("Alumni_Organizations");
                 });
@@ -448,6 +464,10 @@ namespace Alumni_Management_System.Migrations
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<bool>("MustChangePassword")
+                        .HasColumnType("bit")
+                        .HasColumnName("must_change_password");
+
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -485,7 +505,651 @@ namespace Alumni_Management_System.Migrations
                         .HasDatabaseName("UserNameIndex")
                         .HasFilter("[NormalizedUserName] IS NOT NULL");
 
+                    b.HasIndex(new[] { "JagId" }, "UQ_AspNetUsers_JagId")
+                        .IsUnique();
+
                     b.ToTable("AspNetUsers", (string)null);
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.AppUserRole", b =>
+                {
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("RoleId")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("AssignedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime")
+                        .HasColumnName("assigned_at")
+                        .HasDefaultValueSql("(getdate())");
+
+                    b.Property<string>("AssignedBy")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("assigned_by");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true)
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("ScopeMode")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("System")
+                        .HasColumnName("scope_mode");
+
+                    b.HasKey("UserId", "RoleId");
+
+                    b.HasIndex("RoleId");
+
+                    b.ToTable("AspNetUserRoles", (string)null);
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.Audit.AlumniAudit", b =>
+                {
+                    b.Property<int>("AuditId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("audit_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AuditId"));
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("action_type");
+
+                    b.Property<int>("AlumniId")
+                        .HasColumnType("int")
+                        .HasColumnName("alumni_id");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("changed_at");
+
+                    b.Property<string>("ChangedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)")
+                        .HasColumnName("changed_by");
+
+                    b.Property<string>("NewValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("new_values");
+
+                    b.Property<string>("OldValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("old_values");
+
+                    b.HasKey("AuditId");
+
+                    b.ToTable("Alumni_Audit");
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.Audit.AlumniDegreeAudit", b =>
+                {
+                    b.Property<int>("AuditId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("audit_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AuditId"));
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("action_type");
+
+                    b.Property<int>("AlumniDegreeId")
+                        .HasColumnType("int")
+                        .HasColumnName("alumni_degree_id");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("changed_at");
+
+                    b.Property<string>("ChangedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)")
+                        .HasColumnName("changed_by");
+
+                    b.Property<string>("NewValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("new_values");
+
+                    b.Property<string>("OldValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("old_values");
+
+                    b.HasKey("AuditId");
+
+                    b.ToTable("Alumni_Degrees_Audit");
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.Audit.AlumniEmploymentAudit", b =>
+                {
+                    b.Property<int>("AuditId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("audit_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AuditId"));
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("action_type");
+
+                    b.Property<int>("AlumniEmploymentId")
+                        .HasColumnType("int")
+                        .HasColumnName("alumni_employment_id");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("changed_at");
+
+                    b.Property<string>("ChangedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)")
+                        .HasColumnName("changed_by");
+
+                    b.Property<string>("NewValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("new_values");
+
+                    b.Property<string>("OldValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("old_values");
+
+                    b.HasKey("AuditId");
+
+                    b.ToTable("Alumni_Employment_Audit");
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.Audit.AlumniInternshipAudit", b =>
+                {
+                    b.Property<int>("AuditId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("audit_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AuditId"));
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("action_type");
+
+                    b.Property<int>("AlumniInternshipId")
+                        .HasColumnType("int")
+                        .HasColumnName("alumni_internship_id");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("changed_at");
+
+                    b.Property<string>("ChangedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)")
+                        .HasColumnName("changed_by");
+
+                    b.Property<string>("NewValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("new_values");
+
+                    b.Property<string>("OldValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("old_values");
+
+                    b.HasKey("AuditId");
+
+                    b.ToTable("Alumni_Internships_Audit");
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.Audit.AlumniMessageAudit", b =>
+                {
+                    b.Property<int>("AuditId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("audit_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AuditId"));
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("action_type");
+
+                    b.Property<int>("AlumniMessageId")
+                        .HasColumnType("int")
+                        .HasColumnName("alumni_message_id");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("changed_at");
+
+                    b.Property<string>("ChangedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)")
+                        .HasColumnName("changed_by");
+
+                    b.Property<string>("NewValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("new_values");
+
+                    b.Property<string>("OldValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("old_values");
+
+                    b.HasKey("AuditId");
+
+                    b.ToTable("Alumni_Messages_Audit");
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.Audit.AlumniOrganizationAudit", b =>
+                {
+                    b.Property<int>("AuditId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("audit_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AuditId"));
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("action_type");
+
+                    b.Property<int>("AlumniOrganizationId")
+                        .HasColumnType("int")
+                        .HasColumnName("alumni_organization_id");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("changed_at");
+
+                    b.Property<string>("ChangedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)")
+                        .HasColumnName("changed_by");
+
+                    b.Property<string>("NewValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("new_values");
+
+                    b.Property<string>("OldValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("old_values");
+
+                    b.HasKey("AuditId");
+
+                    b.ToTable("Alumni_Organizations_Audit");
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.Audit.AlumniRegistryAudit", b =>
+                {
+                    b.Property<int>("AuditId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("audit_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AuditId"));
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("action_type");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("changed_at");
+
+                    b.Property<string>("ChangedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)")
+                        .HasColumnName("changed_by");
+
+                    b.Property<string>("NewValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("new_values");
+
+                    b.Property<string>("OldValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("old_values");
+
+                    b.Property<int>("RegistryId")
+                        .HasColumnType("int")
+                        .HasColumnName("registry_id");
+
+                    b.HasKey("AuditId");
+
+                    b.ToTable("Alumni_Registry_Audit");
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.Audit.CollegeAudit", b =>
+                {
+                    b.Property<int>("AuditId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("audit_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AuditId"));
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("action_type");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("changed_at");
+
+                    b.Property<string>("ChangedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)")
+                        .HasColumnName("changed_by");
+
+                    b.Property<int>("CollegeId")
+                        .HasColumnType("int")
+                        .HasColumnName("college_id");
+
+                    b.Property<string>("NewValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("new_values");
+
+                    b.Property<string>("OldValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("old_values");
+
+                    b.HasKey("AuditId");
+
+                    b.ToTable("Colleges_Audit");
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.Audit.DegreeProgramAudit", b =>
+                {
+                    b.Property<int>("AuditId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("audit_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AuditId"));
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("action_type");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("changed_at");
+
+                    b.Property<string>("ChangedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)")
+                        .HasColumnName("changed_by");
+
+                    b.Property<int>("DegreeId")
+                        .HasColumnType("int")
+                        .HasColumnName("degree_id");
+
+                    b.Property<string>("NewValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("new_values");
+
+                    b.Property<string>("OldValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("old_values");
+
+                    b.HasKey("AuditId");
+
+                    b.ToTable("Degree_Programs_Audit");
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.Audit.DepartmentAudit", b =>
+                {
+                    b.Property<int>("AuditId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("audit_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AuditId"));
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("action_type");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("changed_at");
+
+                    b.Property<string>("ChangedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)")
+                        .HasColumnName("changed_by");
+
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("int")
+                        .HasColumnName("department_id");
+
+                    b.Property<string>("NewValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("new_values");
+
+                    b.Property<string>("OldValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("old_values");
+
+                    b.HasKey("AuditId");
+
+                    b.ToTable("Departments_Audit");
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.Audit.EmployerAudit", b =>
+                {
+                    b.Property<int>("AuditId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("audit_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AuditId"));
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("action_type");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("changed_at");
+
+                    b.Property<string>("ChangedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)")
+                        .HasColumnName("changed_by");
+
+                    b.Property<int>("EmployerId")
+                        .HasColumnType("int")
+                        .HasColumnName("employer_id");
+
+                    b.Property<string>("NewValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("new_values");
+
+                    b.Property<string>("OldValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("old_values");
+
+                    b.HasKey("AuditId");
+
+                    b.ToTable("Employers_Audit");
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.Audit.MessageAudit", b =>
+                {
+                    b.Property<int>("AuditId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("audit_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AuditId"));
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("action_type");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("changed_at");
+
+                    b.Property<string>("ChangedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)")
+                        .HasColumnName("changed_by");
+
+                    b.Property<int>("MessageId")
+                        .HasColumnType("int")
+                        .HasColumnName("message_id");
+
+                    b.Property<string>("NewValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("new_values");
+
+                    b.Property<string>("OldValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("old_values");
+
+                    b.HasKey("AuditId");
+
+                    b.ToTable("Messages_Audit");
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.Audit.StudentOrganizationAudit", b =>
+                {
+                    b.Property<int>("AuditId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("audit_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AuditId"));
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("action_type");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("changed_at");
+
+                    b.Property<string>("ChangedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)")
+                        .HasColumnName("changed_by");
+
+                    b.Property<string>("NewValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("new_values");
+
+                    b.Property<string>("OldValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("old_values");
+
+                    b.Property<int>("OrganizationId")
+                        .HasColumnType("int")
+                        .HasColumnName("organization_id");
+
+                    b.HasKey("AuditId");
+
+                    b.ToTable("Student_Organizations_Audit");
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.Audit.UserAccessScopeAudit", b =>
+                {
+                    b.Property<int>("AuditId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("audit_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AuditId"));
+
+                    b.Property<string>("ActionType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("action_type");
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("datetime")
+                        .HasColumnName("changed_at");
+
+                    b.Property<string>("ChangedBy")
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)")
+                        .HasColumnName("changed_by");
+
+                    b.Property<string>("NewValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("new_values");
+
+                    b.Property<string>("OldValues")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("old_values");
+
+                    b.Property<int>("UserAccessScopeId")
+                        .HasColumnType("int")
+                        .HasColumnName("user_access_scope_id");
+
+                    b.HasKey("AuditId");
+
+                    b.ToTable("User_Access_Scopes_Audit");
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.College", b =>
+                {
+                    b.Property<int>("CollegeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("college_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CollegeId"));
+
+                    b.Property<string>("CollegeName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("college_name");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_active");
+
+                    b.Property<bool>("IsInternal")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_internal");
+
+                    b.HasKey("CollegeId");
+
+                    b.ToTable("Colleges");
                 });
 
             modelBuilder.Entity("Alumni_Management_System.Models.DegreeProgram", b =>
@@ -503,17 +1167,19 @@ namespace Alumni_Management_System.Migrations
                         .HasColumnType("nvarchar(20)")
                         .HasColumnName("degree_type");
 
-                    b.Property<string>("Department")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
-                        .HasColumnName("department");
+                    b.Property<int>("DepartmentId")
+                        .HasColumnType("int")
+                        .HasColumnName("department_id");
 
                     b.Property<string>("Institution")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("nvarchar(150)")
                         .HasColumnName("institution");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_active");
 
                     b.Property<string>("MajorFieldOfStudy")
                         .IsRequired()
@@ -524,7 +1190,39 @@ namespace Alumni_Management_System.Migrations
                     b.HasKey("DegreeId")
                         .HasName("PK__Degree_P__A1AFAEBBB780871C");
 
+                    b.HasIndex("DepartmentId");
+
                     b.ToTable("Degree_Programs");
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.Department", b =>
+                {
+                    b.Property<int>("DepartmentId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("department_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DepartmentId"));
+
+                    b.Property<int>("CollegeId")
+                        .HasColumnType("int")
+                        .HasColumnName("college_id");
+
+                    b.Property<string>("DepartmentName")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)")
+                        .HasColumnName("department_name");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_active");
+
+                    b.HasKey("DepartmentId");
+
+                    b.HasIndex("CollegeId");
+
+                    b.ToTable("Departments");
                 });
 
             modelBuilder.Entity("Alumni_Management_System.Models.Employer", b =>
@@ -602,14 +1300,26 @@ namespace Alumni_Management_System.Migrations
                     b.ToTable("Messages");
                 });
 
-            modelBuilder.Entity("Alumni_Management_System.Models.OrganizationType", b =>
+            modelBuilder.Entity("Alumni_Management_System.Models.StudentOrganization", b =>
                 {
-                    b.Property<int>("OrganizationTypeId")
+                    b.Property<int>("OrganizationId")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
-                        .HasColumnName("organization_type_id");
+                        .HasColumnName("organization_id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OrganizationTypeId"));
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OrganizationId"));
+
+                    b.Property<int>("CollegeId")
+                        .HasColumnType("int")
+                        .HasColumnName("college_id");
+
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("int")
+                        .HasColumnName("department_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_active");
 
                     b.Property<string>("OrganizationName")
                         .IsRequired()
@@ -617,10 +1327,63 @@ namespace Alumni_Management_System.Migrations
                         .HasColumnType("nvarchar(150)")
                         .HasColumnName("organization_name");
 
-                    b.HasKey("OrganizationTypeId")
-                        .HasName("PK__Organiza__466C7A244B987C0F");
+                    b.HasKey("OrganizationId");
 
-                    b.ToTable("Organization_Types");
+                    b.HasIndex("CollegeId");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.ToTable("Student_Organizations");
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.UserAccessScope", b =>
+                {
+                    b.Property<int>("UserAccessScopeId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("user_access_scope_id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("UserAccessScopeId"));
+
+                    b.Property<string>("AccessLevel")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasColumnName("access_level");
+
+                    b.Property<int?>("CollegeId")
+                        .HasColumnType("int")
+                        .HasColumnName("college_id");
+
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("int")
+                        .HasColumnName("department_id");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("is_active");
+
+                    b.Property<string>("RoleId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("role_id");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("user_id");
+
+                    b.HasKey("UserAccessScopeId");
+
+                    b.HasIndex("CollegeId");
+
+                    b.HasIndex("DepartmentId");
+
+                    b.HasIndex("RoleId");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("User_Access_Scopes");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -722,21 +1485,6 @@ namespace Alumni_Management_System.Migrations
                     b.ToTable("AspNetUserLogins", (string)null);
                 });
 
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
-                {
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("RoleId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.HasKey("UserId", "RoleId");
-
-                    b.HasIndex("RoleId");
-
-                    b.ToTable("AspNetUserRoles", (string)null);
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserToken<string>", b =>
                 {
                     b.Property<string>("UserId")
@@ -758,12 +1506,13 @@ namespace Alumni_Management_System.Migrations
 
             modelBuilder.Entity("Alumni_Management_System.Models.Alumni", b =>
                 {
-                    b.HasOne("Alumni_Management_System.Models.AppUser", "User")
-                        .WithOne("Alumni")
-                        .HasForeignKey("Alumni_Management_System.Models.Alumni", "JagId")
-                        .HasPrincipalKey("Alumni_Management_System.Models.AppUser", "JagId");
+                    b.HasOne("Alumni_Management_System.Models.College", "College")
+                        .WithMany("Alumni")
+                        .HasForeignKey("CollegeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_alumni_college");
 
-                    b.Navigation("User");
+                    b.Navigation("College");
                 });
 
             modelBuilder.Entity("Alumni_Management_System.Models.AlumniDegree", b =>
@@ -858,16 +1607,55 @@ namespace Alumni_Management_System.Migrations
                         .IsRequired()
                         .HasConstraintName("fk_ao_alumni");
 
-                    b.HasOne("Alumni_Management_System.Models.OrganizationType", "OrganizationType")
+                    b.HasOne("Alumni_Management_System.Models.StudentOrganization", "Organization")
                         .WithMany("AlumniOrganizations")
-                        .HasForeignKey("OrganizationTypeId")
+                        .HasForeignKey("OrganizationId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired()
                         .HasConstraintName("fk_ao_org");
 
                     b.Navigation("Alumni");
 
-                    b.Navigation("OrganizationType");
+                    b.Navigation("Organization");
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.AppUserRole", b =>
+                {
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Alumni_Management_System.Models.AppUser", null)
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.DegreeProgram", b =>
+                {
+                    b.HasOne("Alumni_Management_System.Models.Department", "Department")
+                        .WithMany("DegreePrograms")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_degree_department");
+
+                    b.Navigation("Department");
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.Department", b =>
+                {
+                    b.HasOne("Alumni_Management_System.Models.College", "College")
+                        .WithMany("Departments")
+                        .HasForeignKey("CollegeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_dept_college");
+
+                    b.Navigation("College");
                 });
 
             modelBuilder.Entity("Alumni_Management_System.Models.Message", b =>
@@ -877,6 +1665,63 @@ namespace Alumni_Management_System.Migrations
                         .HasForeignKey("CreatedBy");
 
                     b.Navigation("CreatedByNavigation");
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.StudentOrganization", b =>
+                {
+                    b.HasOne("Alumni_Management_System.Models.College", "College")
+                        .WithMany("StudentOrganizations")
+                        .HasForeignKey("CollegeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("fk_studorg_college");
+
+                    b.HasOne("Alumni_Management_System.Models.Department", "Department")
+                        .WithMany("StudentOrganizations")
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_studorg_department");
+
+                    b.Navigation("College");
+
+                    b.Navigation("Department");
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.UserAccessScope", b =>
+                {
+                    b.HasOne("Alumni_Management_System.Models.College", "College")
+                        .WithMany()
+                        .HasForeignKey("CollegeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_scope_college");
+
+                    b.HasOne("Alumni_Management_System.Models.Department", "Department")
+                        .WithMany()
+                        .HasForeignKey("DepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("fk_scope_department");
+
+                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_scope_role");
+
+                    b.HasOne("Alumni_Management_System.Models.AppUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_scope_user");
+
+                    b.Navigation("College");
+
+                    b.Navigation("Department");
+
+                    b.Navigation("Role");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -899,21 +1744,6 @@ namespace Alumni_Management_System.Migrations
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserLogin<string>", b =>
                 {
-                    b.HasOne("Alumni_Management_System.Models.AppUser", null)
-                        .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-                });
-
-            modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityUserRole<string>", b =>
-                {
-                    b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
-                        .WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("Alumni_Management_System.Models.AppUser", null)
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -945,14 +1775,28 @@ namespace Alumni_Management_System.Migrations
 
             modelBuilder.Entity("Alumni_Management_System.Models.AppUser", b =>
                 {
+                    b.Navigation("Messages");
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.College", b =>
+                {
                     b.Navigation("Alumni");
 
-                    b.Navigation("Messages");
+                    b.Navigation("Departments");
+
+                    b.Navigation("StudentOrganizations");
                 });
 
             modelBuilder.Entity("Alumni_Management_System.Models.DegreeProgram", b =>
                 {
                     b.Navigation("AlumniDegrees");
+                });
+
+            modelBuilder.Entity("Alumni_Management_System.Models.Department", b =>
+                {
+                    b.Navigation("DegreePrograms");
+
+                    b.Navigation("StudentOrganizations");
                 });
 
             modelBuilder.Entity("Alumni_Management_System.Models.Employer", b =>
@@ -967,7 +1811,7 @@ namespace Alumni_Management_System.Migrations
                     b.Navigation("AlumniMessages");
                 });
 
-            modelBuilder.Entity("Alumni_Management_System.Models.OrganizationType", b =>
+            modelBuilder.Entity("Alumni_Management_System.Models.StudentOrganization", b =>
                 {
                     b.Navigation("AlumniOrganizations");
                 });

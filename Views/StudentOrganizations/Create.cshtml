@@ -1,0 +1,94 @@
+@model Alumni_Management_System.Models.StudentOrganization
+
+@{
+    ViewData["Title"] = "Add Student Organization";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4 mx-auto" style="max-width:700px;">
+        <div class="card-body p-5">
+
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                    <i class="bi bi-diagram-2 text-primary fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0">Add Student Organization</h3>
+                    <small class="text-info">Enter student organization information</small>
+                </div>
+            </div>
+
+            <hr class="mb-4" />
+
+            <form asp-action="Create" novalidate>
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+
+                <!-- Organization Name -->
+                <div class="mb-3">
+                    <label asp-for="OrganizationName" class="form-label fw-semibold">
+                        <span class="text-danger">*</span> Organization Name
+                    </label>
+                    <div class="input-group shadow-sm">
+                        <span class="input-group-text bg-light">
+                            <i class="bi bi-diagram-2"></i>
+                        </span>
+                        <input asp-for="OrganizationName" class="form-control rounded-end-3" placeholder="Enter organization name" />
+                    </div>
+                    <span asp-validation-for="OrganizationName" class="text-danger"></span>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="CollegeId" class="form-label fw-semibold">
+                            <span class="text-danger">*</span> College
+                        </label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-bank"></i>
+                            </span>
+                            <select asp-for="CollegeId" class="form-select rounded-end-3" asp-items="ViewBag.CollegeId">
+                                <option value="">Select College...</option>
+                            </select>
+                        </div>
+                        <span asp-validation-for="CollegeId" class="text-danger"></span>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label asp-for="DepartmentId" class="form-label fw-semibold">Department</label>
+                        <div class="input-group shadow-sm">
+                            <span class="input-group-text bg-light">
+                                <i class="bi bi-columns-gap"></i>
+                            </span>
+                            <select asp-for="DepartmentId" class="form-select rounded-end-3" asp-items="ViewBag.DepartmentId">
+                                <option value="">Select Department...</option>
+                            </select>
+                        </div>
+                        <span asp-validation-for="DepartmentId" class="text-danger"></span>
+                    </div>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input asp-for="IsActive" class="form-check-input" type="checkbox" checked />
+                    <label asp-for="IsActive" class="form-check-label"></label>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-flex justify-content-between mt-4">
+                    <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
+                        <i class="bi bi-arrow-left me-2"></i>Back
+                    </a>
+                    <button type="submit" class="btn btn-primary rounded-pill px-4 shadow-sm">
+                        <i class="bi bi-check-circle-fill me-2"></i>Save
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{
+        await Html.RenderPartialAsync("_ValidationScriptsPartial");
+    }
+}

@@ -18,9 +18,9 @@ public partial class AlumniOrganization
     [Display(Name = "Alumni ID")]
     public int AlumniId { get; set; }
 
-    [Column("organization_type_id")]
-    [Display(Name = "Organization Type ID")]
-    public int OrganizationTypeId { get; set; }
+    [Column("organization_id")]
+    [Display(Name = "Organization ID")]
+    public int OrganizationId { get; set; }
 
     [Column("officer_roles")]
     [StringLength(150)]
@@ -31,7 +31,7 @@ public partial class AlumniOrganization
     [InverseProperty("AlumniOrganizations")]
     public virtual Alumni Alumni { get; set; }
 
-    [ForeignKey("OrganizationTypeId")]
+    [ForeignKey("OrganizationId")]
     [InverseProperty("AlumniOrganizations")]
-    public virtual OrganizationType OrganizationType { get; set; }
+    public virtual StudentOrganization Organization { get; set; }
 }

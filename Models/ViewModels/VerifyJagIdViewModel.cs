@@ -8,6 +8,10 @@ namespace Alumni_Management_System.Models.ViewModels
         [RegularExpression(@"^J00\d+$", ErrorMessage = "JAG ID must start with 'J00' followed by numbers only.")]
         [Display(Name = "JAG ID")]
         public string JagId { get; set; }
+
+        [Required(ErrorMessage = "Last name is required")]
+        [Display(Name = "Last Name")]
+        public string LastName { get; set; }
     }
 }
 

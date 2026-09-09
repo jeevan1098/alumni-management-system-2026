@@ -1,0 +1,46 @@
+@model Alumni_Management_System.Models.Department
+
+@{
+    ViewData["Title"] = "Delete Department";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+
+            <div class="text-center mb-4">
+                <i class="bi bi-exclamation-triangle-fill text-danger fs-1"></i>
+                <h2 class="fw-bold text-danger mt-3">
+                    Delete Department: <span class="text-primary">@Model.DepartmentName</span>
+                </h2>
+                <p class="text-info">
+                    This action cannot be undone. Any degree programs or organizations
+                    scoped to this department may be affected.
+                </p>
+            </div>
+
+            <hr class="mb-4" />
+
+            <dl class="row mb-4">
+                <dt class="col-sm-3">Department Name</dt>
+                <dd class="col-sm-9">@Model.DepartmentName</dd>
+
+                <dt class="col-sm-3">College</dt>
+                <dd class="col-sm-9">@Model.College?.CollegeName</dd>
+            </dl>
+
+            <form asp-action="Delete">
+                <input type="hidden" asp-for="DepartmentId" />
+                <div class="d-flex justify-content-between mt-4">
+                    <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
+                        <i class="bi bi-arrow-left me-2"></i>Cancel
+                    </a>
+                    <button type="submit" class="btn btn-danger rounded-pill px-4">
+                        <i class="bi bi-trash-fill me-2"></i>Confirm Delete
+                    </button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>

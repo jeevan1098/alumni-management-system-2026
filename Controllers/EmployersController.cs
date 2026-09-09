@@ -46,6 +46,7 @@ namespace Alumni_Management_System.Controllers
         }
 
         // GET: Employers/Create
+        [Authorize(Roles = "Admin")] // Staff have read-only access
         public IActionResult Create()
         {
             return View();
@@ -56,6 +57,7 @@ namespace Alumni_Management_System.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")] // Staff have read-only access
         public async Task<IActionResult> Create([Bind("EmployerId,EmployerName,Location,Industry")] Employer employer)
         {
             if (ModelState.IsValid)
@@ -68,6 +70,7 @@ namespace Alumni_Management_System.Controllers
         }
 
         // GET: Employers/Edit/5
+        [Authorize(Roles = "Admin")] // Staff have read-only access
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -88,6 +91,7 @@ namespace Alumni_Management_System.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")] // Staff have read-only access
         public async Task<IActionResult> Edit(int id, [Bind("EmployerId,EmployerName,Location,Industry")] Employer employer)
         {
             if (id != employer.EmployerId)
@@ -119,6 +123,7 @@ namespace Alumni_Management_System.Controllers
         }
 
         // GET: Employers/Delete/5
+        [Authorize(Roles = "Admin")] // Staff have read-only access
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -139,6 +144,7 @@ namespace Alumni_Management_System.Controllers
         // POST: Employers/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")] // Staff have read-only access
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var employer = await _context.Employers.FindAsync(id);

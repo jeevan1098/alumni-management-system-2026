@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
+using Microsoft.EntityFrameworkCore;
 
 namespace Alumni_Management_System.Areas.Identity.Pages.Account
 {
@@ -62,7 +63,10 @@ namespace Alumni_Management_System.Areas.Identity.Pages.Account
                 return Page();
             }
 
-            var user = await _userManager.FindByEmailAsync(Input.Email);
+            // Email isn't guaranteed unique - FindByEmailAsync throws if two
+            // accounts share one, so look up the first match instead.
+            var normalizedEmail = _userManager.NormalizeEmail(Input.Email);
+            var user = await _userManager.Users.FirstOrDefaultAsync(u => u.NormalizedEmail == normalizedEmail);
             if (user == null)
             {
                 ModelState.AddModelError(string.Empty, "Verification email sent. Please check your email.");

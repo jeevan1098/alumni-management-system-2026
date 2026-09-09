@@ -122,7 +122,7 @@ namespace Alumni_Management_System.Controllers
 
             var roles = await _userManager.GetRolesAsync(user);
 
-            if (roles.Contains("Admin"))
+            if (roles.Contains("Admin") || roles.Contains("Staff"))
                 return RedirectToAction("Dashboard");
 
             if (roles.Contains("Alumni"))
@@ -131,97 +131,65 @@ namespace Alumni_Management_System.Controllers
             return View("PublicHome");
         }
 
-        // ================= ADMIN DASHBOARD =================
-        [Authorize(Roles = "Admin")]
+        // ================= ADMIN/STAFF DASHBOARD =================
+        [Authorize(Roles = "Admin,Staff")]
         public async Task<IActionResult> Dashboard()
         {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var roles = await _userManager.GetRolesAsync(currentUser);
+            var allowedCollegeIds = await Services.AccessScopeService.GetAllowedCollegeIdsAsync(_context, currentUser, roles);
+
+            IQueryable<Alumni> scopedAlumni = _context.Alumni;
+            if (allowedCollegeIds != null)
+            {
+                scopedAlumni = scopedAlumni.Where(a => a.CollegeId != null && allowedCollegeIds.Contains(a.CollegeId.Value));
+
+                var scopedCollegeNames = await _context.Colleges
+                    .Where(c => allowedCollegeIds.Contains(c.CollegeId))
+                    .Select(c => c.CollegeName)
+                    .ToListAsync();
+                ViewData["ScopeLabel"] = string.Join(", ", scopedCollegeNames);
+            }
+
             // ===== COUNTS =====
-            ViewData["TotalAlumni"] = await _context.Alumni.CountAsync();
+            ViewData["TotalAlumni"] = await scopedAlumni.CountAsync();
             ViewData["TotalRegistry"] = await _context.AlumniRegistries.CountAsync();
             ViewData["TotalUsers"] = await _context.Users.CountAsync();
             ViewData["TotalMessages"] = await _context.Messages.CountAsync();
             ViewData["TotalEmployments"] = await _context.AlumniEmployments.CountAsync();
-            ViewData["PendingApprovals"] = await _context.Alumni.CountAsync(a => !a.IsActive);
+            ViewData["TotalColleges"] = await _context.Colleges.CountAsync();
 
             // =========================================================
-            // 📊 REAL CHART DATA (Alumni + Registry + Users by Year)
+            // 📊 CHART DATA - Alumni by graduation year, and by college
             // =========================================================
 
-            var alumniChart = await _context.Alumni
+            var alumniChart = await scopedAlumni
                 .Where(a => a.GraduationYear > 0)
                 .GroupBy(a => a.GraduationYear)
                 .Select(g => new { Year = g.Key, Count = g.Count() })
+                .OrderBy(g => g.Year)
                 .ToListAsync();
 
-            // AlumniRegistry no longer has GraduationYear, so we'll use Alumni table only
-            // var registryChart = new List<dynamic>(); // Empty list since registry doesn't have year data
+            ViewBag.ChartLabels = alumniChart.Select(g => g.Year).ToList();
+            ViewBag.AlumniData = alumniChart.Select(g => g.Count).ToList();
 
-            // Convert to List BEFORE Union
-            // Convert to NON-NULLABLE int list
-            var alumniYears = alumniChart
-                .Select(x => (int?)x.Year)
-                .Where(x => x.HasValue)
-                .Select(x => x.Value)
-                .ToList();
+            var alumniByCollege = await scopedAlumni
+                .Where(a => a.CollegeId != null)
+                .GroupBy(a => a.College.CollegeName)
+                .Select(g => new { College = g.Key, Count = g.Count() })
+                .OrderByDescending(g => g.Count)
+                .ToListAsync();
 
-            // Since AlumniRegistry no longer has GraduationYear, we'll use only Alumni data
-            var years = alumniYears
-                .Distinct()
-                .OrderBy(x => x)
-                .ToList();
-
-            ViewBag.ChartLabels = years;
-
-            ViewBag.AlumniData = years
-                .Select(y => alumniChart.FirstOrDefault(a => a.Year == y)?.Count ?? 0)
-                .ToList();
-
-            // Registry data is now empty since we removed GraduationYear
-            ViewBag.RegistryData = years.Select(y => 0).ToList();
+            ViewBag.CollegeLabels = alumniByCollege.Select(g => g.College).ToList();
+            ViewBag.CollegeData = alumniByCollege.Select(g => g.Count).ToList();
 
             // =========================================================
-            // 🔴 REAL LIVE ACTIVITY FEED
+            // 🔴 RECENT ACTIVITY - pulled from the audit trail (real
+            // timestamps + who made the change), not hand-rolled per-entity
+            // guesses.
             // =========================================================
 
-            var activity = new List<string>();
-
-            // Recent Alumni
-            var recentAlumni = await _context.Alumni
-                .OrderByDescending(a => a.LastUpdated)
-                .Take(3)
-                .ToListAsync();
-
-            activity.AddRange(recentAlumni
-                .Select(a => $"Alumni updated: {a.FirstName} {a.LastName}"));
-
-            // Recent Registry
-            var recentRegistry = await _context.AlumniRegistries
-                .OrderByDescending(r => r.RegistryId)
-                .Take(3)
-                .ToListAsync();
-
-            activity.AddRange(recentRegistry
-                .Select(r => $"Registry updated: {r.FirstName} {r.LastName}"));
-
-            // Recent Messages
-            var recentMessages = await _context.Messages
-                .OrderByDescending(m => m.MessageId)
-                .Take(3)
-                .ToListAsync();
-
-            activity.AddRange(recentMessages
-                .Select(m => $"New message sent"));
-
-            // Recent Employments
-            var recentJobs = await _context.AlumniEmployments
-                .OrderByDescending(e => e.AlumniEmploymentId)
-                .Take(3)
-                .ToListAsync();
-
-            activity.AddRange(recentJobs
-                .Select(e => $"Employment updated"));
-
-            ViewBag.RecentActivity = activity.Take(10).ToList();
+            ViewBag.RecentActivity = await Services.RecentActivityService.GetRecentAsync(_context, take: 8);
 
             return View();
         }
@@ -248,7 +216,7 @@ namespace Alumni_Management_System.Controllers
                 if (!string.IsNullOrEmpty(alumni.PermanentEmail)) done++;
                 if (!string.IsNullOrEmpty(alumni.Phone)) done++;
                 if (!string.IsNullOrEmpty(alumni.Gender)) done++;
-                if (alumni.AgeAtGraduation > 0) done++;
+                if (alumni.DateOfBirth != null) done++;
                 if (!string.IsNullOrEmpty(alumni.Address)) done++;
                 if (!string.IsNullOrEmpty(alumni.City)) done++;
                 if (!string.IsNullOrEmpty(alumni.State)) done++;

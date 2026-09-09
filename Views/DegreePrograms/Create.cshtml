@@ -116,16 +116,16 @@
                     </div>
 
                     <div class="col-md-6 mb-3">
-                        <label asp-for="Department" class="form-label fw-semibold"></label>
+                        <label asp-for="DepartmentId" class="form-label fw-semibold">Department</label>
                         <div class="input-group shadow-sm">
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-building-fill-check"></i>
                             </span>
-                            <input asp-for="Department"
-                                   placeholder="Eg: School of Computing"
-                                   class="form-control rounded-end-3" />
+                            <select asp-for="DepartmentId" class="form-select rounded-end-3" asp-items="ViewBag.DepartmentId">
+                                <option value="">Select Department...</option>
+                            </select>
                         </div>
-                        <span asp-validation-for="Department" class="text-danger"></span>
+                        <span asp-validation-for="DepartmentId" class="text-danger"></span>
                     </div>
                 </div>
 

@@ -1,42 +1,7 @@
-﻿@* @model Alumni_Management_System.Models.OrganizationType
+@model Alumni_Management_System.Models.StudentOrganization
 
 @{
-    ViewData["Title"] = "Edit";
-}
-
-<h1>Edit</h1>
-
-<h4>OrganizationType</h4>
-<hr />
-<div class="row">
-    <div class="col-md-4">
-        <form asp-action="Edit">
-            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
-            <input type="hidden" asp-for="OrganizationTypeId" />
-            <div class="form-group">
-                <label asp-for="OrganizationName" class="control-label"></label>
-                <input asp-for="OrganizationName" class="form-control" />
-                <span asp-validation-for="OrganizationName" class="text-danger"></span>
-            </div>
-            <div class="form-group">
-                <input type="submit" value="Save" class="btn btn-primary" />
-            </div>
-        </form>
-    </div>
-</div>
-
-<div>
-    <a asp-action="Index">Back to List</a>
-</div>
-
-@section Scripts {
-    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
-} *@
-
-@model Alumni_Management_System.Models.OrganizationType
-
-@{
-    ViewData["Title"] = "Edit Organization Type";
+    ViewData["Title"] = "Edit Student Organization";
 }
 
 <div class="container mt-5 mb-5">
@@ -49,9 +14,9 @@
                     <i class="bi bi-diagram-3-fill text-warning fs-3"></i>
                 </div>
                 <div>
-                    <h3 class="fw-bold mb-0 text-warning">Edit Organization Type</h3>
+                    <h3 class="fw-bold mb-0 text-warning">Edit Student Organization</h3>
                     <small class="text-info text-warning">
-                        Update organization type details
+                        Update student organization details
                     </small>
                 </div>
             </div>
@@ -60,31 +25,45 @@
 
             <form asp-action="Edit">
                 <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
-                <input type="hidden" asp-for="OrganizationTypeId" />
-
-                <!-- Organization Information Section -->
-                <h5 class="fw-bold text-warning mb-3">
-                    <i class="bi bi-building-fill me-2 text-warning"></i>
-                    Organization Information
-                </h5>
+                <input type="hidden" asp-for="OrganizationId" />
 
                 <div class="row mb-4">
 
                     <!-- Organization Name -->
                     <div class="col-md-6 mb-3">
                         <label asp-for="OrganizationName" class="form-label fw-semibold"></label>
-
                         <div class="input-group shadow-sm">
                             <span class="input-group-text bg-light">
-                                <i class="bi bi-building text-warning"></i>
+                                <i class="bi bi-diagram-2 text-warning"></i>
                             </span>
                             <input asp-for="OrganizationName"
                                    class="form-control rounded-end-3"
-                                   placeholder="Enter organization type name" />
+                                   placeholder="Enter organization name" />
                         </div>
+                        <span asp-validation-for="OrganizationName" class="text-danger small"></span>
+                    </div>
 
-                        <span asp-validation-for="OrganizationName"
-                              class="text-danger small"></span>
+                    <div class="col-md-3 mb-3">
+                        <label asp-for="CollegeId" class="form-label fw-semibold"></label>
+                        <select asp-for="CollegeId" class="form-select" asp-items="ViewBag.CollegeId">
+                            <option value="">Select College...</option>
+                        </select>
+                        <span asp-validation-for="CollegeId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <label asp-for="DepartmentId" class="form-label fw-semibold"></label>
+                        <select asp-for="DepartmentId" class="form-select" asp-items="ViewBag.DepartmentId">
+                            <option value="">Select Department...</option>
+                        </select>
+                        <span asp-validation-for="DepartmentId" class="text-danger small"></span>
+                    </div>
+
+                    <div class="col-md-3 mb-3">
+                        <div class="form-check mt-4">
+                            <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                            <label asp-for="IsActive" class="form-check-label"></label>
+                        </div>
                     </div>
 
                 </div>

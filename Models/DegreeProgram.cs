@@ -33,11 +33,17 @@ public partial class DegreeProgram
     [Display(Name = "Major Field of Study")]
     public string MajorFieldOfStudy { get; set; }
 
-    [Required]
-    [Column("department")]
-    [StringLength(100)]
+    [Column("department_id")]
     [Display(Name = "Department")]
-    public string Department { get; set; }
+    public int DepartmentId { get; set; }
+
+    [Column("is_active")]
+    [Display(Name = "Is Active?")]
+    public bool IsActive { get; set; } = true;
+
+    [ForeignKey("DepartmentId")]
+    [InverseProperty("DegreePrograms")]
+    public virtual Department Department { get; set; }
 
     [InverseProperty("Degree")]
     public virtual ICollection<AlumniDegree> AlumniDegrees { get; set; } = new List<AlumniDegree>();

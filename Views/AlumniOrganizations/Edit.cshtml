@@ -21,13 +21,13 @@
                 <span asp-validation-for="AlumniId" class="text-danger"></span>
             </div>
             <div class="form-group">
-                <label asp-for="OrganizationTypeId" class="control-label">
+                <label asp-for="OrganizationId" class="control-label">
                     <span class="text-danger">*</span> Organization Type
                 </label>
-                <select asp-for="OrganizationTypeId" class="form-control" asp-items="ViewBag.OrganizationTypeId">
+                <select asp-for="OrganizationId" class="form-control" asp-items="ViewBag.OrganizationId">
                     <option value="">-- Select Organization Type --</option>
                 </select>
-                <span asp-validation-for="OrganizationTypeId" class="text-danger"></span>
+                <span asp-validation-for="OrganizationId" class="text-danger"></span>
             </div>
             <div class="mb-3">
                 <label asp-for="OfficerRoles" class="form-label fw-semibold">
@@ -120,20 +120,20 @@
 
                     <!-- Organization Type -->
                     <div class="col-md-6">
-                        <label asp-for="OrganizationTypeId" class="form-label fw-semibold">
+                        <label asp-for="OrganizationId" class="form-label fw-semibold">
                             <span class="text-danger">*</span> Organization Type
                         </label>
                         <div class="input-group shadow-sm">
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-building text-warning"></i>
                             </span>
-                            <select asp-for="OrganizationTypeId"
+                            <select asp-for="OrganizationId"
                                     class="form-select rounded-end-3"
-                                    asp-items="ViewBag.OrganizationTypeId">
+                                    asp-items="ViewBag.OrganizationId">
                                 <option value="">-- Select Organization Type --</option>
                             </select>
                         </div>
-                        <span asp-validation-for="OrganizationTypeId" class="text-danger small"></span>
+                        <span asp-validation-for="OrganizationId" class="text-danger small"></span>
                     </div>
                 </div>
 

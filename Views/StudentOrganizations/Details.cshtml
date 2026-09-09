@@ -1,31 +1,7 @@
-﻿@* @model Alumni_Management_System.Models.OrganizationType
+@model Alumni_Management_System.Models.StudentOrganization
 
 @{
-    ViewData["Title"] = "Details";
-}
-
-<h1>Details</h1>
-
-<div>
-    <h4>OrganizationType</h4>
-    <hr />
-    <dl class="row">
-        <dt class = "col-sm-2">
-            @Html.DisplayNameFor(model => model.OrganizationName)
-        </dt>
-        <dd class = "col-sm-10">
-            @Html.DisplayFor(model => model.OrganizationName)
-        </dd>
-    </dl>
-</div>
-<div>
-    <a asp-action="Edit" asp-route-id="@Model?.OrganizationTypeId">Edit</a> |
-    <a asp-action="Index">Back to List</a>
-</div> *@
-@model Alumni_Management_System.Models.OrganizationType
-
-@{
-    ViewData["Title"] = "Organization Type Details";
+    ViewData["Title"] = "Student Organization Details";
 }
 
 <div class="container mt-5 mb-5">
@@ -35,13 +11,13 @@
             <!-- Header -->
             <div class="d-flex align-items-center mb-4">
                 <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
-                    <i class="bi bi-building text-primary fs-3"></i>
+                    <i class="bi bi-diagram-2 text-primary fs-3"></i>
                 </div>
                 <div>
                     <h3 class="fw-bold mb-0">
-                        Organization Type Details
+                        Student Organization Details
                     </h3>
-                    <small class="text-info">View information about this organization type</small>
+                    <small class="text-info">View information about this organization</small>
                 </div>
             </div>
 
@@ -52,8 +28,8 @@
                 <i class="bi bi-info-circle me-2"></i>Organization Information
             </h5>
             <dl class="row mb-4">
-                <dt class="col-sm-5">Organization Name</dt>
-                <dd class="col-sm-7">
+                <dt class="col-sm-3">Organization Name</dt>
+                <dd class="col-sm-9">
                     @if (!string.IsNullOrEmpty(Model.OrganizationName))
                     {
                         @Model.OrganizationName
@@ -63,6 +39,24 @@
                         <span class="badge bg-danger">Not Answered</span>
                     }
                 </dd>
+
+                <dt class="col-sm-3">College</dt>
+                <dd class="col-sm-9">@Model.College?.CollegeName</dd>
+
+                <dt class="col-sm-3">Department</dt>
+                <dd class="col-sm-9">@Model.Department?.DepartmentName</dd>
+
+                <dt class="col-sm-3">Active</dt>
+                <dd class="col-sm-9">
+                    @if (Model.IsActive)
+                    {
+                        <span class="badge bg-success">Yes</span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-secondary">No</span>
+                    }
+                </dd>
             </dl>
 
             <!-- Footer Buttons -->
@@ -70,7 +64,7 @@
                 <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
                     <i class="bi bi-arrow-left me-2"></i>Back to List
                 </a>
-                <a asp-action="Edit" asp-route-id="@Model?.OrganizationTypeId" class="btn btn-primary rounded-pill px-4">
+                <a asp-action="Edit" asp-route-id="@Model?.OrganizationId" class="btn btn-primary rounded-pill px-4">
                     <i class="bi bi-pencil-square me-2"></i>Edit
                 </a>
             </div>
