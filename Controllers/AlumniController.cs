@@ -216,6 +216,10 @@ namespace Alumni_Management_System.Controllers
             }
             // Admin can edit any profile
 
+            ViewData["UserRole"] = roles.Contains(Constants.AdminRole) ? Constants.AdminRole
+                : roles.Contains(Constants.StaffRole) ? Constants.StaffRole
+                : roles.FirstOrDefault();
+
             // No need for IdentityUserId since we're using JagId now
             ViewData["CollegeId"] = new SelectList(await _context.Colleges.Where(c => c.IsActive).ToListAsync(), "CollegeId", "CollegeName", alumni.CollegeId);
 

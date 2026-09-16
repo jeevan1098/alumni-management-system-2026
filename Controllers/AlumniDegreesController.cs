@@ -105,21 +105,11 @@ namespace Alumni_Management_System.Controllers
             else
             {
                 // Admin can select any alumni
-                ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName");
+                ViewData["AlumniId"] = GetAlumniSelectList();
                 ViewData["UserRole"] = "Admin";
             }
 
-            //ViewData["DegreeId"] = new SelectList(_context.DegreePrograms, "DegreeId", "DegreeType");
-            ViewData["DegreeId"] = new SelectList( _context.DegreePrograms.Include(d => d.Department).Select(d => new
-            {
-                d.DegreeId,
-                DisplayText = d.DegreeType + ", " +
-                              d.Institution + ", " +
-                              d.MajorFieldOfStudy + ", " +
-                              d.Department.DepartmentName
-            }),
-                "DegreeId",
-                "DisplayText");
+            ViewData["DegreeId"] = GetDegreeSelectList();
 
             return View();
         }
@@ -194,12 +184,14 @@ namespace Alumni_Management_System.Controllers
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 ViewData["CurrentAlumniId"] = alumni?.AlumniId;
                 ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniDegree.AlumniId);
+                ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
             {
-                ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniDegree.AlumniId);
+                ViewData["AlumniId"] = GetAlumniSelectList(alumniDegree.AlumniId);
+                ViewData["UserRole"] = "Admin";
             }
-            ViewData["DegreeId"] = new SelectList(_context.DegreePrograms, "DegreeId", "DegreeType", alumniDegree.DegreeId);
+            ViewData["DegreeId"] = GetDegreeSelectList(alumniDegree.DegreeId);
             return View(alumniDegree);
         }
 
@@ -230,13 +222,15 @@ namespace Alumni_Management_System.Controllers
                 }
                 ViewData["CurrentAlumniId"] = alumni.AlumniId;
                 ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniDegree.AlumniId);
+                ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
             {
-                ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniDegree.AlumniId);
+                ViewData["AlumniId"] = GetAlumniSelectList(alumniDegree.AlumniId);
+                ViewData["UserRole"] = "Admin";
             }
 
-            ViewData["DegreeId"] = new SelectList(_context.DegreePrograms, "DegreeId", "DegreeType", alumniDegree.DegreeId);
+            ViewData["DegreeId"] = GetDegreeSelectList(alumniDegree.DegreeId);
             return View(alumniDegree);
         }
 
@@ -330,12 +324,14 @@ namespace Alumni_Management_System.Controllers
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 ViewData["CurrentAlumniId"] = alumni?.AlumniId;
                 ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniDegree.AlumniId);
+                ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
             {
-                ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniDegree.AlumniId);
+                ViewData["AlumniId"] = GetAlumniSelectList(alumniDegree.AlumniId);
+                ViewData["UserRole"] = "Admin";
             }
-            ViewData["DegreeId"] = new SelectList(_context.DegreePrograms, "DegreeId", "DegreeType", alumniDegree.DegreeId);
+            ViewData["DegreeId"] = GetDegreeSelectList(alumniDegree.DegreeId);
             return View(alumniDegree);
         }
 
@@ -404,6 +400,33 @@ namespace Alumni_Management_System.Controllers
         private bool AlumniDegreeExists(int id)
         {
             return _context.AlumniDegrees.Any(e => e.AlumniDegreeId == id);
+        }
+
+        private SelectList GetAlumniSelectList(int? selectedId = null)
+        {
+            return new SelectList(_context.Alumni.Select(a => new
+            {
+                a.AlumniId,
+                DisplayText = a.FirstName + " " + a.LastName + " (" + a.JagId + ")"
+            }),
+                "AlumniId",
+                "DisplayText",
+                selectedId);
+        }
+
+        private SelectList GetDegreeSelectList(int? selectedId = null)
+        {
+            return new SelectList(_context.DegreePrograms.Include(d => d.Department).Select(d => new
+            {
+                d.DegreeId,
+                DisplayText = d.DegreeType + ", " +
+                              d.Institution + ", " +
+                              d.MajorFieldOfStudy + ", " +
+                              d.Department.DepartmentName
+            }),
+                "DegreeId",
+                "DisplayText",
+                selectedId);
         }
     }
 }

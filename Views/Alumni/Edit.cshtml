@@ -7,6 +7,8 @@
     ViewData["Title"] = "Edit Profile";
     var currentUser = await UserManager.GetUserAsync(User);
     var isFirstLogin = currentUser?.IsFirstLogin ?? false;
+    var userRole = ViewData["UserRole"]?.ToString();
+    var isAdmin = userRole == "Admin";
 
     // Calculate profile completion
     int totalFields = 18;
@@ -285,15 +287,18 @@
                 <div class="card-header bg-warning text-dark">
                     <h5 class="mb-0"><i class="bi bi-shield-check"></i> Privacy Settings</h5>
                 </div>
-                <!-- Status -->
-                <div class="card-body">
-                    <label class="form-label fw-semibold">&nbsp;</label>
-                    <div class="form-check mb-3">
-                        <input asp-for="IsActive" class="form-check-input me-2 border-primary" type="checkbox" />
-                        <label asp-for="IsActive" class="form-check-label fw-semibold"></label>
+                @if (isAdmin)
+                {
+                    <!-- Status (Admin only) -->
+                    <div class="card-body">
+                        <label class="form-label fw-semibold">&nbsp;</label>
+                        <div class="form-check mb-3">
+                            <input asp-for="IsActive" class="form-check-input me-2 border-primary" type="checkbox" />
+                            <label asp-for="IsActive" class="form-check-label fw-semibold"></label>
+                        </div>
+                        <span asp-validation-for="IsActive" class="text-danger"></span>
                     </div>
-                    <span asp-validation-for="IsActive" class="text-danger"></span>
-                </div>
+                }
                 <div class="card-body">
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" asp-for="SolicitationCode" />
