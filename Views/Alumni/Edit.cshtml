@@ -157,9 +157,16 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label asp-for="GraduationYear" class="form-label"></label>
-                            <input asp-for="GraduationYear" class="form-control" type="number" readonly />
+                            @if (isAdmin)
+                            {
+                                <input asp-for="GraduationYear" class="form-control" type="number" min="1950" max="2100" />
+                            }
+                            else
+                            {
+                                <input asp-for="GraduationYear" class="form-control" type="number" readonly />
+                                <small class="form-text text-info"><i class="bi bi-lock"></i> From Registry</small>
+                            }
                             <span asp-validation-for="GraduationYear" class="text-danger"></span>
-                            <small class="form-text text-info"><i class="bi bi-lock"></i> From Registry</small>
                         </div>
                         <div class="col-md-6 mb-3">
                             <label asp-for="CollegeId" class="form-label"></label>

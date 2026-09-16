@@ -206,6 +206,12 @@ namespace Alumni_Management_System.Controllers
             var seenJagIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
             var seenEmails = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
+            // Alumni whose College field was touched by a degree row during
+            // this import - re-synced to their most-recently-conferred
+            // degree's college once everything is saved (see below), instead
+            // of just keeping whichever row happened to be processed last.
+            var alumniWithDegreeRows = new List<Alumni>();
+
             async Task<string> CheckDuplicateAsync(string jagId, string email)
             {
                 if (seenJagIds.Contains(jagId))
@@ -495,7 +501,7 @@ namespace Alumni_Management_System.Controllers
                                         var degreeCode = GetCell(row, "Degree") ?? major;
                                         var degreeProgram = await GetOrCreateDegreeProgramAsync(department, degreeCode, major);
 
-                                        alumni.College = college;
+                                        alumniWithDegreeRows.Add(alumni);
 
                                         if (gradRaw != null && gradRaw.Length >= 4 && int.TryParse(gradRaw.Substring(0, 4), out var gradYearForDegree))
                                         {
@@ -540,6 +546,11 @@ namespace Alumni_Management_System.Controllers
                 }
 
                 await _context.SaveChangesAsync();
+
+                foreach (var alumniId in alumniWithDegreeRows.Select(a => a.AlumniId).Distinct())
+                {
+                    await Services.AlumniCollegeSyncService.SyncToMostRecentDegreeAsync(_context, alumniId);
+                }
 
                 TempData["SuccessMessage"] = $"Import completed: {successCount} records imported successfully, {errorCount} errors.";
                 if (errors.Any())

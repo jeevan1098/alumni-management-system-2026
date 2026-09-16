@@ -52,7 +52,7 @@ public partial class AlumniDegree
     public bool? JobSecuredUponGraduation { get; set; }
 
     [Column("attended_or_plans_grad_school")]
-    [Display(Name = "Attended Or Plans to Grad School?")]
+    [Display(Name = "Attended or Plans to Attend Grad School?")]
     public bool? AttendedOrPlansGradSchool { get; set; }
 
     [ForeignKey("AlumniId")]

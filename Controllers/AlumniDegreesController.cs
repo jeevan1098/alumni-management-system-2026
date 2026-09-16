@@ -174,6 +174,7 @@ namespace Alumni_Management_System.Controllers
             {
                 _context.Add(alumniDegree);
                 await _context.SaveChangesAsync();
+                await Services.AlumniCollegeSyncService.SyncToMostRecentDegreeAsync(_context, alumniDegree.AlumniId);
                 TempData["SuccessMessage"] = "Degree added successfully!";
                 return RedirectToAction(nameof(Index));
             }
@@ -244,6 +245,11 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
+            var previousAlumniId = await _context.AlumniDegrees
+                .Where(ad => ad.AlumniDegreeId == id)
+                .Select(ad => ad.AlumniId)
+                .FirstOrDefaultAsync();
+
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
 
@@ -302,6 +308,13 @@ namespace Alumni_Management_System.Controllers
                 {
                     _context.Update(alumniDegree);
                     await _context.SaveChangesAsync();
+
+                    await Services.AlumniCollegeSyncService.SyncToMostRecentDegreeAsync(_context, alumniDegree.AlumniId);
+                    if (previousAlumniId != 0 && previousAlumniId != alumniDegree.AlumniId)
+                    {
+                        await Services.AlumniCollegeSyncService.SyncToMostRecentDegreeAsync(_context, previousAlumniId);
+                    }
+
                     TempData["SuccessMessage"] = "Degree updated successfully!";
                 }
                 catch (DbUpdateConcurrencyException)
@@ -389,8 +402,10 @@ namespace Alumni_Management_System.Controllers
                     }
                 }
 
+                var affectedAlumniId = alumniDegree.AlumniId;
                 _context.AlumniDegrees.Remove(alumniDegree);
                 await _context.SaveChangesAsync();
+                await Services.AlumniCollegeSyncService.SyncToMostRecentDegreeAsync(_context, affectedAlumniId);
                 TempData["SuccessMessage"] = "Degree deleted successfully!";
             }
 

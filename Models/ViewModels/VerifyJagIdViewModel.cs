@@ -5,7 +5,7 @@ namespace Alumni_Management_System.Models.ViewModels
     public class VerifyJagIdViewModel
     {
         [Required(ErrorMessage = "JAG ID is required")]
-        [RegularExpression(@"^J\d+$", ErrorMessage = "JAG ID must start with 'J' followed by numbers only.")]
+        [RegularExpression(@"^J\d{8}$", ErrorMessage = "JAG ID must start with 'J' followed by 8 digits (e.g., J00123456).")]
         [Display(Name = "JAG ID")]
         public string JagId { get; set; }
 
