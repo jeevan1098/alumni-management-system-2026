@@ -99,7 +99,7 @@ namespace Alumni_Management_System.Controllers
                     return RedirectToAction("Index", "Home");
                 }
                 ViewData["CurrentAlumniId"] = alumni.AlumniId;
-                ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumni.AlumniId);
+                ViewData["AlumniId"] = Services.AlumniSelectList.Build(new[] { alumni }, alumni.AlumniId);
                 ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
@@ -184,7 +184,7 @@ namespace Alumni_Management_System.Controllers
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 ViewData["CurrentAlumniId"] = alumni?.AlumniId;
-                ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniDegree.AlumniId);
+                ViewData["AlumniId"] = Services.AlumniSelectList.Build(new[] { alumni }, alumniDegree.AlumniId);
                 ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
@@ -222,7 +222,7 @@ namespace Alumni_Management_System.Controllers
                     return RedirectToAction(nameof(Index));
                 }
                 ViewData["CurrentAlumniId"] = alumni.AlumniId;
-                ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniDegree.AlumniId);
+                ViewData["AlumniId"] = Services.AlumniSelectList.Build(new[] { alumni }, alumniDegree.AlumniId);
                 ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
@@ -336,7 +336,7 @@ namespace Alumni_Management_System.Controllers
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 ViewData["CurrentAlumniId"] = alumni?.AlumniId;
-                ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniDegree.AlumniId);
+                ViewData["AlumniId"] = Services.AlumniSelectList.Build(new[] { alumni }, alumniDegree.AlumniId);
                 ViewData["UserRole"] = Constants.AlumniRole;
             }
             else

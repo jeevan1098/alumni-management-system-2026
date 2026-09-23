@@ -7,6 +7,20 @@ namespace Alumni_Management_System
 {
     public class SeedData
     {
+        // Test logins for every role combination, all sharing TestPassword.
+        // The ones holding the Alumni role also get a Registry row and an
+        // Alumni profile (see EnsureSampleDataAsync) so profile pages work.
+        public const string TestPassword = "Password1";
+
+        public static readonly (string UserName, string Email, string JagId, string FirstName, string LastName, string[] Roles)[] TestAccounts =
+        {
+            ("test.admin",        "test.admin@university.edu",        "J90000001", "Test", "Admin",        new[] { Constants.AdminRole }),
+            ("test.staff",        "test.staff@university.edu",        "J90000002", "Test", "Staff",        new[] { Constants.StaffRole }),
+            ("test.alumni",       "test.alumni@university.edu",       "J90000003", "Test", "Alumni",       new[] { Constants.AlumniRole }),
+            ("test.staff.alumni", "test.staff.alumni@university.edu", "J90000004", "Test", "StaffAlumni",  new[] { Constants.StaffRole, Constants.AlumniRole }),
+            ("test.admin.alumni", "test.admin.alumni@university.edu", "J90000005", "Test", "AdminAlumni",  new[] { Constants.AdminRole, Constants.AlumniRole }),
+        };
+
         public static async Task InitializeAsync(IServiceProvider services)
         {
             var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
@@ -66,6 +80,45 @@ namespace Alumni_Management_System
                 };
                 await userManager.CreateAsync(staff, "Staff@123");
                 await userManager.AddToRoleAsync(staff, Constants.StaffRole);
+            }
+
+            // Test accounts - one per role combination (see TestAccounts).
+            foreach (var test in TestAccounts)
+            {
+                var user = await userManager.Users.FirstOrDefaultAsync(x => x.UserName == test.UserName);
+                if (user == null)
+                {
+                    user = new AppUser
+                    {
+                        UserName = test.UserName,
+                        Email = test.Email,
+                        EmailConfirmed = true,
+                        JagId = test.JagId,
+                        CreatedAt = DateTime.Now,
+                        IsFirstLogin = false,
+                        MustChangePassword = false,
+                        TwoFactorEnabled = false
+                    };
+                    // "Password1" is deliberately simpler than the password
+                    // policy (no symbol) so it's easy to type while testing -
+                    // hash it directly instead of CreateAsync(user, password),
+                    // which would reject it. Real accounts still get the policy.
+                    user.PasswordHash = userManager.PasswordHasher.HashPassword(user, TestPassword);
+                    var created = await userManager.CreateAsync(user);
+                    if (!created.Succeeded)
+                    {
+                        throw new InvalidOperationException($"Seeding test account {test.UserName} failed: " +
+                            string.Join("; ", created.Errors.Select(e => e.Description)));
+                    }
+                }
+
+                foreach (var role in test.Roles)
+                {
+                    if (!await userManager.IsInRoleAsync(user, role))
+                    {
+                        await userManager.AddToRoleAsync(user, role);
+                    }
+                }
             }
 
             // Alumni Users
@@ -202,9 +255,59 @@ namespace Alumni_Management_System
                 await context.SaveChangesAsync();
             }
 
-            // Note: Alumni seeding commented out due to foreign key constraints
-            // Alumni records can be created directly through the application UI after user registration
-            // This ensures proper relationships with AppUser accounts
+            // Seed an Alumni profile for each demo Alumni login above. The login
+            // and Registry row alone aren't enough - My Profile, Add Employment,
+            // etc. all look up the Alumni row by JagId and fail without it.
+            // Alumni <-> AppUser is a logical JagId link (no FK), so this is
+            // safe; per-JagId check so it also back-fills existing databases.
+            var alumniProfiles = new List<(string JagId, string FirstName, string LastName)>
+            {
+                ("J0012345", "John", "Doe"),
+                ("J0012346", "Jane", "Smith"),
+                ("J0012347", "Michael", "Johnson"),
+                ("J0012348", "Sarah", "Williams"),
+                ("J0012349", "David", "Brown")
+            };
+            alumniProfiles.AddRange(TestAccounts
+                .Where(t => t.Roles.Contains(Constants.AlumniRole))
+                .Select(t => (t.JagId, t.FirstName, t.LastName)));
+
+            foreach (var (jagId, firstName, lastName) in alumniProfiles)
+            {
+                var user = await userManager.Users.FirstOrDefaultAsync(u => u.JagId == jagId);
+                if (user == null) continue;
+
+                var registry = await context.AlumniRegistries.FirstOrDefaultAsync(r => r.JagId == jagId);
+                if (registry == null)
+                {
+                    registry = new AlumniRegistry { JagId = jagId, FirstName = firstName, LastName = lastName, AccountCreated = true };
+                    context.AlumniRegistries.Add(registry);
+                    await context.SaveChangesAsync();
+                }
+
+                if (await context.Alumni.AnyAsync(a => a.JagId == jagId)) continue;
+
+                // Don't collide with an email another Alumni record already uses.
+                var email = user.Email;
+                if (string.IsNullOrWhiteSpace(email) || await context.Alumni.AnyAsync(a => a.PermanentEmail == email))
+                {
+                    email = $"{jagId.ToLower()}@pending.import";
+                }
+
+                context.Alumni.Add(new Alumni
+                {
+                    JagId = jagId,
+                    FirstName = registry.FirstName,
+                    LastName = registry.LastName,
+                    PermanentEmail = email,
+                    GraduationYear = 0,
+                    IsActive = true,
+                    Privacy = true,
+                    SolicitationCode = false,
+                    LastUpdated = DateTime.Now
+                });
+                await context.SaveChangesAsync();
+            }
         }
     }
 }

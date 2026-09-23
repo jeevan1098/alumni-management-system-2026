@@ -452,14 +452,24 @@
                         <span asp-validation-for="IsActive" class="text-danger"></span>
                     </div>
 
-                    <!-- Solicitation Code -->
-                    <div class="col-md-4 mb-3">
-                        <label class="form-label fw-semibold">&nbsp;</label>
+                    <!-- Solicitation Code (messages only) -->
+                    <div class="col-md-6 mb-3">
                         <div class="form-check mt-2">
                             <input asp-for="SolicitationCode" class="form-check-input me-2 border-primary" type="checkbox" />
                             <label asp-for="SolicitationCode" class="form-check-label fw-semibold"></label>
                         </div>
+                        <div class="form-text"><i class="bi bi-envelope me-1"></i>@Alumni_Management_System.Models.Alumni.SolicitationHelp</div>
                         <span asp-validation-for="SolicitationCode" class="text-danger"></span>
+                    </div>
+
+                    <!-- Privacy (hides contact details from other alumni) -->
+                    <div class="col-md-6 mb-3">
+                        <div class="form-check mt-2">
+                            <input asp-for="Privacy" class="form-check-input me-2 border-primary" type="checkbox" />
+                            <label asp-for="Privacy" class="form-check-label fw-semibold"></label>
+                        </div>
+                        <div class="form-text"><i class="bi bi-lock me-1"></i>@Alumni_Management_System.Models.Alumni.PrivacyHelp</div>
+                        <span asp-validation-for="Privacy" class="text-danger"></span>
                     </div>
 
                 </div>

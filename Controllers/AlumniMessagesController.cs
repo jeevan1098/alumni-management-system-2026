@@ -93,11 +93,7 @@ namespace Alumni_Management_System.Controllers
         {
             //ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName");
 
-            ViewData["AlumniId"] = new SelectList(_context.Alumni .Where(a => a.SolicitationCode).Select(a => new
-                                    {
-                                        a.AlumniId,
-                                        FullName = a.FirstName + " " + a.LastName 
-                                    }).ToList(), "AlumniId", "FullName");
+            ViewData["AlumniId"] = Services.AlumniSelectList.Build(_context.Alumni.Where(a => a.SolicitationCode));
 
             ViewData["MessageId"] = new SelectList(_context.Messages, "MessageId", "MessageBody");
             return View();
@@ -116,7 +112,7 @@ namespace Alumni_Management_System.Controllers
                 TempData["SuccessMessage"] = "Message sent successfully!";
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniMessage.AlumniId);
+            ViewData["AlumniId"] = Services.AlumniSelectList.Build(_context.Alumni, alumniMessage.AlumniId);
             ViewData["MessageId"] = new SelectList(_context.Messages, "MessageId", "MessageBody", alumniMessage.MessageId);
             return View(alumniMessage);
         }
@@ -135,7 +131,7 @@ namespace Alumni_Management_System.Controllers
             {
                 return NotFound();
             }
-            ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniMessage.AlumniId);
+            ViewData["AlumniId"] = Services.AlumniSelectList.Build(_context.Alumni, alumniMessage.AlumniId);
             ViewData["MessageId"] = new SelectList(_context.Messages, "MessageId", "MessageBody", alumniMessage.MessageId);
             return View(alumniMessage);
         }
@@ -172,7 +168,7 @@ namespace Alumni_Management_System.Controllers
                 }
                 return RedirectToAction(nameof(Index));
             }
-            ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniMessage.AlumniId);
+            ViewData["AlumniId"] = Services.AlumniSelectList.Build(_context.Alumni, alumniMessage.AlumniId);
             ViewData["MessageId"] = new SelectList(_context.Messages, "MessageId", "MessageBody", alumniMessage.MessageId);
             return View(alumniMessage);
         }

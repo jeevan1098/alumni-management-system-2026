@@ -251,8 +251,17 @@
 
             <dl class="row mb-4">
 
-                <dt class="col-sm-4">Privacy</dt>
-                <dd class="col-sm-8">@Model.Privacy</dd>
+                <dt class="col-sm-4">@Html.DisplayNameFor(m => m.Privacy)</dt>
+                <dd class="col-sm-8">
+                    @(Model.Privacy ? "Yes" : "No")
+                    <div class="form-text mt-0">@Alumni_Management_System.Models.Alumni.PrivacyHelp</div>
+                </dd>
+
+                <dt class="col-sm-4">@Html.DisplayNameFor(m => m.SolicitationCode)</dt>
+                <dd class="col-sm-8">
+                    @(Model.SolicitationCode ? "Yes" : "No")
+                    <div class="form-text mt-0">@Alumni_Management_System.Models.Alumni.SolicitationHelp</div>
+                </dd>
 
                 <dt class="col-sm-4">Active</dt>
                 <dd class="col-sm-8">

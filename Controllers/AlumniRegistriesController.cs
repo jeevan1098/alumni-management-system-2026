@@ -182,6 +182,74 @@ namespace Alumni_Management_System.Controllers
             return View();
         }
 
+        // Columns the importer understands, in the order the downloadable
+        // template uses. Shared by the template download and the instructions
+        // on the Bulk Import page so the two can't drift apart.
+        public static readonly IReadOnlyList<(string Header, string Sample, bool Required, string Description)> TemplateColumns = new[]
+        {
+            ("ID", "J00123456", true, "JAG ID - \"J\" followed by numbers. Existing JAG IDs are updated, new ones are created."),
+            ("First Name", "John", true, "First name"),
+            ("Last Name", "Doe", true, "Last name"),
+            ("UNIV Email", "jd1234@jagmail.southalabama.edu", false, "University email - saved as the email on record"),
+            ("OTH Email", "john.doe@example.com", false, "Other email - used only when UNIV Email is blank"),
+            ("CL", "CS", false, "College code (e.g. CS = School of Computing) - needs Major too"),
+            ("Major", "Computer Science", false, "Major / department - needs CL too"),
+            ("Degree", "BSCSC", false, "Degree code (defaults to the Major when blank)"),
+            ("Grad", "202610", false, "Graduation term (202610) or year (2026)"),
+            ("Inst GPA", "3.45", false, "Institutional GPA for the degree"),
+            ("Street Line 1", "123 Main Street", false, "Street address"),
+            ("Street Line 2", "Apt 4", false, "Apartment / suite (joined to Street Line 1)"),
+            ("City", "Mobile", false, "City"),
+            ("State", "AL", false, "State"),
+            ("Zip", "36608", false, "Zip / postal code"),
+            ("Country", "USA", false, "Country"),
+            ("Phone", "251-555-0123", false, "Phone number"),
+        };
+
+        // GET: AlumniRegistries/DownloadTemplate?format=xlsx|csv
+        [Authorize(Roles = "Admin")]
+        public IActionResult DownloadTemplate(string format = "xlsx")
+        {
+            if (string.Equals(format, "csv", StringComparison.OrdinalIgnoreCase))
+            {
+                string Csv(string v) => v.Contains(',') || v.Contains('"') ? $"\"{v.Replace("\"", "\"\"")}\"" : v;
+                var csv = new StringBuilder();
+                csv.AppendLine(string.Join(",", TemplateColumns.Select(c => Csv(c.Header))));
+                csv.AppendLine(string.Join(",", TemplateColumns.Select(c => Csv(c.Sample))));
+                return File(Encoding.UTF8.GetBytes(csv.ToString()), "text/csv", "Alumni_Bulk_Import_Template.csv");
+            }
+
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            using var package = new ExcelPackage();
+            var sheet = package.Workbook.Worksheets.Add("Alumni");
+            for (int i = 0; i < TemplateColumns.Count; i++)
+            {
+                var header = sheet.Cells[1, i + 1];
+                header.Value = TemplateColumns[i].Header;
+                header.Style.Font.Bold = true;
+                // Stored as text so values like the JAG ID, Zip and Grad term
+                // keep their exact form instead of being turned into numbers.
+                sheet.Cells[2, i + 1].Style.Numberformat.Format = "@";
+                sheet.Cells[2, i + 1].Value = TemplateColumns[i].Sample;
+                if (TemplateColumns[i].Required)
+                {
+                    header.AddComment("Required", "Alumni Management System");
+                }
+            }
+            sheet.View.FreezePanes(2, 1);
+            sheet.Cells[sheet.Dimension.Address].AutoFitColumns();
+
+            return File(package.GetAsByteArray(),
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                "Alumni_Bulk_Import_Template.xlsx");
+        }
+
+        // One parsed row from either the CSV or Excel file.
+        private sealed class ImportRow
+        {
+            public string JagId, FirstName, LastName, GradRaw, Email, Address, City, State, Postcode, Country, Phone;
+        }
+
         // POST: AlumniRegistries/BulkImport
         [HttpPost]
         [ValidateAntiForgeryToken]
@@ -194,17 +262,22 @@ namespace Alumni_Management_System.Controllers
                 return View();
             }
 
-            var importResults = new List<string>();
             var errors = new List<string>();
-            int successCount = 0;
+            var updates = new List<string>();
+            int createdCount = 0;
+            int updatedCount = 0;
+            int unchangedCount = 0;
             int errorCount = 0;
 
-            // Two different JAG IDs sharing the same email is still a
-            // duplicate person, and two rows in the same file can duplicate
-            // each other before anything is saved (so a DB-only check
-            // wouldn't catch them) - track both within this import too.
-            var seenJagIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            var seenEmails = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            // A JAG ID that's already in the system (or appears twice in the
+            // same file) isn't skipped - the existing record is updated with
+            // the file's values and the change is reported back. These caches
+            // hold the records touched so far in this import, since nothing is
+            // saved until the end and a DB lookup wouldn't see them yet.
+            var registryCache = new Dictionary<string, AlumniRegistry>(StringComparer.OrdinalIgnoreCase);
+            var alumniCache = new Dictionary<string, Alumni>(StringComparer.OrdinalIgnoreCase);
+            var firstRowForJagId = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            var emailOwners = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             // Alumni whose College field was touched by a degree row during
             // this import - re-synced to their most-recently-conferred
@@ -212,40 +285,168 @@ namespace Alumni_Management_System.Controllers
             // of just keeping whichever row happened to be processed last.
             var alumniWithDegreeRows = new List<Alumni>();
 
-            async Task<string> CheckDuplicateAsync(string jagId, string email)
+            // Creates the Registry + Alumni records for a new JAG ID, or
+            // updates the existing ones with any non-blank values from the
+            // file (blank cells never wipe out existing data). Returns null
+            // when the row was rejected; otherwise the Alumni plus a list of
+            // the changes made, which the caller reports once it's done with
+            // the row.
+            async Task<(Alumni Alumni, bool IsNew, List<string> Changes)?> UpsertAsync(string rowLabel, ImportRow r)
             {
-                if (seenJagIds.Contains(jagId))
+                if (!System.Text.RegularExpressions.Regex.IsMatch(r.JagId, @"^J\d+$"))
                 {
-                    return $"Duplicate JAG ID within this file: {jagId}";
+                    errors.Add($"{rowLabel}: Invalid JAG ID format '{r.JagId}' - must start with J followed by numbers");
+                    return null;
                 }
 
-                if (await _context.AlumniRegistries.AnyAsync(a => a.JagId == jagId))
+                if (!registryCache.TryGetValue(r.JagId, out var registry))
                 {
-                    return $"Duplicate JAG ID: {jagId}";
+                    registry = await _context.AlumniRegistries.FirstOrDefaultAsync(a => a.JagId == r.JagId);
+                }
+                if (!alumniCache.TryGetValue(r.JagId, out var alumni))
+                {
+                    alumni = await _context.Alumni.Include(a => a.AlumniDegrees).FirstOrDefaultAsync(a => a.JagId == r.JagId);
                 }
 
-                // A JAG ID already tied to an existing account (e.g. an
-                // Admin/Staff account) can't be reused for a bulk-imported
-                // Alumni - it's a one-JAG-ID-per-account system.
-                if (await _context.Users.AnyAsync(u => u.JagId == jagId))
+                // A JAG ID tied to an existing non-Alumni account (e.g. an
+                // Admin/Staff account) can't become an Alumni record - it's a
+                // one-JAG-ID-per-account system.
+                if (alumni == null && await _context.Users.AnyAsync(u => u.JagId == r.JagId))
                 {
-                    return $"JAG ID {jagId} is already in use by an existing account - skipped";
+                    errors.Add($"{rowLabel}: JAG ID {r.JagId} is already in use by a non-alumni account - skipped");
+                    return null;
                 }
 
+                var isNew = registry == null && alumni == null;
+                var changes = new List<string>();
+
+                firstRowForJagId.TryAdd(r.JagId, rowLabel);
+
+                // Emails must stay unique per person. A new record can't be
+                // created with someone else's email; an existing record just
+                // keeps its current email and the conflict is reported.
+                var email = r.Email;
                 if (!string.IsNullOrWhiteSpace(email))
                 {
-                    if (seenEmails.Contains(email))
+                    var takenInFile = emailOwners.TryGetValue(email, out var owner) && !owner.Equals(r.JagId, StringComparison.OrdinalIgnoreCase);
+                    var takenInDb = !takenInFile && await _context.Alumni.AnyAsync(a => a.PermanentEmail == email && a.JagId != r.JagId);
+                    if (takenInFile || takenInDb)
                     {
-                        return $"Duplicate email within this file: {email}";
+                        if (isNew)
+                        {
+                            errors.Add($"{rowLabel}: Email {email} already belongs to another alumni record - skipped");
+                            return null;
+                        }
+                        errors.Add($"{rowLabel}: Email {email} already belongs to another alumni record - kept the existing email for {r.JagId}, other fields still updated");
+                        email = null;
                     }
-
-                    if (await _context.Alumni.AnyAsync(a => a.PermanentEmail == email))
+                    else
                     {
-                        return $"Email already in use by another Alumni record: {email}";
+                        emailOwners[email] = r.JagId;
                     }
                 }
 
-                return null;
+                void Apply(string label, string current, string incoming, Action<string> set)
+                {
+                    if (string.IsNullOrWhiteSpace(incoming) || string.Equals(current?.Trim(), incoming, StringComparison.Ordinal))
+                    {
+                        return;
+                    }
+                    set(incoming);
+                    changes.Add(string.IsNullOrWhiteSpace(current) ? $"{label} set to '{incoming}'" : $"{label} '{current}' → '{incoming}'");
+                }
+
+                if (registry == null)
+                {
+                    registry = new AlumniRegistry { JagId = r.JagId, FirstName = r.FirstName, LastName = r.LastName, AccountCreated = false };
+                    _context.AlumniRegistries.Add(registry);
+                    if (!isNew) changes.Add("registry entry created");
+                }
+                else
+                {
+                    Apply("Registry first name", registry.FirstName, r.FirstName, v => registry.FirstName = v);
+                    Apply("Registry last name", registry.LastName, r.LastName, v => registry.LastName = v);
+                }
+                registryCache[r.JagId] = registry;
+
+                // "Graduation Year" can arrive as a plain year ("2023") or, from the
+                // richer registrar export, a 6-digit term code ("202610") - either
+                // way the year is the first 4 digits.
+                var gradYear = 0;
+                if (!string.IsNullOrWhiteSpace(r.GradRaw))
+                {
+                    var yearPart = r.GradRaw.Length >= 4 ? r.GradRaw.Substring(0, 4) : r.GradRaw;
+                    int.TryParse(yearPart, out gradYear);
+                }
+
+                // Bulk import populates the actual Alumni table too (not just
+                // the Registry stub) so the JagId -> RegisterAlumni self-service
+                // flow (which requires an existing Alumni row) works, and so
+                // Admin/Staff can see them under Alumni immediately.
+                if (alumni == null)
+                {
+                    alumni = new Alumni
+                    {
+                        JagId = r.JagId,
+                        FirstName = r.FirstName,
+                        LastName = r.LastName,
+                        PermanentEmail = string.IsNullOrWhiteSpace(email) ? $"{r.JagId.ToLower()}@pending.import" : email,
+                        GraduationYear = gradYear,
+                        Address = r.Address,
+                        City = r.City,
+                        State = r.State,
+                        Postcode = r.Postcode,
+                        Country = r.Country,
+                        Phone = r.Phone,
+                        IsActive = false,
+                        Privacy = true,
+                        SolicitationCode = false,
+                        LastUpdated = DateTime.Now
+                    };
+                    _context.Alumni.Add(alumni);
+                    if (!isNew) changes.Add("alumni record created");
+                }
+                else
+                {
+                    var a = alumni;
+                    Apply("First name", a.FirstName, r.FirstName, v => a.FirstName = v);
+                    Apply("Last name", a.LastName, r.LastName, v => a.LastName = v);
+                    Apply("Email", a.PermanentEmail, email, v => a.PermanentEmail = v);
+                    Apply("Address", a.Address, r.Address, v => a.Address = v);
+                    Apply("City", a.City, r.City, v => a.City = v);
+                    Apply("State", a.State, r.State, v => a.State = v);
+                    Apply("Zip", a.Postcode, r.Postcode, v => a.Postcode = v);
+                    Apply("Country", a.Country, r.Country, v => a.Country = v);
+                    Apply("Phone", a.Phone, r.Phone, v => a.Phone = v);
+                    if (gradYear > 0 && gradYear != a.GraduationYear)
+                    {
+                        changes.Add(a.GraduationYear > 0 ? $"Graduation year {a.GraduationYear} → {gradYear}" : $"Graduation year set to {gradYear}");
+                        a.GraduationYear = gradYear;
+                    }
+                }
+                alumniCache[r.JagId] = alumni;
+
+                return (alumni, isNew, changes);
+            }
+
+            void Report(string rowLabel, string jagId, bool isNew, List<string> changes)
+            {
+                if (isNew)
+                {
+                    createdCount++;
+                }
+                else if (changes.Count > 0)
+                {
+                    updatedCount++;
+                    var repeatNote = firstRowForJagId.TryGetValue(jagId, out var firstRow) && firstRow != rowLabel
+                        ? $" [also on {firstRow.ToLower()} - this row's values applied]"
+                        : "";
+                    updates.Add($"{rowLabel} ({jagId}){repeatNote}: {string.Join("; ", changes)}");
+                }
+                else
+                {
+                    unchangedCount++;
+                }
             }
 
             try
@@ -256,64 +457,90 @@ namespace Alumni_Management_System.Controllers
                 {
                     using (var reader = new StreamReader(file.OpenReadStream()))
                     {
-                        // Skip header
-                        var header = await reader.ReadLineAsync();
+                        var headerLine = await reader.ReadLineAsync();
 
+                        // The 6-column simple template has no header names worth
+                        // mapping (and is handled by fixed position below), but a
+                        // richer CSV export can carry extra columns - like Address,
+                        // City, State, Postcode, Country, Phone - in any order, so
+                        // map header name to column index the same way the Excel
+                        // path does, and fall back to fixed position when absent.
+                        var csvHeaders = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+                        if (!string.IsNullOrWhiteSpace(headerLine))
+                        {
+                            var headerValues = ParseCsvLine(headerLine);
+                            for (int c = 0; c < headerValues.Length; c++)
+                            {
+                                var h = headerValues[c]?.Trim();
+                                if (!string.IsNullOrEmpty(h) && !csvHeaders.ContainsKey(h))
+                                {
+                                    csvHeaders[h] = c;
+                                }
+                            }
+                        }
+
+                        string GetCsvField(string[] values, params string[] headerNames)
+                        {
+                            foreach (var name in headerNames)
+                            {
+                                if (csvHeaders.TryGetValue(name, out var idx) && idx < values.Length)
+                                {
+                                    var v = values[idx]?.Trim();
+                                    if (!string.IsNullOrWhiteSpace(v)) return v;
+                                }
+                            }
+                            return null;
+                        }
+
+                        // Header is line 1, so the first data line is line 2.
+                        int lineNumber = 1;
                         while (!reader.EndOfStream)
                         {
                             var line = await reader.ReadLineAsync();
+                            lineNumber++;
                             if (string.IsNullOrWhiteSpace(line)) continue;
 
+                            var rowLabel = $"Row {lineNumber}";
                             var values = ParseCsvLine(line);
 
                             if (values.Length < 3)
                             {
-                                errors.Add($"Row skipped - insufficient columns: {line}");
+                                errors.Add($"{rowLabel} skipped - insufficient columns: {line}");
                                 errorCount++;
                                 continue;
                             }
 
                             try
                             {
-                                var registry = new AlumniRegistry
+                                var importRow = new ImportRow
                                 {
-                                    JagId = values[0].Trim(),
-                                    FirstName = values[1].Trim(),
-                                    LastName = values[2].Trim(),
-                                    AccountCreated = false
+                                    JagId = GetCsvField(values, "JAG ID", "ID") ?? values[0].Trim(),
+                                    FirstName = GetCsvField(values, "First Name") ?? values[1].Trim(),
+                                    LastName = GetCsvField(values, "Last Name") ?? values[2].Trim(),
+                                    GradRaw = GetCsvField(values, "Grad", "Graduation Year") ?? (values.Length > 3 ? values[3].Trim() : null),
+                                    Email = GetCsvField(values, "UNIV Email", "Email On Record", "OTH Email") ?? (values.Length > 5 ? values[5].Trim() : null),
+                                    Address = CombineAddressLines(
+                                        GetCsvField(values, "Address", "Street Address", "Address Line 1", "Street Line 1", "Mailing Address"),
+                                        GetCsvField(values, "Address Line 2", "Street Line 2")),
+                                    City = GetCsvField(values, "City"),
+                                    State = GetCsvField(values, "State"),
+                                    Postcode = GetCsvField(values, "Zip", "Zip Code", "Postal Code", "Postcode"),
+                                    Country = GetCsvField(values, "Country"),
+                                    Phone = GetCsvField(values, "Phone", "Phone Number")
                                 };
 
-                                // Validate JAG ID format
-                                if (!System.Text.RegularExpressions.Regex.IsMatch(registry.JagId, @"^J\d+$"))
+                                var result = await UpsertAsync(rowLabel, importRow);
+                                if (result == null)
                                 {
-                                    errors.Add($"Invalid JAG ID format '{registry.JagId}' - must start with J followed by numbers");
                                     errorCount++;
                                     continue;
                                 }
 
-                                var gradYear = values.Length > 3 ? values[3].Trim() : null;
-                                var emailOnRecord = values.Length > 5 ? values[5].Trim() : null;
-
-                                var duplicateReason = await CheckDuplicateAsync(registry.JagId, emailOnRecord);
-                                if (duplicateReason != null)
-                                {
-                                    errors.Add(duplicateReason);
-                                    errorCount++;
-                                    continue;
-                                }
-
-                                seenJagIds.Add(registry.JagId);
-                                if (!string.IsNullOrWhiteSpace(emailOnRecord)) seenEmails.Add(emailOnRecord);
-
-                                _context.AlumniRegistries.Add(registry);
-
-                                await AddAlumniRecordIfMissingAsync(registry, gradYear, emailOnRecord);
-
-                                successCount++;
+                                Report(rowLabel, importRow.JagId, result.Value.IsNew, result.Value.Changes);
                             }
                             catch (Exception ex)
                             {
-                                errors.Add($"Error processing row: {line} - {ex.Message}");
+                                errors.Add($"{rowLabel}: Error processing row: {line} - {ex.Message}");
                                 errorCount++;
                             }
                         }
@@ -436,6 +663,7 @@ namespace Alumni_Management_System.Controllers
                             // Start from row 2 (skip header)
                             for (int row = 2; row <= rowCount; row++)
                             {
+                                var rowLabel = $"Row {row}";
                                 try
                                 {
                                     var jagId = GetCell(row, "JAG ID", "ID");
@@ -450,44 +678,36 @@ namespace Alumni_Management_System.Controllers
 
                                     if (string.IsNullOrWhiteSpace(jagId) || string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName))
                                     {
-                                        errors.Add($"Row {row} skipped - missing required field(s) (JAG ID/First Name/Last Name)");
+                                        errors.Add($"{rowLabel} skipped - missing required field(s) (JAG ID/First Name/Last Name)");
                                         errorCount++;
                                         continue;
                                     }
 
-                                    var registry = new AlumniRegistry
+                                    var importRow = new ImportRow
                                     {
                                         JagId = jagId,
                                         FirstName = firstName,
                                         LastName = lastName,
-                                        AccountCreated = false
+                                        GradRaw = GetCell(row, "Grad", "Graduation Year"),
+                                        Email = GetCell(row, "UNIV Email", "Email On Record", "OTH Email"),
+                                        Address = CombineAddressLines(
+                                            GetCell(row, "Address", "Street Address", "Address Line 1", "Street Line 1", "Mailing Address"),
+                                            GetCell(row, "Address Line 2", "Street Line 2")),
+                                        City = GetCell(row, "City"),
+                                        State = GetCell(row, "State"),
+                                        Postcode = GetCell(row, "Zip", "Zip Code", "Postal Code", "Postcode"),
+                                        Country = GetCell(row, "Country"),
+                                        Phone = GetCell(row, "Phone", "Phone Number")
                                     };
 
-                                    // Validate JAG ID format
-                                    if (!System.Text.RegularExpressions.Regex.IsMatch(registry.JagId, @"^J\d+$"))
+                                    var result = await UpsertAsync(rowLabel, importRow);
+                                    if (result == null)
                                     {
-                                        errors.Add($"Row {row}: Invalid JAG ID format '{registry.JagId}' - must start with J followed by numbers");
                                         errorCount++;
                                         continue;
                                     }
 
-                                    var gradRaw = GetCell(row, "Grad", "Graduation Year");
-                                    var email = GetCell(row, "UNIV Email", "Email On Record", "OTH Email");
-
-                                    var duplicateReason = await CheckDuplicateAsync(registry.JagId, email);
-                                    if (duplicateReason != null)
-                                    {
-                                        errors.Add($"Row {row}: {duplicateReason}");
-                                        errorCount++;
-                                        continue;
-                                    }
-
-                                    seenJagIds.Add(registry.JagId);
-                                    if (!string.IsNullOrWhiteSpace(email)) seenEmails.Add(email);
-
-                                    _context.AlumniRegistries.Add(registry);
-
-                                    var alumni = await AddAlumniRecordIfMissingAsync(registry, gradRaw, email);
+                                    var (alumni, isNew, changes) = result.Value;
 
                                     // Only the richer registrar export carries College (CL) +
                                     // Major - the simple 6-column sample doesn't, so this whole
@@ -503,6 +723,7 @@ namespace Alumni_Management_System.Controllers
 
                                         alumniWithDegreeRows.Add(alumni);
 
+                                        var gradRaw = importRow.GradRaw;
                                         if (gradRaw != null && gradRaw.Length >= 4 && int.TryParse(gradRaw.Substring(0, 4), out var gradYearForDegree))
                                         {
                                             decimal? gpa = null;
@@ -512,10 +733,12 @@ namespace Alumni_Management_System.Controllers
                                                 gpa = parsedGpa;
                                             }
 
-                                            var alreadyLinked = alumni.AlumniDegrees.Any(ad => ad.Degree == degreeProgram)
-                                                || (alumni.AlumniId != 0 && await _context.AlumniDegrees.AnyAsync(ad => ad.AlumniId == alumni.AlumniId && ad.Degree == degreeProgram));
+                                            var existingLink = alumni.AlumniDegrees.FirstOrDefault(ad => ad.Degree == degreeProgram)
+                                                ?? (alumni.AlumniId != 0
+                                                    ? await _context.AlumniDegrees.FirstOrDefaultAsync(ad => ad.AlumniId == alumni.AlumniId && ad.Degree == degreeProgram)
+                                                    : null);
 
-                                            if (!alreadyLinked)
+                                            if (existingLink == null)
                                             {
                                                 _context.AlumniDegrees.Add(new AlumniDegree
                                                 {
@@ -524,15 +747,30 @@ namespace Alumni_Management_System.Controllers
                                                     DateConferred = new DateOnly(gradYearForDegree, 5, 1),
                                                     Gpa = gpa
                                                 });
+                                                if (!isNew) changes.Add($"Degree {degreeCode} ({major}) added");
+                                            }
+                                            else
+                                            {
+                                                var conferred = new DateOnly(gradYearForDegree, 5, 1);
+                                                if (existingLink.DateConferred != conferred)
+                                                {
+                                                    changes.Add($"{degreeCode} conferred date {existingLink.DateConferred} → {conferred}");
+                                                    existingLink.DateConferred = conferred;
+                                                }
+                                                if (gpa != null && existingLink.Gpa != gpa)
+                                                {
+                                                    changes.Add(existingLink.Gpa == null ? $"{degreeCode} GPA set to {gpa}" : $"{degreeCode} GPA {existingLink.Gpa} → {gpa}");
+                                                    existingLink.Gpa = gpa;
+                                                }
                                             }
                                         }
                                     }
 
-                                    successCount++;
+                                    Report(rowLabel, jagId, isNew, changes);
                                 }
                                 catch (Exception ex)
                                 {
-                                    errors.Add($"Row {row}: {ex.Message}");
+                                    errors.Add($"{rowLabel}: {ex.Message}");
                                     errorCount++;
                                 }
                             }
@@ -552,10 +790,14 @@ namespace Alumni_Management_System.Controllers
                     await Services.AlumniCollegeSyncService.SyncToMostRecentDegreeAsync(_context, alumniId);
                 }
 
-                TempData["SuccessMessage"] = $"Import completed: {successCount} records imported successfully, {errorCount} errors.";
+                TempData["SuccessMessage"] = $"Import completed: {createdCount} new, {updatedCount} updated, {unchangedCount} already up to date, {errorCount} errors.";
+                if (updates.Any())
+                {
+                    TempData["UpdateMessages"] = string.Join("<br/>", updates.Select(System.Net.WebUtility.HtmlEncode));
+                }
                 if (errors.Any())
                 {
-                    TempData["ErrorMessages"] = string.Join("<br/>", errors);
+                    TempData["ErrorMessages"] = string.Join("<br/>", errors.Select(System.Net.WebUtility.HtmlEncode));
                 }
 
                 return RedirectToAction("Index", "Alumni");
@@ -567,43 +809,14 @@ namespace Alumni_Management_System.Controllers
             }
         }
 
-        // Bulk import used to populate the actual Alumni table too (not just
-        // the Registry stub) - restoring that: each imported person gets a
-        // real Alumni record so the JagId -> RegisterAlumni self-service
-        // flow (which requires an existing Alumni row) actually works, and
-        // so Admin/Staff can see them under Alumni immediately.
-        private async Task<Alumni> AddAlumniRecordIfMissingAsync(AlumniRegistry registry, string gradYearRaw, string emailOnRecord)
+        // The registrar export splits the street across "Street Line 1" /
+        // "Street Line 2" (e.g. "41 Bob Avenue" + "Apt 12") - Alumni has a
+        // single Address field, so join them.
+        private static string CombineAddressLines(string line1, string line2)
         {
-            var existing = await _context.Alumni.Include(a => a.AlumniDegrees).FirstOrDefaultAsync(a => a.JagId == registry.JagId);
-            if (existing != null)
-            {
-                return existing;
-            }
-
-            // "Graduation Year" can arrive as a plain year ("2023") or, from the
-            // richer registrar export, a 6-digit term code ("202610") - either
-            // way the year is the first 4 digits.
-            var gradYear = 0;
-            if (!string.IsNullOrWhiteSpace(gradYearRaw))
-            {
-                var yearPart = gradYearRaw.Length >= 4 ? gradYearRaw.Substring(0, 4) : gradYearRaw;
-                int.TryParse(yearPart, out gradYear);
-            }
-
-            var alumni = new Alumni
-            {
-                JagId = registry.JagId,
-                FirstName = registry.FirstName,
-                LastName = registry.LastName,
-                PermanentEmail = string.IsNullOrWhiteSpace(emailOnRecord) ? $"{registry.JagId.ToLower()}@pending.import" : emailOnRecord,
-                GraduationYear = gradYear,
-                IsActive = false,
-                Privacy = true,
-                SolicitationCode = false,
-                LastUpdated = DateTime.Now
-            };
-            _context.Alumni.Add(alumni);
-            return alumni;
+            if (string.IsNullOrWhiteSpace(line2)) return line1;
+            if (string.IsNullOrWhiteSpace(line1)) return line2;
+            return $"{line1}, {line2}";
         }
 
         private string[] ParseCsvLine(string line)

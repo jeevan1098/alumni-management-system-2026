@@ -600,6 +600,7 @@ else
     var isAlumni = userRole == "Alumni";
     var isAdmin = userRole == "Admin";
     var isStaff = userRole == "Staff";
+    var hasTableTools = User.IsInRole("Admin") || User.IsInRole("Staff");
 }
 
 <div class="container mt-5 mb-5">
@@ -608,6 +609,23 @@ else
     {
         <div class="alert alert-success alert-dismissible fade show" role="alert">
             @Html.Raw(TempData["SuccessMessage"])
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["ErrorMessage"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["ErrorMessage"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["UpdateMessages"] != null)
+    {
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <strong>Existing records updated:</strong><br />
+            @Html.Raw(TempData["UpdateMessages"])
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     }
@@ -700,7 +718,11 @@ else
         </div>
     }
 
-    <!-- Search -->
+    <!-- Search - Admin/Staff get the live "Search this table" box above the
+         table instead (wwwroot/js/admin-enhance.js), so only show this one
+         to everyone else. -->
+    @if (!hasTableTools)
+    {
     <form asp-action="Index" method="get" class="mb-4 row g-3">
         <div class="col-md-10">
             <div class="input-group input-group-lg">
@@ -719,15 +741,34 @@ else
             </button>
         </div>
     </form>
+    }
 
 
     <!-- ================= TABLE VIEW ================= -->
     <div id="tableView">
 
+        @if (isAdmin)
+        {
+            <div id="bulkBar" class="alert alert-danger d-flex flex-wrap align-items-center gap-2 py-2 mb-3 d-none">
+                <i class="bi bi-check2-square"></i>
+                <span><strong id="bulkCount">0</strong> selected</span>
+                <button type="button" class="btn btn-sm btn-link ms-1" id="bulkClear">Clear selection</button>
+                <button type="button" class="btn btn-sm btn-danger rounded-pill px-3 ms-auto" data-bs-toggle="modal" data-bs-target="#bulkDeleteModal">
+                    <i class="bi bi-trash-fill me-1"></i>Delete selected
+                </button>
+            </div>
+        }
+
         <div class="table-responsive">
             <table class="table table-hover align-middle text-center">
                 <thead class="table-dark">
                     <tr>
+                        @if (isAdmin)
+                        {
+                            <th data-no-sort style="width:1%">
+                                <input type="checkbox" class="form-check-input" id="selectAllAlumni" title="Select all shown" aria-label="Select all shown alumni" />
+                            </th>
+                        }
                         <th>Jag ID</th>
                         <th>Name</th>
                         <th>Email</th>
@@ -758,6 +799,12 @@ else
                     @foreach (var item in Model)
                     {
                         <tr>
+                            @if (isAdmin)
+                            {
+                                <td>
+                                    <input type="checkbox" class="form-check-input alumni-select" name="ids" value="@item.AlumniId" form="bulkDeleteForm" aria-label="Select @item.FirstName @item.LastName" />
+                                </td>
+                            }
                             <td>@item.JagId</td>
                             <td>
                                 @item.FirstName @item.LastName
@@ -769,8 +816,16 @@ else
                                     </small>
                                 }
                             </td>
-                            <td>@item.PermanentEmail</td>
-                            <td>@item.Phone</td>
+                            @if (item.ContactHidden)
+                            {
+                                <td><span class="text-muted" title="This alumnus keeps their contact details private"><i class="bi bi-lock-fill me-1"></i>Private</span></td>
+                                <td><span class="text-muted" title="This alumnus keeps their contact details private"><i class="bi bi-lock-fill me-1"></i>Private</span></td>
+                            }
+                            else
+                            {
+                                <td>@item.PermanentEmail</td>
+                                <td>@item.Phone</td>
+                            }
                             <td>@item.GraduationYear</td>
                             <td>@item.City</td>
                             <td>@item.State</td>
@@ -882,15 +937,22 @@ else
                                 </div>
                             </div>
 
-                            <p class="mb-1">
-                                <i class="bi bi-envelope-fill text-primary me-2"></i>
-                                @item.PermanentEmail
-                            </p>
+                            @if (item.ContactHidden)
+                            {
+                                <p class="mb-1"><span class="text-muted" title="This alumnus keeps their contact details private"><i class="bi bi-lock-fill me-1"></i>Private</span> contact details</p>
+                            }
+                            else
+                            {
+                                <p class="mb-1">
+                                    <i class="bi bi-envelope-fill text-primary me-2"></i>
+                                    @item.PermanentEmail
+                                </p>
 
-                            <p class="mb-1">
-                                <i class="bi bi-telephone-fill text-primary me-2"></i>
-                                @item.Phone
-                            </p>
+                                <p class="mb-1">
+                                    <i class="bi bi-telephone-fill text-primary me-2"></i>
+                                    @item.Phone
+                                </p>
+                            }
 
                             <p class="mb-0">
                                 <i class="bi bi-geo-alt-fill text-primary me-2"></i>
@@ -915,8 +977,77 @@ else
 </div>
 
 
+@if (isAdmin)
+{
+    <form id="bulkDeleteForm" asp-action="BulkDelete" method="post"></form>
+
+    <div class="modal fade" id="bulkDeleteModal" tabindex="-1" aria-labelledby="bulkDeleteTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="bulkDeleteTitle"><i class="bi bi-exclamation-triangle-fill text-danger me-2"></i>Delete selected alumni?</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>You're about to permanently delete <strong id="bulkModalCount">0</strong> alumni record(s), including their degrees, employment, internships, organizations and messages.</p>
+                    <p class="mb-0">Their linked login accounts are deleted too, except accounts that also have the Admin or Staff role - those only lose the Alumni role. <strong>This can't be undone.</strong></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary rounded-pill px-4" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" form="bulkDeleteForm" class="btn btn-danger rounded-pill px-4">
+                        <i class="bi bi-trash-fill me-1"></i>Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @section Scripts {
     <script>
+        // Bulk delete (Admin only): tick rows, then "Delete selected". The
+        // checkboxes post straight to #bulkDeleteForm via their form="" attribute.
+        (function () {
+            var selectAll = document.getElementById('selectAllAlumni');
+            if (!selectAll) return;
+            var boxes = Array.prototype.slice.call(document.querySelectorAll('.alumni-select'));
+            var bar = document.getElementById('bulkBar');
+
+            // "Shown" = not hidden by the table search (admin-enhance.js).
+            function shownBoxes() {
+                return boxes.filter(function (b) { return !b.closest('tr').classList.contains('ae-filtered'); });
+            }
+
+            function refresh() {
+                var checked = boxes.filter(function (b) { return b.checked; }).length;
+                var shown = shownBoxes();
+                var shownChecked = shown.filter(function (b) { return b.checked; }).length;
+                document.getElementById('bulkCount').textContent = checked;
+                document.getElementById('bulkModalCount').textContent = checked;
+                bar.classList.toggle('d-none', checked === 0);
+                selectAll.checked = shown.length > 0 && shownChecked === shown.length;
+                selectAll.indeterminate = shownChecked > 0 && shownChecked < shown.length;
+                boxes.forEach(function (b) { b.closest('tr').classList.toggle('table-danger', b.checked); });
+            }
+
+            selectAll.addEventListener('change', function () {
+                shownBoxes().forEach(function (b) { b.checked = selectAll.checked; });
+                refresh();
+            });
+            boxes.forEach(function (b) { b.addEventListener('change', refresh); });
+            document.getElementById('bulkClear').addEventListener('click', function () {
+                boxes.forEach(function (b) { b.checked = false; });
+                refresh();
+            });
+            // Keep the header checkbox in step as the table search hides rows.
+            ['input', 'change'].forEach(function (type) {
+                document.addEventListener(type, function (e) {
+                    if (e.target.closest && e.target.closest('.ae-toolbar')) setTimeout(refresh, 0);
+                });
+            });
+            refresh();
+        })();
+
         function toggleView(viewType) {
 
             const cardView = document.getElementById('cardView');

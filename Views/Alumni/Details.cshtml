@@ -46,6 +46,14 @@
                 <div class="col-md-6 mb-3">
                     <h5 class="fw-bold">Contact Information</h5>
 
+                    @if (Model.ContactHidden)
+                    {
+                        <div class="alert alert-secondary py-2 small mb-2">
+                            <i class="bi bi-lock-fill me-1"></i>
+                            @Model.FirstName keeps their contact details private - email, phone, address, date of birth and social media aren't shown to other alumni.
+                        </div>
+                    }
+
                     @if (!string.IsNullOrEmpty(Model.StudentEmail))
                     {
                         <p class="mb-1">📧 Student Email: @Model.StudentEmail</p>
@@ -104,19 +112,21 @@
 
                 <div class="row">
                     <div class="col-md-6">
-                        <p class="mb-1">
-                            📩 Solicitation Code:
-                            <span class="badge bg-info text-dark">
-                                @Model.SolicitationCode
+                        <p class="mb-0">
+                            📩 @Html.DisplayNameFor(m => m.SolicitationCode):
+                            <span class="badge @(Model.SolicitationCode ? "bg-success" : "bg-secondary")">
+                                @(Model.SolicitationCode ? "Yes" : "No")
                             </span>
                         </p>
+                        <p class="form-text mt-0 mb-2">@Alumni_Management_System.Models.Alumni.SolicitationHelp</p>
 
-                        <p class="mb-1">
-                            🔒 Privacy Level:
-                            <span class="badge bg-secondary">
-                                @Model.Privacy
+                        <p class="mb-0">
+                            🔒 @Html.DisplayNameFor(m => m.Privacy):
+                            <span class="badge @(Model.Privacy ? "bg-warning text-dark" : "bg-secondary")">
+                                @(Model.Privacy ? "Yes - contact details hidden" : "No - contact details visible")
                             </span>
                         </p>
+                        <p class="form-text mt-0 mb-2">@Alumni_Management_System.Models.Alumni.PrivacyHelp</p>
                     </div>
 
                     <div class="col-md-6">

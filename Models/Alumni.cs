@@ -111,6 +111,8 @@ public partial class Alumni
     [Display(Name = "Most Recent Graduation Year")]
     public int GraduationYear { get; set; }
 
+    // Messages only - see SolicitationHelp. Does NOT affect who can see the
+    // profile in the directory (that's everyone; Privacy only hides contact details).
     [Column("solicitation_code")]
     [Display(Name = "Allow Contact (Solicitation)")]
     public bool SolicitationCode { get; set; }
@@ -120,8 +122,41 @@ public partial class Alumni
     [Display(Name = "Social Media Account")]
     public string SocialMediaAccount { get; set; }
 
+    // Ticked = contact details are hidden from other alumni - see PrivacyHelp
+    // and HideContactDetails(). Admin/Staff and the alumnus themself still see them.
     [Column("privacy")]
+    [Display(Name = "Keep Contact Details Private")]
     public bool Privacy { get; set; }
+
+    // Explanations shown next to these two settings on every page that
+    // displays or edits them, so the wording stays the same everywhere.
+    public const string PrivacyHelp =
+        "When ticked, other alumni can still see the name, graduation year, college, city/state and degrees in the alumni directory, " +
+        "but NOT the contact details - email addresses, phone number, street address, date of birth and social media account. " +
+        "Administrators and staff can always see everything.";
+
+    public const string SolicitationHelp =
+        "When ticked, the alumni office may send messages to this alumnus (newsletters, events, announcements and fundraising). " +
+        "This only controls messages - it doesn't change who can see the profile or contact details.";
+
+    // Set by HideContactDetails() so views can show "Private" instead of a blank.
+    [NotMapped]
+    public bool ContactHidden { get; private set; }
+
+    // Clears the contact fields on this in-memory copy for a viewer who isn't
+    // allowed to see them. Only call on entities that won't be saved
+    // (e.g. loaded with AsNoTracking) - it would otherwise wipe real data.
+    public void HideContactDetails()
+    {
+        PermanentEmail = null;
+        StudentEmail = null;
+        Phone = null;
+        Address = null;
+        Postcode = null;
+        DateOfBirth = null;
+        SocialMediaAccount = null;
+        ContactHidden = true;
+    }
 
     [Column("is_active")]
     [Display(Name = "Is Active?")]

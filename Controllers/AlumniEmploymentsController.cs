@@ -99,13 +99,13 @@ namespace Alumni_Management_System.Controllers
                     return RedirectToAction("Index", "Home");
                 }
                 ViewData["CurrentAlumniId"] = alumni.AlumniId;
-                ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumni.AlumniId);
+                ViewData["AlumniId"] = Services.AlumniSelectList.Build(new[] { alumni }, alumni.AlumniId);
                 ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
             {
                 // Admin can select any alumni
-                ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName");
+                ViewData["AlumniId"] = Services.AlumniSelectList.Build(_context.Alumni);
                 ViewData["UserRole"] = "Admin";
             }
 
@@ -191,12 +191,12 @@ namespace Alumni_Management_System.Controllers
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 ViewData["CurrentAlumniId"] = alumni?.AlumniId;
-                ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniEmployment.AlumniId);
+                ViewData["AlumniId"] = Services.AlumniSelectList.Build(new[] { alumni }, alumniEmployment.AlumniId);
                 ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
             {
-                ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniEmployment.AlumniId);
+                ViewData["AlumniId"] = Services.AlumniSelectList.Build(_context.Alumni, alumniEmployment.AlumniId);
                 ViewData["UserRole"] = "Admin";
             }
 
@@ -239,12 +239,12 @@ namespace Alumni_Management_System.Controllers
                     return RedirectToAction(nameof(Index));
                 }
                 ViewData["CurrentAlumniId"] = alumni.AlumniId;
-                ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniEmployment.AlumniId);
+                ViewData["AlumniId"] = Services.AlumniSelectList.Build(new[] { alumni }, alumniEmployment.AlumniId);
                 ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
             {
-                ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniEmployment.AlumniId);
+                ViewData["AlumniId"] = Services.AlumniSelectList.Build(_context.Alumni, alumniEmployment.AlumniId);
                 ViewData["UserRole"] = "Admin";
             }
 
@@ -349,12 +349,12 @@ namespace Alumni_Management_System.Controllers
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 ViewData["CurrentAlumniId"] = alumni?.AlumniId;
-                ViewData["AlumniId"] = new SelectList(new[] { alumni }, "AlumniId", "FirstName", alumniEmployment.AlumniId);
+                ViewData["AlumniId"] = Services.AlumniSelectList.Build(new[] { alumni }, alumniEmployment.AlumniId);
                 ViewData["UserRole"] = Constants.AlumniRole;
             }
             else
             {
-                ViewData["AlumniId"] = new SelectList(_context.Alumni, "AlumniId", "FirstName", alumniEmployment.AlumniId);
+                ViewData["AlumniId"] = Services.AlumniSelectList.Build(_context.Alumni, alumniEmployment.AlumniId);
                 ViewData["UserRole"] = "Admin";
             }
 

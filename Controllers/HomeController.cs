@@ -231,6 +231,12 @@ namespace Alumni_Management_System.Controllers
 
                 ViewData["ProfileCompletion"] = (int)((double)done / total * 100);
             }
+            else
+            {
+                // Login exists but no Alumni row for its JAG ID - My Profile,
+                // Add Employment, etc. can't work, so say so on the portal.
+                ViewData["MissingProfile"] = true;
+            }
 
             return View();   // Views/Home/AlumniPortal.cshtml
         }

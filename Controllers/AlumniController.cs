@@ -36,20 +36,17 @@ namespace Alumni_Management_System.Controllers
 
             var roles = await _userManager.GetRolesAsync(currentUser);
 
-            IQueryable<Alumni> alumniQuery = _context.Alumni.Include(a => a.College);
+            // Read-only listing - AsNoTracking so HideContactDetails() below can
+            // never be saved back by accident.
+            IQueryable<Alumni> alumniQuery = _context.Alumni.AsNoTracking().Include(a => a.College);
 
             // Role-based filtering. Checked Admin/Staff-first so an account
             // that holds both Alumni and Staff/Admin (see UsersController.AddRole)
             // gets its full Staff/Admin visibility, not the restricted
             // Alumni-only view - Alumni-only restriction applies only to
             // accounts that don't also hold a Staff/Admin role.
-            var hasElevatedRole = roles.Contains(Constants.AdminRole) || roles.Contains(Constants.StaffRole);
-            if (roles.Contains(Constants.AlumniRole) && !hasElevatedRole)
-            {
-                // Alumni can only see other alumni who have SolicitationCode = true
-                alumniQuery = alumniQuery.Where(a => a.SolicitationCode == true);
-            }
-            else
+            var alumniOnly = IsAlumniOnly(roles);
+            if (!alumniOnly)
             {
                 // Admin/Staff see everything, unless an admin has scoped them
                 // to specific college(s) via Access Scopes.
@@ -66,14 +63,15 @@ namespace Alumni_Management_System.Controllers
                 }
             }
 
-            // Search functionality
+            // Search functionality. Alumni can't search by the email of someone
+            // who keeps their contact details private - that would reveal it.
             if (!string.IsNullOrEmpty(searchString))
             {
                 alumniQuery = alumniQuery.Where(a =>
                     a.FirstName.Contains(searchString) ||
                     a.LastName.Contains(searchString) ||
                     a.JagId.Contains(searchString) ||
-                    a.PermanentEmail.Contains(searchString));
+                    ((!alumniOnly || !a.Privacy) && a.PermanentEmail.Contains(searchString)));
             }
 
             ViewData["CurrentFilter"] = searchString;
@@ -88,8 +86,24 @@ namespace Alumni_Management_System.Controllers
             var currentAlumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
             ViewData["CurrentAlumniId"] = currentAlumni?.AlumniId;
 
-            return View(await alumniQuery.ToListAsync());
+            var alumniList = await alumniQuery.ToListAsync();
+            if (alumniOnly)
+            {
+                foreach (var a in alumniList.Where(a => a.Privacy && a.AlumniId != currentAlumni?.AlumniId))
+                {
+                    a.HideContactDetails();
+                }
+            }
+
+            return View(alumniList);
         }
+
+        // Every alumnus is listed in the directory for other alumni (name,
+        // degrees, etc.). Privacy only hides contact details, and
+        // SolicitationCode only controls messages - see Alumni.PrivacyHelp /
+        // SolicitationHelp. An account that also holds Admin/Staff sees everything.
+        private static bool IsAlumniOnly(IList<string> roles) =>
+            roles.Contains(Constants.AlumniRole) && !roles.Contains(Constants.AdminRole) && !roles.Contains(Constants.StaffRole);
 
         // GET: Alumni/MyProfile - Redirect to current user's profile edit page
         public async Task<IActionResult> MyProfile()
@@ -119,11 +133,19 @@ namespace Alumni_Management_System.Controllers
             }
 
             var alumni = await _context.Alumni
+                .AsNoTracking()
                 .Include(a => a.College)
                 .FirstOrDefaultAsync(m => m.AlumniId == id);
             if (alumni == null)
             {
                 return NotFound();
+            }
+
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (alumni.Privacy && currentUser != null && currentUser.JagId != alumni.JagId
+                && IsAlumniOnly(await _userManager.GetRolesAsync(currentUser)))
+            {
+                alumni.HideContactDetails();
             }
 
             return View(alumni);
@@ -390,6 +412,86 @@ namespace Alumni_Management_System.Controllers
                 {
                     await transaction.RollbackAsync();
                     TempData["ErrorMessage"] = "Error during deletion: " + ex.Message;
+                }
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        // POST: Alumni/BulkDelete
+        // Same as DeleteConfirmed, for the rows ticked on the Index page, all
+        // in one transaction. One safety difference: a linked login account
+        // that also holds the Admin or Staff role (one account, multiple
+        // roles) only loses its Alumni role instead of being deleted, and the
+        // signed-in admin's own account is never deleted from here.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> BulkDelete(int[] ids)
+        {
+            if (ids == null || ids.Length == 0)
+            {
+                TempData["ErrorMessage"] = "No alumni were selected.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var alumniToDelete = await _context.Alumni.Where(a => ids.Contains(a.AlumniId)).ToListAsync();
+            var currentUserId = _userManager.GetUserId(User);
+            int accountsDeleted = 0;
+            var accountsKept = new List<string>();
+
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    foreach (var alumni in alumniToDelete)
+                    {
+                        var user = await _userManager.Users.FirstOrDefaultAsync(u => u.JagId == alumni.JagId);
+
+                        // Removing the Alumni profile cascades to its history
+                        // tables (Degrees, Employment, etc.) in the database.
+                        _context.Alumni.Remove(alumni);
+
+                        if (user == null) continue;
+
+                        var isStaffOrAdmin = await _userManager.IsInRoleAsync(user, "Admin") || await _userManager.IsInRoleAsync(user, "Staff");
+                        if (isStaffOrAdmin || user.Id == currentUserId)
+                        {
+                            if (await _userManager.IsInRoleAsync(user, "Alumni"))
+                            {
+                                var roleResult = await _userManager.RemoveFromRoleAsync(user, "Alumni");
+                                if (!roleResult.Succeeded)
+                                {
+                                    throw new Exception($"Failed to remove the Alumni role from {user.UserName}.");
+                                }
+                            }
+                            accountsKept.Add(user.UserName);
+                            continue;
+                        }
+
+                        var result = await _userManager.DeleteAsync(user);
+                        if (!result.Succeeded)
+                        {
+                            throw new Exception($"Failed to delete the login account for {alumni.JagId}.");
+                        }
+                        accountsDeleted++;
+                    }
+
+                    await _context.SaveChangesAsync();
+                    await transaction.CommitAsync();
+
+                    var message = $"Deleted {alumniToDelete.Count} alumni record{(alumniToDelete.Count == 1 ? "" : "s")}";
+                    message += accountsDeleted > 0 ? $" and {accountsDeleted} linked login account{(accountsDeleted == 1 ? "" : "s")}." : ".";
+                    if (accountsKept.Any())
+                    {
+                        message += $" Kept the login account{(accountsKept.Count == 1 ? "" : "s")} for {string.Join(", ", accountsKept)} (Admin/Staff) - only the Alumni role was removed.";
+                    }
+                    TempData["SuccessMessage"] = System.Net.WebUtility.HtmlEncode(message);
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    TempData["ErrorMessage"] = "Error during bulk delete - nothing was deleted: " + ex.Message;
                 }
             }
 
