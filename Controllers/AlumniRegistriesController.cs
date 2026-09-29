@@ -400,7 +400,9 @@ namespace Alumni_Management_System.Controllers
                         Phone = r.Phone,
                         IsActive = false,
                         Privacy = true,
-                        SolicitationCode = false,
+                        // On by default so admins can message imported alumni right away;
+                        // only new records get this - existing alumni keep their choice.
+                        SolicitationCode = true,
                         LastUpdated = DateTime.Now
                     };
                     _context.Alumni.Add(alumni);

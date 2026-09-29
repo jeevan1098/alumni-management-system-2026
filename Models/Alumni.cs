@@ -131,12 +131,12 @@ public partial class Alumni
     // Explanations shown next to these two settings on every page that
     // displays or edits them, so the wording stays the same everywhere.
     public const string PrivacyHelp =
-        "When ticked, other alumni can still see the name, graduation year, college, city/state and degrees in the alumni directory, " +
+        "When checked, other alumni can still see the name, graduation year, college, city/state and degrees in the alumni directory, " +
         "but NOT the contact details - email addresses, phone number, street address, date of birth and social media account. " +
         "Administrators and staff can always see everything.";
 
     public const string SolicitationHelp =
-        "When ticked, the alumni office may send messages to this alumnus (newsletters, events, announcements and fundraising). " +
+        "When checked, the alumni office may send messages to this alumnus (newsletters, events, announcements and fundraising). " +
         "This only controls messages - it doesn't change who can see the profile or contact details.";
 
     // Set by HideContactDetails() so views can show "Private" instead of a blank.
