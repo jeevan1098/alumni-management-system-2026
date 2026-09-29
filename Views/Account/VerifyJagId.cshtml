@@ -1,72 +1,60 @@
 @model Alumni_Management_System.Models.ViewModels.VerifyJagIdViewModel
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 
 @{
     ViewData["Title"] = "Verify JAG ID";
+    Layout = "_AuthLayout";
+    var adminEmail = Configuration["AdminContactEmail"];
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h3 class="mb-0"><i class="bi bi-person-check"></i> Alumni Registration - Step 1</h3>
-                </div>
-                <div class="card-body">
-                    <h5 class="card-title">Verify Your JAG ID</h5>
-                    <p class="text-info">
-                        Please enter your JAG ID to begin the registration process. Your JAG ID must be registered in our Alumni Registry.
-                    </p>
+<span class="auth-step">Alumni Registration &middot; Step 1 of 2</span>
+<h2 class="auth-title"><i class="bi bi-person-check me-2"></i>Verify Your JAG ID</h2>
+<p class="auth-subtitle">Enter your JAG ID to begin registration. It must already be in the Alumni Registry.</p>
 
-                    <form asp-action="VerifyJagId" method="post">
-                        <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
+<form asp-action="VerifyJagId" method="post">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" role="alert"></div>
 
-                        <div class="mb-3">
-                            <label asp-for="JagId" class="form-label"></label>
-                            <input asp-for="JagId" class="form-control form-control-lg" placeholder="J00123456" autofocus />
-                            <span asp-validation-for="JagId" class="text-danger"></span>
-                            <div class="form-text">
-                                <i class="bi bi-info-circle"></i> JAG ID must start with 'J' followed by 8 digits (e.g., J00123456)
-                            </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label asp-for="LastName" class="form-label"></label>
-                            <input asp-for="LastName" class="form-control form-control-lg" placeholder="Doe" />
-                            <span asp-validation-for="LastName" class="text-danger"></span>
-                            <div class="form-text">
-                                <i class="bi bi-info-circle"></i> Must match the last name on file in the Alumni Registry
-                            </div>
-                        </div>
-
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg">
-                                <i class="bi bi-arrow-right-circle"></i> Verify JAG ID
-                            </button>
-                        </div>
-                    </form>
-
-                    <hr class="my-4">
-
-                    <div class="text-center">
-                        <p class="mb-2">Already have an account?</p>
-                        <a asp-area="Identity" asp-page="/Account/Login" class="btn btn-outline-secondary">
-                            <i class="bi bi-box-arrow-in-right"></i> Sign In
-                        </a>
-                    </div>
-
-                    <div class="alert alert-info mt-3" role="alert">
-                        <h6 class="alert-heading"><i class="bi bi-question-circle"></i> Need Help?</h6>
-                        <p class="mb-0">
-                            If your JAG ID is not found or you're experiencing issues, please contact the administrator for assistance.
-                        </p>
-                    </div>
-                </div>
-            </div>
+    <div class="mb-4">
+        <label asp-for="JagId" class="form-label"></label>
+        <input asp-for="JagId" class="form-control" placeholder="J00123456" autofocus />
+        <span asp-validation-for="JagId" class="text-danger"></span>
+        <div class="form-text">
+            <i class="bi bi-info-circle me-1"></i>Starts with 'J' followed by 8 digits (e.g., J00123456)
         </div>
     </div>
+
+    <div class="mb-4">
+        <label asp-for="LastName" class="form-label"></label>
+        <input asp-for="LastName" class="form-control" placeholder="Doe" />
+        <span asp-validation-for="LastName" class="text-danger"></span>
+        <div class="form-text">
+            <i class="bi bi-info-circle me-1"></i>Must match the last name on file in the Alumni Registry
+        </div>
+    </div>
+
+    <button type="submit" class="w-100 btn btn-usa">
+        <i class="bi bi-arrow-right-circle me-2"></i>Verify JAG ID
+    </button>
+</form>
+
+<div class="auth-note mt-4">
+    <i class="bi bi-question-circle me-1"></i><strong>Need help?</strong>
+    @if (!string.IsNullOrWhiteSpace(adminEmail))
+    {
+        <text>If your JAG ID is not found, please contact the administrator at
+        <a href="mailto:@adminEmail" class="link-text">@adminEmail</a> for assistance.</text>
+    }
+    else
+    {
+        <text>If your JAG ID is not found, please contact the administrator for assistance.</text>
+    }
+</div>
+
+<div class="text-center mt-4">
+    Already have an account?
+    <a asp-area="Identity" asp-page="/Account/Login" class="link-text ms-1">Sign In</a>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
 }
-

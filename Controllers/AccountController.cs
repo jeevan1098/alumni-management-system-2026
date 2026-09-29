@@ -17,19 +17,22 @@ namespace Alumni_Management_System.Controllers
         private readonly SignInManager<AppUser> _signInManager;
         private readonly IEmailSender _emailSender;
         private readonly ILogger<AccountController> _logger;
+        private readonly IConfiguration _configuration;
 
         public AccountController(
             ApplicationDbContext context,
             UserManager<AppUser> userManager,
             SignInManager<AppUser> signInManager,
             IEmailSender emailSender,
-            ILogger<AccountController> logger)
+            ILogger<AccountController> logger,
+            IConfiguration configuration)
         {
             _context = context;
             _userManager = userManager;
             _signInManager = signInManager;
             _emailSender = emailSender;
             _logger = logger;
+            _configuration = configuration;
         }
 
         // GET: Account/VerifyJagId
@@ -363,6 +366,13 @@ namespace Alumni_Management_System.Controllers
 
         private async Task<string> GetPrimaryAdminContactEmailAsync()
         {
+            // The configured support mailbox wins; the oldest admin's email is only a fallback.
+            var configured = _configuration["AdminContactEmail"];
+            if (!string.IsNullOrWhiteSpace(configured))
+            {
+                return configured;
+            }
+
             var admins = await _userManager.GetUsersInRoleAsync(Constants.AdminRole);
             var primary = admins
                 .Where(a => !string.IsNullOrWhiteSpace(a.Email))

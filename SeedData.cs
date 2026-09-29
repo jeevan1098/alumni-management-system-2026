@@ -82,6 +82,26 @@ namespace Alumni_Management_System
                 await userManager.AddToRoleAsync(staff, Constants.StaffRole);
             }
 
+            // Superadmin - the overall system admin, tied to the main alumnimanagement@ mailbox.
+            // No known password is seeded: sign in the first time via "Forgot password / username",
+            // which emails a temporary password to this mailbox and then forces a change.
+            if (!await userManager.Users.AnyAsync(x => x.UserName == "Superadmin"))
+            {
+                var superadmin = new AppUser
+                {
+                    UserName = "Superadmin",
+                    Email = "alumnimanagement@southalabama.edu",
+                    EmailConfirmed = true,
+                    JagId = "J0000000",
+                    CreatedAt = DateTime.Now,
+                    IsFirstLogin = false,
+                    MustChangePassword = true,
+                    TwoFactorEnabled = false
+                };
+                await userManager.CreateAsync(superadmin, Services.PasswordGenerator.GenerateTempPassword());
+                await userManager.AddToRoleAsync(superadmin, Constants.AdminRole);
+            }
+
             // Test accounts - one per role combination (see TestAccounts).
             foreach (var test in TestAccounts)
             {
