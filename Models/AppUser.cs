@@ -13,7 +13,7 @@ namespace Alumni_Management_System.Models
     {
         [Required]
         [StringLength(20)]
-        [RegularExpression(@"^J\d+$", ErrorMessage = "JAG ID must start with 'J' followed by numbers only.")]
+        [RegularExpression(JagIdFormat.Pattern, ErrorMessage = JagIdFormat.ErrorMessage)]
         [Display(Name = "JAG ID")]
         public string JagId { get; set; }
 

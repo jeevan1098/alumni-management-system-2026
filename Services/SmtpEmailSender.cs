@@ -17,6 +17,11 @@ public class SmtpEmailSender : IEmailSender
 
     public async Task SendEmailAsync(string email, string subject, string htmlMessage)
     {
+        if (string.IsNullOrWhiteSpace(_options.Host) || string.IsNullOrWhiteSpace(_options.Password))
+        {
+            throw new InvalidOperationException("Email is not configured: set Smtp:Host in appsettings.json and Smtp:Password in user-secrets or an environment variable.");
+        }
+
         var fromAddress = new MailAddress(_options.FromAddress, _options.FromName);
         var toAddress = new MailAddress(email);
 

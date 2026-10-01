@@ -33,9 +33,9 @@
 
                 <div class="mb-3">
                     <label asp-for="JagId" class="form-label fw-semibold"></label>
-                    <input asp-for="JagId" class="form-control" placeholder="J0000003" />
+                    <input asp-for="JagId" class="form-control" placeholder="@JagIdFormat.Example" maxlength="@JagIdFormat.Length" />
                     <span asp-validation-for="JagId" class="text-danger"></span>
-                    <small class="text-muted">Must start with 'J00' followed by numbers. A suggested value is pre-filled.</small>
+                    <small class="text-muted">@JagIdFormat.Hint. A suggested value is pre-filled.</small>
                 </div>
 
                 <div class="mb-3">

@@ -187,7 +187,7 @@ namespace Alumni_Management_System.Controllers
         // on the Bulk Import page so the two can't drift apart.
         public static readonly IReadOnlyList<(string Header, string Sample, bool Required, string Description)> TemplateColumns = new[]
         {
-            ("ID", "J00123456", true, "JAG ID - \"J\" followed by numbers. Existing JAG IDs are updated, new ones are created."),
+            ("ID", JagIdFormat.Example, true, "JAG ID - \"J\" followed by exactly 8 digits. Existing JAG IDs are updated, new ones are created."),
             ("First Name", "John", true, "First name"),
             ("Last Name", "Doe", true, "Last name"),
             ("UNIV Email", "jd1234@jagmail.southalabama.edu", false, "University email - saved as the email on record"),
@@ -293,9 +293,9 @@ namespace Alumni_Management_System.Controllers
             // the row.
             async Task<(Alumni Alumni, bool IsNew, List<string> Changes)?> UpsertAsync(string rowLabel, ImportRow r)
             {
-                if (!System.Text.RegularExpressions.Regex.IsMatch(r.JagId, @"^J\d+$"))
+                if (!System.Text.RegularExpressions.Regex.IsMatch(r.JagId, JagIdFormat.Pattern))
                 {
-                    errors.Add($"{rowLabel}: Invalid JAG ID format '{r.JagId}' - must start with J followed by numbers");
+                    errors.Add($"{rowLabel}: Invalid JAG ID format '{r.JagId}' - must be J followed by exactly 8 digits (e.g., {JagIdFormat.Example})");
                     return null;
                 }
 

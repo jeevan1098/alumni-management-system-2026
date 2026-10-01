@@ -168,6 +168,7 @@ namespace Alumni_Management_System.Controllers
         [Authorize(Roles = "Admin")] // Only Admin can create alumni manually
         public async Task<IActionResult> Create([Bind("AlumniId,JagId,Prefix,FirstName,PreferredFirstName,MiddleName,LastName,Suffix,Gender,DateOfBirth,CollegeId,StudentEmail,PermanentEmail,Phone,Address,City,State,Postcode,Country,GraduationYear,SolicitationCode,SocialMediaAccount,Privacy,IsActive,LastUpdated")] Alumni alumni)
         {
+            UseClearGraduationYearMessage();
 
             if (ModelState.IsValid)
             {
@@ -300,7 +301,19 @@ namespace Alumni_Management_System.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
+            UseClearGraduationYearMessage();
 
+            // JAG ID is read-only on this form. Records created before the
+            // fixed format was enforced may not match it - don't let that
+            // block saving the rest of the profile when it hasn't changed.
+            var storedJagId = await _context.Alumni
+                .Where(a => a.AlumniId == id)
+                .Select(a => a.JagId)
+                .FirstOrDefaultAsync();
+            if (storedJagId != null && alumni.JagId == storedJagId)
+            {
+                ModelState.Remove(nameof(Alumni.JagId));
+            }
 
             if (ModelState.IsValid)
             {
@@ -496,6 +509,19 @@ namespace Alumni_Management_System.Controllers
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        // A blank Graduation Year can't bind to the non-nullable int, so MVC
+        // reports "The value '' is invalid." - swap in the readable message.
+        private void UseClearGraduationYearMessage()
+        {
+            if (ModelState.TryGetValue(nameof(Alumni.GraduationYear), out var entry)
+                && entry.Errors.Count > 0
+                && string.IsNullOrWhiteSpace(entry.AttemptedValue))
+            {
+                entry.Errors.Clear();
+                ModelState.AddModelError(nameof(Alumni.GraduationYear), Alumni.GraduationYearRequiredMessage);
+            }
         }
 
         private bool AlumniExists(int id)

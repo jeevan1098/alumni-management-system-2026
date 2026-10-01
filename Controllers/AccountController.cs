@@ -329,12 +329,19 @@ namespace Alumni_Management_System.Controllers
             // Reset and email immediately - never reveal to the requester
             // whether the account exists, so the confirmation page is the
             // same either way.
+            var emailFailed = false;
             foreach (var match in matches)
             {
                 if (string.IsNullOrWhiteSpace(match.Email))
                 {
                     continue;
                 }
+
+                // Remembered so the reset can be undone if the email below
+                // doesn't go out - otherwise the old password stops working
+                // and the new one never reaches the user, locking them out.
+                var previousPasswordHash = match.PasswordHash;
+                var previousMustChangePassword = match.MustChangePassword;
 
                 var tempPassword = Services.PasswordGenerator.GenerateTempPassword();
                 var token = await _userManager.GeneratePasswordResetTokenAsync(match);
@@ -348,17 +355,34 @@ namespace Alumni_Management_System.Controllers
                 match.MustChangePassword = true;
                 await _userManager.UpdateAsync(match);
 
-                await _emailSender.SendEmailAsync(
-                    match.Email,
-                    "Your temporary password - Alumni Management System",
-                    $"<p>You requested a password reset.</p>" +
-                    $"<p><strong>Username:</strong> {match.UserName}<br/>" +
-                    $"<strong>Temporary password:</strong> {tempPassword}</p>" +
-                    "<p>Log in with these - you'll be asked to set your own password right after.</p>" +
-                    "<p>Didn't request this? Contact your administrator.</p>");
+                try
+                {
+                    await _emailSender.SendEmailAsync(
+                        match.Email,
+                        "Your temporary password - Alumni Management System",
+                        $"<p>You requested a password reset.</p>" +
+                        $"<p><strong>Username:</strong> {match.UserName}<br/>" +
+                        $"<strong>Temporary password:</strong> {tempPassword}</p>" +
+                        "<p>Log in with these - you'll be asked to set your own password right after.</p>" +
+                        "<p>Didn't request this? Contact your administrator.</p>");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Sending the temporary password email to '{UserName}' failed; restoring their previous password.", match.UserName);
+                    match.PasswordHash = previousPasswordHash;
+                    match.MustChangePassword = previousMustChangePassword;
+                    await _userManager.UpdateAsync(match);
+                    emailFailed = true;
+                }
             }
 
             _logger.LogInformation("Self-service password reset requested for '{Input}'; matched {MatchCount} account(s).", model.UsernameOrEmail, matches.Count);
+
+            if (emailFailed)
+            {
+                ModelState.AddModelError(string.Empty, "We couldn't send the email right now, so your password has NOT been changed - your current password still works. Please try again later or contact the administrator.");
+                return View(model);
+            }
 
             ViewData["AdminContactEmail"] = await GetPrimaryAdminContactEmailAsync();
             return View("ForgotPasswordConfirmation");

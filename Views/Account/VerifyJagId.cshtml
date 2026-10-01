@@ -16,10 +16,10 @@
 
     <div class="mb-4">
         <label asp-for="JagId" class="form-label"></label>
-        <input asp-for="JagId" class="form-control" placeholder="J00123456" autofocus />
+        <input asp-for="JagId" class="form-control" placeholder="@JagIdFormat.Example" maxlength="@JagIdFormat.Length" autofocus />
         <span asp-validation-for="JagId" class="text-danger"></span>
         <div class="form-text">
-            <i class="bi bi-info-circle me-1"></i>Starts with 'J' followed by 8 digits (e.g., J00123456)
+            <i class="bi bi-info-circle me-1"></i>@JagIdFormat.Hint
         </div>
     </div>
 

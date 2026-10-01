@@ -44,15 +44,15 @@ public partial class AlumniDegree
     public bool? DegreeSpecificJob { get; set; }
 
     [Column("participated_in_research")]
-    [Display(Name = "Participated In Research(s)?")]
+    [Display(Name = "Participated In Research?")]
     public bool? ParticipatedInResearch { get; set; }
 
     [Column("job_secured_upon_graduation")]
-    [Display(Name = "Job Secured Upon Graduation?")]
+    [Display(Name = "Have you already Secured a Job Upon Graduation?")]
     public bool? JobSecuredUponGraduation { get; set; }
 
     [Column("attended_or_plans_grad_school")]
-    [Display(Name = "Attended or Plans to Attend Grad School?")]
+    [Display(Name = "Do you have Plans to Attend Grad School now or at a later date?")]
     public bool? AttendedOrPlansGradSchool { get; set; }
 
     [ForeignKey("AlumniId")]

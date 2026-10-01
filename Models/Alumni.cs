@@ -18,7 +18,7 @@ public partial class Alumni
     [Required]
     [Column("jag_id")]
     [StringLength(20)]
-    [RegularExpression(@"^J\d+$", ErrorMessage = "JAG ID must start with 'J' followed by numbers only.")]
+    [RegularExpression(JagIdFormat.Pattern, ErrorMessage = JagIdFormat.ErrorMessage)]
     [Display(Name = "JAG ID")]
     public string JagId { get; set; }
 
@@ -107,9 +107,15 @@ public partial class Alumni
     [StringLength(50)]
     public string Country { get; set; }
 
+    // Non-nullable, so a blank box fails model binding before [Required] ever
+    // runs - the message here is what the browser shows; AlumniController
+    // swaps the server-side "The value '' is invalid." for the same text.
     [Column("graduation_year")]
+    [Required(ErrorMessage = GraduationYearRequiredMessage)]
     [Display(Name = "Most Recent Graduation Year")]
     public int GraduationYear { get; set; }
+
+    public const string GraduationYearRequiredMessage = "Please enter the graduation year (for example, 2024).";
 
     // Messages only - see SolicitationHelp. Does NOT affect who can see the
     // profile in the directory (that's everyone; Privacy only hides contact details).

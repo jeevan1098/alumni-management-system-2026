@@ -88,7 +88,7 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label asp-for="JagId" class="form-label"></label>
-                            <input asp-for="JagId" class="form-control" placeholder="J0012345" readonly />
+                            <input asp-for="JagId" class="form-control" placeholder="@JagIdFormat.Example" readonly />
                             <span asp-validation-for="JagId" class="text-danger"></span>
                             <small class="form-text text-info"><i class="bi bi-lock"></i> JAG ID cannot be changed</small>
                         </div>
@@ -156,10 +156,16 @@
                     </div>
                     <div class="row">
                         <div class="col-md-6 mb-3">
-                            <label asp-for="GraduationYear" class="form-label"></label>
+                            <label asp-for="GraduationYear" class="form-label">
+                                @if (isAdmin)
+                                {
+                                    <span class="text-danger">*</span>
+                                }
+                                @Html.DisplayNameFor(m => m.GraduationYear)
+                            </label>
                             @if (isAdmin)
                             {
-                                <input asp-for="GraduationYear" class="form-control" type="number" min="1950" max="2100" />
+                                <input asp-for="GraduationYear" class="form-control" type="number" min="1950" max="2100" placeholder="e.g. 2024" />
                             }
                             else
                             {

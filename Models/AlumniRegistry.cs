@@ -17,7 +17,7 @@ public partial class AlumniRegistry
     [Required]
     [Column("jag_id")]
     [StringLength(20)]
-    [RegularExpression(@"^J\d+$", ErrorMessage = "JAG ID must start with 'J' followed by numbers only.")]
+    [RegularExpression(JagIdFormat.Pattern, ErrorMessage = JagIdFormat.ErrorMessage)]
     [Display(Name = "JAG ID")]
     public string JagId { get; set; }
 

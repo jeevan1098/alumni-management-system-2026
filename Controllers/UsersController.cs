@@ -25,9 +25,11 @@ namespace Alumni_Management_System.Controllers
         private readonly UserManager<AppUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IEmailSender _emailSender;
+        private readonly ILogger<UsersController> _logger;
 
-        public UsersController(ApplicationDbContext context, UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager, IEmailSender emailSender)
+        public UsersController(ApplicationDbContext context, UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager, IEmailSender emailSender, ILogger<UsersController> logger)
         {
+            _logger = logger;
             _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
@@ -268,13 +270,24 @@ namespace Alumni_Management_System.Controllers
 
             await _userManager.AddToRoleAsync(user, model.Role);
 
-            await _emailSender.SendEmailAsync(
-                user.Email,
-                "Your Alumni Management System account",
-                $"<p>A {model.Role} account has been created for you.</p>" +
-                $"<p><strong>Temporary username:</strong> {placeholderUsername}<br/>" +
-                $"<strong>Temporary password:</strong> {model.Password}</p>" +
-                "<p>Log in with these at the site, then you'll be asked to choose your own username and password.</p>");
+            try
+            {
+                await _emailSender.SendEmailAsync(
+                    user.Email,
+                    "Your Alumni Management System account",
+                    $"<p>A {model.Role} account has been created for you.</p>" +
+                    $"<p><strong>Temporary username:</strong> {placeholderUsername}<br/>" +
+                    $"<strong>Temporary password:</strong> {model.Password}</p>" +
+                    "<p>Log in with these at the site, then you'll be asked to choose your own username and password.</p>");
+            }
+            catch (Exception ex)
+            {
+                // The account exists and the admin knows the temp password
+                // they just typed, so keep it and let them pass it on.
+                _logger.LogError(ex, "Sending the new-account email to '{Email}' failed.", user.Email);
+                TempData["ErrorMessage"] = $"{model.Role} account created, but the email to {user.Email} could not be sent. Give them the temporary username '{placeholderUsername}' and the temporary password you entered.";
+                return RedirectToAction(nameof(Index));
+            }
 
             TempData["SuccessMessage"] = $"{model.Role} account created. Temporary login credentials were emailed to {user.Email}.";
             return RedirectToAction(nameof(Index));
@@ -336,6 +349,12 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
+            // Remembered so the reset can be undone if the email below doesn't
+            // go out - otherwise the old password stops working and the new
+            // one never reaches the user, locking them out.
+            var previousPasswordHash = user.PasswordHash;
+            var previousMustChangePassword = user.MustChangePassword;
+
             var tempPassword = Services.PasswordGenerator.GenerateTempPassword();
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             var result = await _userManager.ResetPasswordAsync(user, token, tempPassword);
@@ -349,12 +368,24 @@ namespace Alumni_Management_System.Controllers
             user.MustChangePassword = true;
             await _userManager.UpdateAsync(user);
 
-            await _emailSender.SendEmailAsync(
-                user.Email,
-                "Your password has been reset - Alumni Management System",
-                $"<p>Your administrator reset your password.</p>" +
-                $"<p><strong>Temporary password:</strong> {tempPassword}</p>" +
-                $"<p>Log in with your existing username (<strong>{user.UserName}</strong>) and this temporary password - you'll be asked to set your own right after.</p>");
+            try
+            {
+                await _emailSender.SendEmailAsync(
+                    user.Email,
+                    "Your password has been reset - Alumni Management System",
+                    $"<p>Your administrator reset your password.</p>" +
+                    $"<p><strong>Temporary password:</strong> {tempPassword}</p>" +
+                    $"<p>Log in with your existing username (<strong>{user.UserName}</strong>) and this temporary password - you'll be asked to set your own right after.</p>");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Sending the temporary password email to '{UserName}' failed; restoring their previous password.", user.UserName);
+                user.PasswordHash = previousPasswordHash;
+                user.MustChangePassword = previousMustChangePassword;
+                await _userManager.UpdateAsync(user);
+                TempData["ErrorMessage"] = $"The email to {user.Email} could not be sent, so the password for {user.UserName} was NOT changed. Check the email settings and try again.";
+                return RedirectToAction(nameof(Index));
+            }
 
             TempData["SuccessMessage"] = $"Password reset for {user.UserName}. A temporary password was emailed to {user.Email}.";
             return RedirectToAction(nameof(Index));
