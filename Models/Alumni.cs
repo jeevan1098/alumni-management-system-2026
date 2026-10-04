@@ -74,17 +74,20 @@ public partial class Alumni
 
     [Column("student_email")]
     [StringLength(150)]
+    [EmailAddress(ErrorMessage = "Please enter a valid email address, e.g. name@example.com.")]
     [Display(Name = "Student Email")]
     public string StudentEmail { get; set; }
 
     [Required]
     [Column("permanent_email")]
     [StringLength(150)]
+    [EmailAddress(ErrorMessage = "Please enter a valid email address, e.g. name@example.com.")]
     [Display(Name = "Permanent Email")]
     public string PermanentEmail { get; set; }
 
     [Column("phone")]
     [StringLength(20)]
+    [RegularExpression(@"^[0-9+()\-. ]{7,20}$", ErrorMessage = "Phone can only contain digits, spaces and + - ( ) . (7 to 20 characters).")]
     public string Phone { get; set; }
 
     [Column("address")]
@@ -112,6 +115,7 @@ public partial class Alumni
     // swaps the server-side "The value '' is invalid." for the same text.
     [Column("graduation_year")]
     [Required(ErrorMessage = GraduationYearRequiredMessage)]
+    [GraduationYear]
     [Display(Name = "Most Recent Graduation Year")]
     public int GraduationYear { get; set; }
 
@@ -123,10 +127,21 @@ public partial class Alumni
     [Display(Name = "Allow Contact (Solicitation)")]
     public bool SolicitationCode { get; set; }
 
+    // Shown as a clickable link on the profile page, so only real web
+    // addresses are allowed - a "javascript:" value would run as a script
+    // for whoever clicks it.
     [Column("social_media_account")]
     [StringLength(255)]
+    [RegularExpression(@"^https?://\S+$", ErrorMessage = "Please enter a full web address starting with http:// or https://, e.g. https://www.linkedin.com/in/yourname.")]
     [Display(Name = "Social Media Account")]
     public string SocialMediaAccount { get; set; }
+
+    // True when the social link is safe to render as a link (see above);
+    // older or imported values that aren't are shown as plain text instead.
+    [NotMapped]
+    public bool HasSafeSocialMediaLink =>
+        Uri.TryCreate(SocialMediaAccount, UriKind.Absolute, out var uri)
+        && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
 
     // Ticked = contact details are hidden from other alumni - see PrivacyHelp
     // and HideContactDetails(). Admin/Staff and the alumnus themself still see them.

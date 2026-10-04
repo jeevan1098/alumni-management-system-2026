@@ -15,11 +15,11 @@ public partial class AlumniOrganization
     public int AlumniOrganizationId { get; set; }
 
     [Column("alumni_id")]
-    [Display(Name = "Alumni ID")]
+    [Display(Name = "Alumni")]
     public int AlumniId { get; set; }
 
     [Column("organization_id")]
-    [Display(Name = "Organization ID")]
+    [Display(Name = "Organization")]
     public int OrganizationId { get; set; }
 
     [Column("officer_roles")]

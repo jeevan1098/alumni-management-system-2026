@@ -31,11 +31,11 @@ public partial class Message
     public string MessageType { get; set; }
 
     [Column("created_by")]
-    [Display(Name = "Created By?")]
+    [Display(Name = "Created By")]
     public string CreatedBy { get; set; }
 
     [Column("created_at", TypeName = "datetime")]
-    [Display(Name = "Created At?")]
+    [Display(Name = "Created At")]
     public DateTime CreatedAt { get; set; }
 
     [InverseProperty("Message")]

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -144,6 +144,13 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
+            var inUse = await InUseReasonAsync(degreeProgram);
+            if (inUse != null)
+            {
+                TempData["ErrorMessage"] = inUse;
+                return RedirectToAction(nameof(Index));
+            }
+
             return View(degreeProgram);
         }
 
@@ -156,11 +163,28 @@ namespace Alumni_Management_System.Controllers
             var degreeProgram = await _context.DegreePrograms.FindAsync(id);
             if (degreeProgram != null)
             {
+                var inUse = await InUseReasonAsync(degreeProgram);
+                if (inUse != null)
+                {
+                    TempData["ErrorMessage"] = inUse;
+                    return RedirectToAction(nameof(Index));
+                }
+
                 _context.DegreePrograms.Remove(degreeProgram);
             }
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
+        }
+
+        // Deleting a program would silently delete every alumnus's degree
+        // record for it (the database cascades), so refuse while any exist.
+        private async Task<string> InUseReasonAsync(DegreeProgram degreeProgram)
+        {
+            var inUse = Services.InUseMessage.Describe(
+                (await _context.AlumniDegrees.CountAsync(ad => ad.DegreeId == degreeProgram.DegreeId), "alumnus has", "alumni have"));
+            return inUse == null ? null
+                : $"{degreeProgram.DegreeType} {degreeProgram.MajorFieldOfStudy} can't be deleted - {inUse} this degree on file. Mark the program inactive instead so their records are kept.";
         }
 
         private bool DegreeProgramExists(int id)

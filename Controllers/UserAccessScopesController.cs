@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Alumni_Management_System.Data;
@@ -24,6 +25,23 @@ namespace Alumni_Management_System.Controllers
             _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
+        }
+
+        // This raw editor can grant anything to anyone, so it's only for
+        // unrestricted admins. Limited admins use Manage Users, which keeps
+        // them inside their own scope (see UsersController).
+        public override async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
+        {
+            var actor = await _userManager.GetUserAsync(User);
+            var roles = actor == null ? null : await _userManager.GetRolesAsync(actor);
+            if (actor == null || await Services.AccessScopeService.GetScopeAsync(_context, actor, roles) != null)
+            {
+                TempData["ErrorMessage"] = "Only an administrator with system-wide access can open the Access Scopes page. Use Manage Scope here instead.";
+                context.Result = RedirectToAction("Index", "Users");
+                return;
+            }
+
+            await next();
         }
 
         // GET: UserAccessScopes

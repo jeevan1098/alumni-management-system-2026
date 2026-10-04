@@ -1,0 +1,69 @@
+@model Alumni_Management_System.Models.ViewModels.ScopePickerModel
+@*
+    College -> department checkbox tree used by Manage Scope and Create User.
+    Ticking a whole college covers all its departments, so they're shown
+    ticked and disabled (disabled boxes aren't posted - the college row is
+    enough). A college the admin only holds some departments of has no
+    whole-college box.
+*@
+
+<div class="scope-picker">
+    @foreach (var college in Model.Options)
+    {
+        <div class="mb-2">
+            @if (college.CanGrantWholeCollege)
+            {
+                <div class="form-check">
+                    <input class="form-check-input scope-college" type="checkbox" name="CollegeIds" value="@college.CollegeId"
+                           id="@(Model.IdPrefix)College@(college.CollegeId)" checked="@Model.SelectedCollegeIds.Contains(college.CollegeId)" />
+                    <label class="form-check-label fw-semibold" for="@(Model.IdPrefix)College@(college.CollegeId)">
+                        @college.CollegeName <span class="text-muted fw-normal small">(whole college)</span>
+                    </label>
+                </div>
+            }
+            else
+            {
+                <div class="fw-semibold">@college.CollegeName <span class="text-muted fw-normal small">(only your departments)</span></div>
+            }
+
+            <div class="ms-4">
+                @foreach (var dept in college.Departments)
+                {
+                    <div class="form-check">
+                        <input class="form-check-input scope-department" type="checkbox" name="DepartmentIds" value="@dept.DepartmentId"
+                               data-college-id="@college.CollegeId"
+                               id="@(Model.IdPrefix)Dept@(dept.DepartmentId)" checked="@Model.SelectedDepartmentIds.Contains(dept.DepartmentId)" />
+                        <label class="form-check-label" for="@(Model.IdPrefix)Dept@(dept.DepartmentId)">@dept.DepartmentName</label>
+                    </div>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<script>
+    if (!window.syncScopePicker) {
+        // Greys out (and shows as included) the departments of every ticked
+        // whole college inside `container`.
+        window.syncScopePicker = function (container) {
+            container.querySelectorAll('.scope-department').forEach(function (dept) {
+                var college = container.querySelector('.scope-college[value="' + dept.dataset.collegeId + '"]');
+                var coveredByCollege = !!(college && college.checked);
+                if (coveredByCollege) {
+                    dept.dataset.wasChecked = dept.dataset.wasChecked ?? String(dept.checked);
+                    dept.checked = true;
+                } else if (dept.disabled) {
+                    dept.checked = dept.dataset.wasChecked === 'true';
+                    delete dept.dataset.wasChecked;
+                }
+                dept.disabled = coveredByCollege;
+            });
+        };
+        document.addEventListener('change', function (e) {
+            if (e.target.classList.contains('scope-college')) {
+                window.syncScopePicker(e.target.closest('.scope-picker'));
+            }
+        });
+    }
+    document.querySelectorAll('.scope-picker').forEach(window.syncScopePicker);
+</script>

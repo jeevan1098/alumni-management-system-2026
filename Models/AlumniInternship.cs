@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -15,11 +15,11 @@ public partial class AlumniInternship
     public int AlumniInternshipId { get; set; }
 
     [Column("alumni_id")]
-    [Display(Name = "Alumni ID")]
+    [Display(Name = "Alumni")]
     public int AlumniId { get; set; }
 
     [Column("employer_id")]
-    [Display(Name = "Employer ID")]
+    [Display(Name = "Employer")]
     public int EmployerId { get; set; }
 
     [Required]
@@ -35,11 +35,15 @@ public partial class AlumniInternship
 
     [Column("start_date")]
     [Display(Name = "Start Date")]
+    [Required(ErrorMessage = StartDateRequiredMessage)]
     public DateOnly StartDate { get; set; }
+
+    public const string StartDateRequiredMessage = "Please enter the date this internship started.";
 
     [Column("end_date")]
     [Display(Name = "End Date")]
-    public DateOnly EndDate { get; set; }
+    // Optional - blank means the internship is still going, same as jobs.
+    public DateOnly? EndDate { get; set; }
 
     [ForeignKey("AlumniId")]
     [InverseProperty("AlumniInternships")]

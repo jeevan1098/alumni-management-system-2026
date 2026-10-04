@@ -30,22 +30,17 @@ namespace Alumni_Management_System.Controllers
             return View();
         }
 
-        // Alumni this user is allowed to see - a Staff user scoped to a
-        // college (see AccessScopeService) only ever sees that college's
-        // alumni in any of these reports, same as the Dashboard.
-        private async Task<IQueryable<Alumni>> GetScopedAlumniAsync()
+        // Alumni this user is allowed to see - a Staff user scoped to
+        // colleges/departments (see AccessScopeService.ApplyTo) only ever sees
+        // those alumni in any of these reports, same as the Dashboard.
+        private async Task<IQueryable<Alumni>> GetScopedAlumniAsync() =>
+            Services.AccessScopeService.ApplyTo(_context.Alumni, await GetScopeAsync());
+
+        private async Task<Services.AccessScope> GetScopeAsync()
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
-            var allowedCollegeIds = await Services.AccessScopeService.GetAllowedCollegeIdsAsync(_context, currentUser, roles);
-
-            IQueryable<Alumni> scopedAlumni = _context.Alumni;
-            if (allowedCollegeIds != null)
-            {
-                scopedAlumni = scopedAlumni.Where(a => a.CollegeId != null && allowedCollegeIds.Contains(a.CollegeId.Value));
-            }
-
-            return scopedAlumni;
+            return await Services.AccessScopeService.GetScopeAsync(_context, currentUser, roles);
         }
 
         // GET: Reports/MailingLabels
@@ -53,8 +48,9 @@ namespace Alumni_Management_System.Controllers
         {
             var scopedAlumni = await GetScopedAlumniAsync();
 
-            ViewBag.Majors = await _context.DegreePrograms
-                .Select(d => d.MajorFieldOfStudy)
+            // Only majors held by alumni this user can see.
+            ViewBag.Majors = await scopedAlumni
+                .SelectMany(a => a.AlumniDegrees.Select(d => d.Degree.MajorFieldOfStudy))
                 .Distinct()
                 .OrderBy(m => m)
                 .ToListAsync();
@@ -101,7 +97,8 @@ namespace Alumni_Management_System.Controllers
         // GET: Reports/AlumniCount
         public async Task<IActionResult> AlumniCount(int? fromYear, int? toYear, string groupBy, bool? download)
         {
-            var scopedAlumni = await GetScopedAlumniAsync();
+            var scope = await GetScopeAsync();
+            var scopedAlumni = Services.AccessScopeService.ApplyTo(_context.Alumni, scope);
 
             var query = scopedAlumni.Include(a => a.AlumniDegrees).ThenInclude(d => d.Degree).ThenInclude(deg => deg.Department);
 
@@ -119,7 +116,7 @@ namespace Alumni_Management_System.Controllers
 
             var rows = alumniList
                 .SelectMany(a => a.AlumniDegrees.Select(d => new { a.GraduationYear, d.Degree }))
-                .Where(x => x.Degree != null)
+                .Where(x => x.Degree != null && Services.AccessScopeService.IsDegreeInScope(x.Degree, scope))
                 .GroupBy(x => new { x.Degree.Department.DepartmentName, x.Degree.DegreeType, x.Degree.MajorFieldOfStudy, x.GraduationYear })
                 .Select(g => new AlumniCountReportRowViewModel
                 {
@@ -149,9 +146,10 @@ namespace Alumni_Management_System.Controllers
         // GET: Reports/AverageGPA
         public async Task<IActionResult> AverageGPA(int? fromYear, int? toYear, bool? download)
         {
-            var scopedAlumni = await GetScopedAlumniAsync();
+            var scope = await GetScopeAsync();
+            var scopedAlumni = Services.AccessScopeService.ApplyTo(_context.Alumni, scope);
 
-            var query = scopedAlumni.Include(a => a.AlumniDegrees).ThenInclude(d => d.Degree);
+            var query = scopedAlumni.Include(a => a.AlumniDegrees).ThenInclude(d => d.Degree).ThenInclude(deg => deg.Department);
 
             IQueryable<Alumni> yearFiltered = query;
             if (fromYear.HasValue)
@@ -167,7 +165,8 @@ namespace Alumni_Management_System.Controllers
 
             var rows = alumniList
                 .SelectMany(a => a.AlumniDegrees.Select(d => new { a.GraduationYear, AlumniDegree = d }))
-                .Where(x => x.AlumniDegree.Degree != null && x.AlumniDegree.Gpa.HasValue)
+                .Where(x => x.AlumniDegree.Degree != null && x.AlumniDegree.Gpa.HasValue
+                    && Services.AccessScopeService.IsDegreeInScope(x.AlumniDegree.Degree, scope))
                 .GroupBy(x => new { x.GraduationYear, x.AlumniDegree.Degree.DegreeType, x.AlumniDegree.Degree.MajorFieldOfStudy })
                 .Select(g => new AverageGpaReportRowViewModel
                 {

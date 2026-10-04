@@ -1,5 +1,6 @@
-﻿using Alumni_Management_System.Data;
+using Alumni_Management_System.Data;
 using Alumni_Management_System.Models;
+using Alumni_Management_System.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -12,6 +13,9 @@ using System.Threading.Tasks;
 
 namespace Alumni_Management_System.Controllers
 {
+    // "!roles.Contains(AdminRole)" below = acting as an alumnus: only Alumni
+    // and Admin get in, so anyone without Admin manages just their own
+    // records. An Admin who is also an alumnus gets the (scoped) admin view.
     [Authorize(Roles = "Alumni,Admin")]
     public class AlumniDegreesController : Controller
     {
@@ -33,7 +37,7 @@ namespace Alumni_Management_System.Controllers
             IQueryable<AlumniDegree> query = _context.AlumniDegrees.Include(a => a.Alumni).Include(a => a.Degree);
 
             // Alumni can only see their own degrees
-            if (roles.Contains(Constants.AlumniRole))
+            if (!roles.Contains(Constants.AdminRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni != null)
@@ -45,7 +49,12 @@ namespace Alumni_Management_System.Controllers
                     return View(new List<AlumniDegree>());
                 }
             }
-            // Admin can see all degrees
+            else
+            {
+                // Admin sees degrees of alumni inside their access scope
+                var visibleIds = (await Services.AccessScopeService.GetVisibleAlumniAsync(_context, currentUser, roles)).Select(a => a.AlumniId);
+                query = query.Where(ad => visibleIds.Contains(ad.AlumniId));
+            }
 
             return View(await query.ToListAsync());
         }
@@ -70,7 +79,7 @@ namespace Alumni_Management_System.Controllers
             // Check if Alumni user is trying to view another alumni's degree
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
-            if (roles.Contains(Constants.AlumniRole))
+            if (!roles.Contains(Constants.AdminRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null || alumniDegree.AlumniId != alumni.AlumniId)
@@ -78,6 +87,10 @@ namespace Alumni_Management_System.Controllers
                     TempData["ErrorMessage"] = "You can only view your own degrees.";
                     return RedirectToAction(nameof(Index));
                 }
+            }
+            else if (!await Services.AccessScopeService.AreAlumniVisibleAsync(_context, currentUser, roles, alumniDegree.AlumniId))
+            {
+                return OutsideScope();
             }
 
             return View(alumniDegree);
@@ -90,7 +103,7 @@ namespace Alumni_Management_System.Controllers
             var roles = await _userManager.GetRolesAsync(currentUser);
 
             // For Alumni users, auto-select their own AlumniId
-            if (roles.Contains(Constants.AlumniRole))
+            if (!roles.Contains(Constants.AdminRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null)
@@ -105,7 +118,7 @@ namespace Alumni_Management_System.Controllers
             else
             {
                 // Admin can select any alumni
-                ViewData["AlumniId"] = GetAlumniSelectList();
+                ViewData["AlumniId"] = await GetAlumniSelectListAsync(currentUser, roles);
                 ViewData["UserRole"] = "Admin";
             }
 
@@ -119,11 +132,13 @@ namespace Alumni_Management_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("AlumniDegreeId,AlumniId,DegreeId,DateConferred,YearsToCompleteDegree,Gpa,EmploymentWhileStudying,DegreeSpecificJob,ParticipatedInResearch,JobSecuredUponGraduation,AttendedOrPlansGradSchool")] AlumniDegree alumniDegree)
         {
+            ModelState.UseClearBlankMessage(nameof(AlumniDegree.DateConferred), AlumniDegree.DateConferredRequiredMessage);
+
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
 
             // Validate: Alumni can only create degrees for themselves
-            if (roles.Contains(Constants.AlumniRole))
+            if (!roles.Contains(Constants.AdminRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null || alumniDegree.AlumniId != alumni.AlumniId)
@@ -131,6 +146,10 @@ namespace Alumni_Management_System.Controllers
                     TempData["ErrorMessage"] = "You can only create degrees for yourself.";
                     return RedirectToAction(nameof(Index));
                 }
+            }
+            else if (!await Services.AccessScopeService.AreAlumniVisibleAsync(_context, currentUser, roles, alumniDegree.AlumniId))
+            {
+                return OutsideScope();
             }
 
             // Validation 1: DateConferred cannot be in future
@@ -180,7 +199,7 @@ namespace Alumni_Management_System.Controllers
             }
 
             // Repopulate dropdowns
-            if (roles.Contains(Constants.AlumniRole))
+            if (!roles.Contains(Constants.AdminRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 ViewData["CurrentAlumniId"] = alumni?.AlumniId;
@@ -189,7 +208,7 @@ namespace Alumni_Management_System.Controllers
             }
             else
             {
-                ViewData["AlumniId"] = GetAlumniSelectList(alumniDegree.AlumniId);
+                ViewData["AlumniId"] = await GetAlumniSelectListAsync(currentUser, roles, alumniDegree.AlumniId);
                 ViewData["UserRole"] = "Admin";
             }
             ViewData["DegreeId"] = GetDegreeSelectList(alumniDegree.DegreeId);
@@ -213,7 +232,7 @@ namespace Alumni_Management_System.Controllers
             // Check if Alumni user is trying to edit another alumni's degree
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
-            if (roles.Contains(Constants.AlumniRole))
+            if (!roles.Contains(Constants.AdminRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null || alumniDegree.AlumniId != alumni.AlumniId)
@@ -225,9 +244,13 @@ namespace Alumni_Management_System.Controllers
                 ViewData["AlumniId"] = Services.AlumniSelectList.Build(new[] { alumni }, alumniDegree.AlumniId);
                 ViewData["UserRole"] = Constants.AlumniRole;
             }
+            else if (!await Services.AccessScopeService.AreAlumniVisibleAsync(_context, currentUser, roles, alumniDegree.AlumniId))
+            {
+                return OutsideScope();
+            }
             else
             {
-                ViewData["AlumniId"] = GetAlumniSelectList(alumniDegree.AlumniId);
+                ViewData["AlumniId"] = await GetAlumniSelectListAsync(currentUser, roles, alumniDegree.AlumniId);
                 ViewData["UserRole"] = "Admin";
             }
 
@@ -240,28 +263,40 @@ namespace Alumni_Management_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("AlumniDegreeId,AlumniId,DegreeId,DateConferred,YearsToCompleteDegree,Gpa,EmploymentWhileStudying,DegreeSpecificJob,ParticipatedInResearch,JobSecuredUponGraduation,AttendedOrPlansGradSchool")] AlumniDegree alumniDegree)
         {
+            ModelState.UseClearBlankMessage(nameof(AlumniDegree.DateConferred), AlumniDegree.DateConferredRequiredMessage);
+
             if (id != alumniDegree.AlumniDegreeId)
             {
                 return NotFound();
             }
 
+            // The owner as stored - not just the AlumniId posted in the form,
+            // which could be changed to claim someone else's degree.
             var previousAlumniId = await _context.AlumniDegrees
                 .Where(ad => ad.AlumniDegreeId == id)
                 .Select(ad => ad.AlumniId)
                 .FirstOrDefaultAsync();
+            if (previousAlumniId == 0)
+            {
+                return NotFound();
+            }
 
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
 
             // Validate: Alumni can only edit their own degrees
-            if (roles.Contains(Constants.AlumniRole))
+            if (!roles.Contains(Constants.AdminRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
-                if (alumni == null || alumniDegree.AlumniId != alumni.AlumniId)
+                if (alumni == null || alumniDegree.AlumniId != alumni.AlumniId || previousAlumniId != alumni.AlumniId)
                 {
                     TempData["ErrorMessage"] = "You can only edit your own degrees.";
                     return RedirectToAction(nameof(Index));
                 }
+            }
+            else if (!await Services.AccessScopeService.AreAlumniVisibleAsync(_context, currentUser, roles, previousAlumniId, alumniDegree.AlumniId))
+            {
+                return OutsideScope();
             }
 
             // Validation 1: DateConferred cannot be in future
@@ -332,7 +367,7 @@ namespace Alumni_Management_System.Controllers
             }
 
             // Repopulate dropdowns
-            if (roles.Contains(Constants.AlumniRole))
+            if (!roles.Contains(Constants.AdminRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 ViewData["CurrentAlumniId"] = alumni?.AlumniId;
@@ -341,7 +376,7 @@ namespace Alumni_Management_System.Controllers
             }
             else
             {
-                ViewData["AlumniId"] = GetAlumniSelectList(alumniDegree.AlumniId);
+                ViewData["AlumniId"] = await GetAlumniSelectListAsync(currentUser, roles, alumniDegree.AlumniId);
                 ViewData["UserRole"] = "Admin";
             }
             ViewData["DegreeId"] = GetDegreeSelectList(alumniDegree.DegreeId);
@@ -368,7 +403,7 @@ namespace Alumni_Management_System.Controllers
             // Check if Alumni user is trying to delete another alumni's degree
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
-            if (roles.Contains(Constants.AlumniRole))
+            if (!roles.Contains(Constants.AdminRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null || alumniDegree.AlumniId != alumni.AlumniId)
@@ -376,6 +411,10 @@ namespace Alumni_Management_System.Controllers
                     TempData["ErrorMessage"] = "You can only delete your own degrees.";
                     return RedirectToAction(nameof(Index));
                 }
+            }
+            else if (!await Services.AccessScopeService.AreAlumniVisibleAsync(_context, currentUser, roles, alumniDegree.AlumniId))
+            {
+                return OutsideScope();
             }
 
             return View(alumniDegree);
@@ -392,7 +431,7 @@ namespace Alumni_Management_System.Controllers
                 // Check if Alumni user is trying to delete another alumni's degree
                 var currentUser = await _userManager.GetUserAsync(User);
                 var roles = await _userManager.GetRolesAsync(currentUser);
-                if (roles.Contains(Constants.AlumniRole))
+                if (!roles.Contains(Constants.AdminRole))
                 {
                     var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                     if (alumni == null || alumniDegree.AlumniId != alumni.AlumniId)
@@ -400,6 +439,10 @@ namespace Alumni_Management_System.Controllers
                         TempData["ErrorMessage"] = "You can only delete your own degrees.";
                         return RedirectToAction(nameof(Index));
                     }
+                }
+                else if (!await Services.AccessScopeService.AreAlumniVisibleAsync(_context, currentUser, roles, alumniDegree.AlumniId))
+                {
+                    return OutsideScope();
                 }
 
                 var affectedAlumniId = alumniDegree.AlumniId;
@@ -417,9 +460,17 @@ namespace Alumni_Management_System.Controllers
             return _context.AlumniDegrees.Any(e => e.AlumniDegreeId == id);
         }
 
-        private SelectList GetAlumniSelectList(int? selectedId = null)
+        private IActionResult OutsideScope()
         {
-            return new SelectList(_context.Alumni.Select(a => new
+            TempData["ErrorMessage"] = "That alumnus is outside your access scope.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // Admin dropdown - only alumni inside the admin's access scope.
+        private async Task<SelectList> GetAlumniSelectListAsync(AppUser user, IList<string> roles, int? selectedId = null)
+        {
+            var visible = await Services.AccessScopeService.GetVisibleAlumniAsync(_context, user, roles);
+            return new SelectList(visible.Select(a => new
             {
                 a.AlumniId,
                 DisplayText = a.FirstName + " " + a.LastName + " (" + a.JagId + ")"

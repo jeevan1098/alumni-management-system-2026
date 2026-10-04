@@ -1,0 +1,14 @@
+@*
+    Replaces the built-in account menu. Email, personal data, external logins
+    and the authenticator-app pages are switched off (see Program.cs), so only
+    what the app supports is listed; two-factor links to the app's own page.
+*@
+@{
+    var page = ViewContext.RouteData.Values["page"] as string;
+    string Active(string p) => string.Equals(page, p, StringComparison.OrdinalIgnoreCase) ? "active" : null;
+}
+<ul class="nav nav-pills flex-column">
+    <li class="nav-item"><a class="nav-link @Active("/Account/Manage/Index")" id="profile" asp-area="Identity" asp-page="/Account/Manage/Index">Profile</a></li>
+    <li class="nav-item"><a class="nav-link @Active("/Account/Manage/ChangePassword")" id="change-password" asp-area="Identity" asp-page="/Account/Manage/ChangePassword">Password</a></li>
+    <li class="nav-item"><a class="nav-link" id="two-factor" asp-area="" asp-controller="TwoFactorSettings" asp-action="Index">Two-factor authentication</a></li>
+</ul>

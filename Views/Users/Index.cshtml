@@ -4,8 +4,11 @@
 @{
     ViewData["Title"] = "Manage Users";
     var rolesByUserId = (Dictionary<string, IList<string>>)ViewData["RolesByUserId"];
-    var scopeByUserId = (Dictionary<string, Alumni_Management_System.Models.UserAccessScope>)ViewData["ScopeByUserId"];
-    var colleges = (SelectList)ViewData["Colleges"];
+    var scopesByUserId = (Dictionary<string, List<Alumni_Management_System.Models.UserAccessScope>>)ViewData["ScopesByUserId"];
+    // Only the colleges/departments the signed-in admin may grant (all of
+    // them when their own access is system-wide).
+    var scopeOptions = (List<Alumni_Management_System.Models.ViewModels.ScopeCollegeOption>)ViewData["ScopeOptions"];
+    var actorIsLimited = (bool)ViewData["ActorIsLimited"];
     var assignableRoles = new[] { "Admin", "Staff" };
 
     var adminUsers = Model.Where(u => rolesByUserId[u.Id].Contains("Admin")).ToList();
@@ -53,7 +56,11 @@
         var roles = rolesByUserId[item.Id];
         var canScope = roles.Contains("Admin") || roles.Contains("Staff");
         var addableRoles = assignableRoles.Where(r => !roles.Contains(r)).ToList();
-        scopeByUserId.TryGetValue(item.Id, out var scope);
+        var scopes = scopesByUserId.TryGetValue(item.Id, out var found) ? found : new List<Alumni_Management_System.Models.UserAccessScope>();
+        // A row with no college means system-wide, whatever else is granted.
+        var isSystemWide = scopes.Count == 0 || scopes.Any(s => s.CollegeId == null);
+        var wholeColleges = scopes.Where(s => s.CollegeId != null && s.DepartmentId == null).ToList();
+        var departments = scopes.Where(s => s.DepartmentId != null).ToList();
         <tr class="user-row" data-search="@($"{item.UserName} {item.Email}".ToLower())">
             <td>@item.UserName</td>
             <td>@item.Email</td>
@@ -114,21 +121,29 @@
             <td>
                 @if (canScope)
                 {
-                    @if (scope != null)
+                    @if (isSystemWide)
                     {
-                        <span class="badge bg-warning text-dark">@(scope.College?.CollegeName ?? "System-wide")</span>
+                        <span class="badge bg-light text-dark border">System-wide</span>
                     }
                     else
                     {
-                        <span class="badge bg-light text-dark border">System-wide</span>
+                        foreach (var s in wholeColleges)
+                        {
+                            <span class="badge bg-warning text-dark mb-1">@s.College?.CollegeName</span>
+                        }
+                        foreach (var s in departments)
+                        {
+                            <span class="badge bg-info-subtle text-info-emphasis border mb-1">@s.College?.CollegeName → @s.Department?.DepartmentName</span>
+                        }
                     }
                     <button type="button" class="btn btn-sm btn-outline-primary rounded-pill mt-1"
                             data-bs-toggle="modal" data-bs-target="#scopeModal"
                             data-user-id="@item.Id"
                             data-user-name="@item.UserName"
-                            data-scope-id="@scope?.UserAccessScopeId"
-                            data-college-id="@scope?.CollegeId"
-                            data-access-level="@(scope?.AccessLevel ?? "Full")">
+                            data-has-scope="@(scopes.Count > 0 ? "true" : "false")"
+                            data-college-ids="@(isSystemWide ? "" : string.Join(",", wholeColleges.Select(s => s.CollegeId)))"
+                            data-department-ids="@(isSystemWide ? "" : string.Join(",", departments.Select(s => s.DepartmentId)))"
+                            data-access-level="@(scopes.FirstOrDefault()?.AccessLevel ?? "Full")">
                         <i class="bi bi-shield-lock"></i> Manage Scope
                     </button>
                 }
@@ -205,6 +220,15 @@
                 <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
             }
 
+            @if (actorIsLimited)
+            {
+                <div class="alert alert-info">
+                    <i class="bi bi-shield-lock me-2"></i>Your access is limited to
+                    <strong>@ViewData["ActorScopeLabel"]</strong>.
+                    You only see the accounts inside that scope, and you can only grant access within it.
+                </div>
+            }
+
             <div class="d-flex justify-content-between align-items-center mb-3 gap-3">
                 <div class="input-group" style="max-width: 360px;">
                     <span class="input-group-text bg-white"><i class="bi bi-search"></i></span>
@@ -277,10 +301,19 @@
                     <input type="hidden" name="userId" id="scopeModalUserId" />
 
                     <div class="mb-3">
-                        <label class="form-label fw-semibold">College (blank = system-wide)</label>
-                        <select name="collegeId" id="scopeModalCollegeId" class="form-select" asp-items="colleges">
-                            <option value="">-- System-wide --</option>
-                        </select>
+                        <label class="form-label fw-semibold">Colleges and departments this user can access</label>
+                        @await Html.PartialAsync("_ScopePicker", new Alumni_Management_System.Models.ViewModels.ScopePickerModel { Options = scopeOptions, IdPrefix = "scopeModal" })
+                        <div class="form-text">
+                            @if (actorIsLimited)
+                            {
+                                <text>Tick at least one. You can only grant what's in your own scope.</text>
+                            }
+                            else
+                            {
+                                <text>Tick a whole college, or just some of its departments. Leave everything unticked for system-wide access.</text>
+                            }
+                            Alumni with an External degree are visible to everyone.
+                        </div>
                     </div>
 
                     <div class="mb-3">
@@ -309,7 +342,7 @@
 
 <!-- Separate form for Remove, since it posts to a different action -->
 <form asp-action="RemoveScope" method="post" id="scopeRemoveForm">
-    <input type="hidden" name="id" id="scopeRemoveId" />
+    <input type="hidden" name="userId" id="scopeRemoveUserId" />
 </form>
 
 <!-- Hidden forms for the role add/remove buttons above -->
@@ -362,15 +395,27 @@
             const button = event.relatedTarget;
             document.getElementById('scopeModalUserId').value = button.getAttribute('data-user-id');
             document.getElementById('scopeModalUserName').textContent = button.getAttribute('data-user-name');
-            document.getElementById('scopeModalCollegeId').value = button.getAttribute('data-college-id') || '';
+            const collegeIds = (button.getAttribute('data-college-ids') || '').split(',');
+            const departmentIds = (button.getAttribute('data-department-ids') || '').split(',');
+            document.querySelectorAll('#scopeModal .scope-college').forEach(function (box) {
+                box.checked = collegeIds.includes(box.value);
+            });
+            document.querySelectorAll('#scopeModal .scope-department').forEach(function (box) {
+                // Reset what the previous user's dialog left behind.
+                box.disabled = false;
+                delete box.dataset.wasChecked;
+                box.checked = departmentIds.includes(box.value);
+            });
+            syncScopePicker(document.getElementById('scopeModal'));
             document.getElementById('scopeModalAccessLevel').value = button.getAttribute('data-access-level') || 'Full';
 
-            const scopeId = button.getAttribute('data-scope-id');
+            // Removing a scope makes the user system-wide, so a limited
+            // admin never gets the button (the server refuses it too).
             const removeBtn = document.getElementById('scopeModalRemoveBtn');
-            if (scopeId && scopeId !== '') {
+            if (button.getAttribute('data-has-scope') === 'true' && !@(actorIsLimited ? "true" : "false")) {
                 removeBtn.hidden = false;
                 removeBtn.onclick = function () {
-                    document.getElementById('scopeRemoveId').value = scopeId;
+                    document.getElementById('scopeRemoveUserId').value = button.getAttribute('data-user-id');
                     document.getElementById('scopeRemoveForm').submit();
                 };
             } else {

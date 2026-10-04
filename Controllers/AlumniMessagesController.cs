@@ -33,7 +33,7 @@ namespace Alumni_Management_System.Controllers
             IQueryable<AlumniMessage> query = _context.AlumniMessages.Include(a => a.Alumni).Include(a => a.Message);
 
             // Alumni can only see their own messages
-            if (roles.Contains(Constants.AlumniRole))
+            if (roles.Contains(Constants.AlumniRole) && !roles.Contains(Constants.AdminRole) && !roles.Contains(Constants.StaffRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni != null)
@@ -74,7 +74,7 @@ namespace Alumni_Management_System.Controllers
             // Check if Alumni user is trying to view another alumni's message
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
-            if (roles.Contains(Constants.AlumniRole))
+            if (roles.Contains(Constants.AlumniRole) && !roles.Contains(Constants.AdminRole) && !roles.Contains(Constants.StaffRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null || alumniMessage.AlumniId != alumni.AlumniId)

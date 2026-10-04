@@ -29,6 +29,8 @@ builder.Services.AddIdentity<AppUser, IdentityRole>(options =>
     options.Password.RequireUppercase = true;
     options.Password.RequireNonAlphanumeric = true;
     options.Password.RequiredLength = 8;
+    // Forgot Password and other lookups expect one account per email.
+    options.User.RequireUniqueEmail = true;
 })
     .AddEntityFrameworkStores<ApplicationDbContext>()
     .AddDefaultUI()
@@ -48,7 +50,12 @@ builder.Services.Configure<Microsoft.AspNetCore.Routing.RouteOptions>(options =>
     // This will be handled by middleware
 });
 
-builder.Services.AddControllersWithViews();
+builder.Services.AddControllersWithViews(options =>
+{
+    // A blank number/date box would otherwise say "The value '' is invalid.";
+    // fields with their own message replace this (ModelStateMessages).
+    options.ModelBindingMessageProvider.SetValueMustNotBeNullAccessor(_ => "Please fill in this field.");
+});
 
 var app = builder.Build();
 
@@ -82,13 +89,36 @@ else
 app.UseHttpsRedirection();
 app.UseRouting();
 
-// Redirect default Identity registration to custom registration
+// Built-in Identity pages this app replaces or doesn't allow. Deleting your own
+// account or changing your email here would bypass the alumni records linked
+// by JAG ID, and two-factor is the app's own email-code setup
+// (TwoFactorSettingsController), not the built-in authenticator pages.
+var blockedIdentityPages = new (string Path, string RedirectTo)[]
+{
+    ("/Identity/Account/Register", "/Account/VerifyJagId"),
+    ("/Identity/Account/ExternalLogin", "/Identity/Account/Login"),
+    ("/Identity/Account/ConfirmEmailChange", "/Identity/Account/Manage"),
+    ("/Identity/Account/Manage/Email", "/Identity/Account/Manage"),
+    ("/Identity/Account/Manage/PersonalData", "/Identity/Account/Manage"),
+    ("/Identity/Account/Manage/DownloadPersonalData", "/Identity/Account/Manage"),
+    ("/Identity/Account/Manage/DeletePersonalData", "/Identity/Account/Manage"),
+    ("/Identity/Account/Manage/ExternalLogins", "/Identity/Account/Manage"),
+    ("/Identity/Account/Manage/TwoFactorAuthentication", "/TwoFactorSettings"),
+    ("/Identity/Account/Manage/EnableAuthenticator", "/TwoFactorSettings"),
+    ("/Identity/Account/Manage/ResetAuthenticator", "/TwoFactorSettings"),
+    ("/Identity/Account/Manage/Disable2fa", "/TwoFactorSettings"),
+    ("/Identity/Account/Manage/GenerateRecoveryCodes", "/TwoFactorSettings"),
+    ("/Identity/Account/Manage/ShowRecoveryCodes", "/TwoFactorSettings"),
+};
 app.Use(async (context, next) =>
 {
-    if (context.Request.Path.StartsWithSegments("/Identity/Account/Register"))
+    foreach (var (path, redirectTo) in blockedIdentityPages)
     {
-        context.Response.Redirect("/Account/VerifyJagId");
-        return;
+        if (context.Request.Path.StartsWithSegments(path))
+        {
+            context.Response.Redirect(redirectTo);
+            return;
+        }
     }
     await next();
 });

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
@@ -15,23 +15,26 @@ public partial class AlumniDegree
     public int AlumniDegreeId { get; set; }
 
     [Column("alumni_id")]
-    [Display(Name = "Alumni ID")]
+    [Display(Name = "Alumni")]
     public int AlumniId { get; set; }
 
     [Column("degree_id")]
-    [Display(Name = "Degree ID")]
+    [Display(Name = "Degree Program")]
     public int DegreeId { get; set; }
 
     [Column("date_conferred")]
     [Display(Name = "Date Conferred")]
+    [Required(ErrorMessage = DateConferredRequiredMessage)]
     public DateOnly DateConferred { get; set; }
+
+    public const string DateConferredRequiredMessage = "Please enter the date the degree was conferred.";
 
     [Column("years_to_complete_degree")]
     [Display(Name = "Years To Complete Degree")]
     public int? YearsToCompleteDegree { get; set; }
 
     [Column("gpa", TypeName = "decimal(3, 2)")]
-    [Display(Name = "Grade")]
+    [Display(Name = "GPA")]
     public decimal? Gpa { get; set; }
 
     [Column("employment_while_studying")]

@@ -1,4 +1,4 @@
-﻿@* @model Alumni_Management_System.Models.AlumniInternship
+@* @model Alumni_Management_System.Models.AlumniInternship
 
 @{
     ViewData["Title"] = "Details";
@@ -138,7 +138,14 @@
 
                         <dt class="col-sm-5">End Date</dt>
                         <dd class="col-sm-7">
-                            @Model.EndDate.ToString("MMMM dd, yyyy")
+                            @if (Model.EndDate == null)
+                            {
+                                <span class="badge bg-success">Ongoing</span>
+                            }
+                            else
+                            {
+                                @Model.EndDate.Value.ToString("MMMM dd, yyyy")
+                            }
                         </dd>
 
                         <dt class="col-sm-5">Alumni</dt>

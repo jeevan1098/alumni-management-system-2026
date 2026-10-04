@@ -1,4 +1,4 @@
-﻿@* @model IEnumerable<Alumni_Management_System.Models.Employer>
+@* @model IEnumerable<Alumni_Management_System.Models.Employer>
 
 @{
     ViewData["Title"] = "Index";
@@ -67,6 +67,8 @@
             </div>
 
             <hr class="mb-4" />
+
+            <partial name="_StatusMessages" />
 
             <!-- Create Button (Admin only - Staff have read-only access) -->
             @if (User.IsInRole("Admin"))

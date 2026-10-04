@@ -18,7 +18,7 @@ namespace Alumni_Management_System.Models
         public string JagId { get; set; }
 
         [Column("created_at", TypeName = "datetime")]
-        [Display(Name = "Created At?")]
+        [Display(Name = "Created At")]
         public DateTime CreatedAt { get; set; }
 
         [Column("is_first_login")]

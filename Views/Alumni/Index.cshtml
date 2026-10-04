@@ -1,4 +1,4 @@
-﻿@* @model IEnumerable<Alumni_Management_System.Models.Alumni>
+@* @model IEnumerable<Alumni_Management_System.Models.Alumni>
 
 @{
     ViewData["Title"] = "Alumni Directory";
@@ -117,10 +117,13 @@
 
                         <hr />
 
-                        <div class="mb-2">
-                            <i class="bi bi-mortarboard-fill text-primary"></i>
-                            <strong>Class of:</strong> @item.GraduationYear
-                        </div>
+                        @if (item.GraduationYear > 0)
+                        {
+                            <div class="mb-2">
+                                <i class="bi bi-mortarboard-fill text-primary"></i>
+                                <strong>Class of:</strong> @item.GraduationYear
+                            </div>
+                        }
 
                         @if (!string.IsNullOrEmpty(item.PermanentEmail))
                         {
@@ -206,7 +209,7 @@
                         </td>
                         <td>@item.PermanentEmail</td>
                         <td>@item.Phone</td>
-                        <td>@item.GraduationYear</td>
+                        <td>@(item.GraduationYear > 0 ? item.GraduationYear.ToString() : "Not provided")</td>
                         <td>@item.City@(!string.IsNullOrEmpty(item.City) && !string.IsNullOrEmpty(item.State) ? ", " : "")@item.State</td>
                         <td>
                             <a asp-action="Details" asp-route-id="@item.AlumniId" class="btn btn-sm btn-outline-primary">
@@ -266,7 +269,7 @@ else
                         </td>
                         <td>@item.PermanentEmail</td>
                         <td>@item.Phone</td>
-                        <td>@item.GraduationYear</td>
+                        <td>@(item.GraduationYear > 0 ? item.GraduationYear.ToString() : "Not provided")</td>
                         <td>@item.City</td>
                         <td>@item.State</td>
                         <td>
@@ -415,10 +418,13 @@ else
 
                             <hr />
 
-                            <div class="mb-2">
-                                <i class="bi bi-mortarboard-fill text-primary"></i>
-                                <strong>Class of:</strong> @item.GraduationYear
-                            </div>
+                            @if (item.GraduationYear > 0)
+                            {
+                                <div class="mb-2">
+                                    <i class="bi bi-mortarboard-fill text-primary"></i>
+                                    <strong>Class of:</strong> @item.GraduationYear
+                                </div>
+                            }
 
                             @if (!string.IsNullOrEmpty(item.PermanentEmail))
                             {
@@ -508,7 +514,7 @@ else
                             </td>
                             <td>@item.PermanentEmail</td>
                             <td>@item.Phone</td>
-                            <td>@item.GraduationYear</td>
+                            <td>@(item.GraduationYear > 0 ? item.GraduationYear.ToString() : "Not provided")</td>
                             <td>@item.City</td>
                             <td>@item.State</td>
                             <td>
@@ -702,7 +708,7 @@ else
     {
         <div class="alert alert-warning">
             <i class="bi bi-shield-lock me-2"></i>
-            Your access is scoped to: <strong>@ViewData["ScopeLabel"]</strong>. You're only seeing alumni from this college.
+            Your access is scoped to: <strong>@ViewData["ScopeLabel"]</strong>. You're only seeing alumni within this scope, plus anyone with an External degree.
         </div>
     }
 
@@ -826,7 +832,7 @@ else
                                 <td>@item.PermanentEmail</td>
                                 <td>@item.Phone</td>
                             }
-                            <td>@item.GraduationYear</td>
+                            <td>@(item.GraduationYear > 0 ? item.GraduationYear.ToString() : "Not provided")</td>
                             <td>@item.City</td>
                             <td>@item.State</td>
 
@@ -932,7 +938,7 @@ else
                                         @item.FirstName @item.LastName
                                     </h5>
                                     <small class="text-info">
-                                        @item.GraduationYear
+                                        @(item.GraduationYear > 0 ? item.GraduationYear.ToString() : "")
                                     </small>
                                 </div>
                             </div>

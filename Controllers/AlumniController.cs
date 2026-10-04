@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Alumni_Management_System.Data;
 using Alumni_Management_System.Models;
+using Alumni_Management_System.Services;
 using Alumni_Management_System.Models.ViewModels;
 using Microsoft.AspNetCore.Identity;
 
@@ -49,17 +50,12 @@ namespace Alumni_Management_System.Controllers
             if (!alumniOnly)
             {
                 // Admin/Staff see everything, unless an admin has scoped them
-                // to specific college(s) via Access Scopes.
-                var allowedCollegeIds = await Services.AccessScopeService.GetAllowedCollegeIdsAsync(_context, currentUser, roles);
-                if (allowedCollegeIds != null)
+                // to specific colleges/departments (see AccessScopeService.ApplyTo).
+                var scope = await Services.AccessScopeService.GetScopeAsync(_context, currentUser, roles);
+                if (scope != null)
                 {
-                    alumniQuery = alumniQuery.Where(a => a.CollegeId != null && allowedCollegeIds.Contains(a.CollegeId.Value));
-
-                    var scopedCollegeNames = await _context.Colleges
-                        .Where(c => allowedCollegeIds.Contains(c.CollegeId))
-                        .Select(c => c.CollegeName)
-                        .ToListAsync();
-                    ViewData["ScopeLabel"] = string.Join(", ", scopedCollegeNames);
+                    alumniQuery = Services.AccessScopeService.ApplyTo(alumniQuery, scope);
+                    ViewData["ScopeLabel"] = await Services.AccessScopeService.DescribeAsync(_context, scope);
                 }
             }
 
@@ -105,6 +101,51 @@ namespace Alumni_Management_System.Controllers
         private static bool IsAlumniOnly(IList<string> roles) =>
             roles.Contains(Constants.AlumniRole) && !roles.Contains(Constants.AdminRole) && !roles.Contains(Constants.StaffRole);
 
+        // Whether a scoped Staff/Admin may open this alumnus at all - the same
+        // rule as the list, so a profile outside their scope can't be reached
+        // just by typing its URL. Alumni-only accounts browse the whole
+        // directory and are unaffected.
+        private async Task<bool> IsInViewerScopeAsync(AppUser viewer, IList<string> roles, int alumniId)
+        {
+            if (IsAlumniOnly(roles))
+            {
+                return true;
+            }
+
+            var scope = await Services.AccessScopeService.GetScopeAsync(_context, viewer, roles);
+            return scope == null
+                || await _context.Alumni.AnyAsync(a => a.AlumniId == alumniId && a.JagId == viewer.JagId) // their own profile
+                || await Services.AccessScopeService.ApplyTo(_context.Alumni.Where(a => a.AlumniId == alumniId), scope).AnyAsync();
+        }
+
+        // Who may edit a profile: its owner (any account holding the Alumni
+        // role, even if it also has Staff/Admin), or an Admin within their
+        // scope. Staff are otherwise read-only. Decided from the stored JAG
+        // ID, never the one posted in the form. Returns null when allowed.
+        private async Task<IActionResult> CheckCanEditAsync(AppUser user, IList<string> roles, int alumniId, string storedJagId)
+        {
+            if (roles.Contains(Constants.AlumniRole) && storedJagId == user.JagId)
+            {
+                return null;
+            }
+
+            if (!roles.Contains(Constants.AdminRole))
+            {
+                TempData["ErrorMessage"] = roles.Contains(Constants.StaffRole)
+                    ? "Staff members have read-only access."
+                    : "You can only edit your own profile.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            return await IsInViewerScopeAsync(user, roles, alumniId) ? null : OutsideScope();
+        }
+
+        private IActionResult OutsideScope()
+        {
+            TempData["ErrorMessage"] = "That alumnus is outside your access scope.";
+            return RedirectToAction(nameof(Index));
+        }
+
         // GET: Alumni/MyProfile - Redirect to current user's profile edit page
         public async Task<IActionResult> MyProfile()
         {
@@ -142,8 +183,20 @@ namespace Alumni_Management_System.Controllers
             }
 
             var currentUser = await _userManager.GetUserAsync(User);
+            var currentRoles = currentUser == null ? new List<string>() : await _userManager.GetRolesAsync(currentUser);
+            if (currentUser != null && !await IsInViewerScopeAsync(currentUser, currentRoles, alumni.AlumniId))
+            {
+                return OutsideScope();
+            }
+
+            // Edit button: the owner, or an Admin (already limited to their
+            // scope above). Settings/status: everyone except other alumni.
+            var isOwner = currentUser != null && currentUser.JagId == alumni.JagId && currentRoles.Contains(Constants.AlumniRole);
+            ViewData["CanEdit"] = isOwner || currentRoles.Contains(Constants.AdminRole);
+            ViewData["ShowSettings"] = isOwner || !IsAlumniOnly(currentRoles);
+
             if (alumni.Privacy && currentUser != null && currentUser.JagId != alumni.JagId
-                && IsAlumniOnly(await _userManager.GetRolesAsync(currentUser)))
+                && IsAlumniOnly(currentRoles))
             {
                 alumni.HideContactDetails();
             }
@@ -169,6 +222,13 @@ namespace Alumni_Management_System.Controllers
         public async Task<IActionResult> Create([Bind("AlumniId,JagId,Prefix,FirstName,PreferredFirstName,MiddleName,LastName,Suffix,Gender,DateOfBirth,CollegeId,StudentEmail,PermanentEmail,Phone,Address,City,State,Postcode,Country,GraduationYear,SolicitationCode,SocialMediaAccount,Privacy,IsActive,LastUpdated")] Alumni alumni)
         {
             UseClearGraduationYearMessage();
+
+            // JAG ID is unique - say so on the field instead of letting the
+            // database's unique rule crash the page.
+            if (!string.IsNullOrWhiteSpace(alumni.JagId) && await _context.Alumni.AnyAsync(a => a.JagId == alumni.JagId))
+            {
+                ModelState.AddModelError(nameof(Alumni.JagId), "An alumni profile with this JAG ID already exists.");
+            }
 
             if (ModelState.IsValid)
             {
@@ -222,22 +282,11 @@ namespace Alumni_Management_System.Controllers
 
             var roles = await _userManager.GetRolesAsync(currentUser);
 
-            if (roles.Contains(Constants.AlumniRole))
+            var denied = await CheckCanEditAsync(currentUser, roles, alumni.AlumniId, alumni.JagId);
+            if (denied != null)
             {
-                // Alumni can only edit their own profile
-                if (alumni.JagId != currentUser.JagId)
-                {
-                    TempData["ErrorMessage"] = "You can only edit your own profile.";
-                    return RedirectToAction(nameof(Index));
-                }
+                return denied;
             }
-            else if (roles.Contains(Constants.StaffRole))
-            {
-                // Staff cannot edit any profiles
-                TempData["ErrorMessage"] = "Staff members have read-only access.";
-                return RedirectToAction(nameof(Index));
-            }
-            // Admin can edit any profile
 
             ViewData["UserRole"] = roles.Contains(Constants.AdminRole) ? Constants.AdminRole
                 : roles.Contains(Constants.StaffRole) ? Constants.StaffRole
@@ -285,34 +334,49 @@ namespace Alumni_Management_System.Controllers
 
             var roles = await _userManager.GetRolesAsync(currentUser);
 
-            if (roles.Contains(Constants.AlumniRole))
-            {
-                // Alumni can only edit their own profile
-                if (alumni.JagId != currentUser.JagId)
-                {
-                    TempData["ErrorMessage"] = "You can only edit your own profile.";
-                    return RedirectToAction(nameof(Index));
-                }
-            }
-            else if (roles.Contains(Constants.StaffRole))
-            {
-                // Staff cannot edit any profiles
-                TempData["ErrorMessage"] = "Staff members have read-only access.";
-                return RedirectToAction(nameof(Index));
-            }
-
-            UseClearGraduationYearMessage();
-
-            // JAG ID is read-only on this form. Records created before the
-            // fixed format was enforced may not match it - don't let that
-            // block saving the rest of the profile when it hasn't changed.
             var storedJagId = await _context.Alumni
                 .Where(a => a.AlumniId == id)
                 .Select(a => a.JagId)
                 .FirstOrDefaultAsync();
-            if (storedJagId != null && alumni.JagId == storedJagId)
+            if (storedJagId == null)
             {
-                ModelState.Remove(nameof(Alumni.JagId));
+                return NotFound();
+            }
+
+            var denied = await CheckCanEditAsync(currentUser, roles, id, storedJagId);
+            if (denied != null)
+            {
+                return denied;
+            }
+
+            UseClearGraduationYearMessage();
+
+            // JAG ID is read-only on this form, so the stored value always
+            // wins over whatever was posted. Records created before the fixed
+            // format was enforced may not match it - don't let that block
+            // saving the rest of the profile.
+            alumni.JagId = storedJagId;
+            ModelState.Remove(nameof(Alumni.JagId));
+
+            // Fields shown read-only to anyone but an Admin (name comes from
+            // the Registry, graduation year and college from their degrees,
+            // active flag is set by the office) - keep the stored values so
+            // they can't be changed by editing the form before submitting.
+            if (!roles.Contains(Constants.AdminRole))
+            {
+                var stored = await _context.Alumni.AsNoTracking()
+                    .Where(a => a.AlumniId == id)
+                    .Select(a => new { a.FirstName, a.LastName, a.GraduationYear, a.IsActive, a.CollegeId })
+                    .FirstAsync();
+                alumni.FirstName = stored.FirstName;
+                alumni.LastName = stored.LastName;
+                alumni.GraduationYear = stored.GraduationYear;
+                alumni.IsActive = stored.IsActive;
+                alumni.CollegeId = stored.CollegeId;
+                foreach (var field in new[] { nameof(Alumni.FirstName), nameof(Alumni.LastName), nameof(Alumni.GraduationYear), nameof(Alumni.IsActive), nameof(Alumni.CollegeId) })
+                {
+                    ModelState.Remove(field);
+                }
             }
 
             if (ModelState.IsValid)
@@ -322,8 +386,8 @@ namespace Alumni_Management_System.Controllers
                     alumni.LastUpdated = DateTime.Now;
                     _context.Update(alumni);
 
-                    // Mark first login as complete for Alumni users
-                    if (roles.Contains(Constants.AlumniRole) && currentUser.IsFirstLogin)
+                    // Mark first login as complete once Alumni users save their own profile
+                    if (roles.Contains(Constants.AlumniRole) && storedJagId == currentUser.JagId && currentUser.IsFirstLogin)
                     {
                         currentUser.IsFirstLogin = false;
                         await _userManager.UpdateAsync(currentUser);
@@ -371,6 +435,12 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (!await IsInViewerScopeAsync(currentUser, await _userManager.GetRolesAsync(currentUser), alumni.AlumniId))
+            {
+                return OutsideScope();
+            }
+
             // JagId<->AppUser is a logical link, not a DB relationship - look
             // it up manually so the Delete confirmation page can still show
             // which login account (if any) will be removed alongside it.
@@ -394,6 +464,12 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
+            var currentUser = await _userManager.GetUserAsync(User);
+            if (!await IsInViewerScopeAsync(currentUser, await _userManager.GetRolesAsync(currentUser), alumni.AlumniId))
+            {
+                return OutsideScope();
+            }
+
             using (var transaction = await _context.Database.BeginTransactionAsync())
             {
                 try
@@ -404,22 +480,45 @@ namespace Alumni_Management_System.Controllers
                     // 3. Remove the Alumni profile first
                     // This triggers the database CASCADE to history tables (Degrees, etc.)
                     _context.Alumni.Remove(alumni);
+                    await ReopenRegistryEntriesAsync(new[] { alumni.JagId });
 
                     // 4. Remove the linked Identity User if they have one
-                    // This is the "Reverse Cascade" manual step
+                    // This is the "Reverse Cascade" manual step. Same rule as
+                    // BulkDelete: an account that also holds Admin/Staff (or is
+                    // the signed-in admin's own) only loses its Alumni role.
+                    var keptAccount = false;
                     if (user != null)
                     {
-                        var result = await _userManager.DeleteAsync(user);
-                        if (!result.Succeeded)
+                        if (await _userManager.IsInRoleAsync(user, Constants.AdminRole)
+                            || await _userManager.IsInRoleAsync(user, Constants.StaffRole)
+                            || user.Id == currentUser.Id)
                         {
-                            throw new Exception("Failed to delete associated user account.");
+                            if (await _userManager.IsInRoleAsync(user, Constants.AlumniRole))
+                            {
+                                var roleResult = await _userManager.RemoveFromRoleAsync(user, Constants.AlumniRole);
+                                if (!roleResult.Succeeded)
+                                {
+                                    throw new Exception($"Failed to remove the Alumni role from {user.UserName}.");
+                                }
+                            }
+                            keptAccount = true;
+                        }
+                        else
+                        {
+                            var result = await _userManager.DeleteAsync(user);
+                            if (!result.Succeeded)
+                            {
+                                throw new Exception("Failed to delete associated user account.");
+                            }
                         }
                     }
 
                     await _context.SaveChangesAsync();
                     await transaction.CommitAsync();
 
-                    TempData["SuccessMessage"] = "Alumni and associated user account deleted successfully!";
+                    TempData["SuccessMessage"] = user == null ? "Alumni record deleted successfully!"
+                        : keptAccount ? $"Alumni record deleted. The login account {user.UserName} also has Admin/Staff access, so it was kept - only its Alumni role was removed."
+                        : "Alumni and associated user account deleted successfully!";
                 }
                 catch (Exception ex)
                 {
@@ -448,7 +547,12 @@ namespace Alumni_Management_System.Controllers
                 return RedirectToAction(nameof(Index));
             }
 
-            var alumniToDelete = await _context.Alumni.Where(a => ids.Contains(a.AlumniId)).ToListAsync();
+            // A scoped admin can only delete alumni inside their scope - ids
+            // posted for anyone else are ignored, not trusted from the form.
+            var deleter = await _userManager.GetUserAsync(User);
+            var visibleAlumni = await Services.AccessScopeService.GetVisibleAlumniAsync(_context, deleter, await _userManager.GetRolesAsync(deleter));
+            var alumniToDelete = await visibleAlumni.Where(a => ids.Contains(a.AlumniId)).ToListAsync();
+            var skippedOutsideScope = ids.Distinct().Count() - alumniToDelete.Count;
             var currentUserId = _userManager.GetUserId(User);
             int accountsDeleted = 0;
             var accountsKept = new List<string>();
@@ -457,6 +561,8 @@ namespace Alumni_Management_System.Controllers
             {
                 try
                 {
+                    await ReopenRegistryEntriesAsync(alumniToDelete.Select(a => a.JagId));
+
                     foreach (var alumni in alumniToDelete)
                     {
                         var user = await _userManager.Users.FirstOrDefaultAsync(u => u.JagId == alumni.JagId);
@@ -499,6 +605,10 @@ namespace Alumni_Management_System.Controllers
                     {
                         message += $" Kept the login account{(accountsKept.Count == 1 ? "" : "s")} for {string.Join(", ", accountsKept)} (Admin/Staff) - only the Alumni role was removed.";
                     }
+                    if (skippedOutsideScope > 0)
+                    {
+                        message += $" Skipped {skippedOutsideScope} that {(skippedOutsideScope == 1 ? "is" : "are")} outside your access scope or no longer exist.";
+                    }
                     TempData["SuccessMessage"] = System.Net.WebUtility.HtmlEncode(message);
                 }
                 catch (Exception ex)
@@ -513,14 +623,19 @@ namespace Alumni_Management_System.Controllers
 
         // A blank Graduation Year can't bind to the non-nullable int, so MVC
         // reports "The value '' is invalid." - swap in the readable message.
-        private void UseClearGraduationYearMessage()
+        private void UseClearGraduationYearMessage() =>
+            ModelState.UseClearBlankMessage(nameof(Alumni.GraduationYear), Alumni.GraduationYearRequiredMessage);
+
+        // A deleted alumnus stays on the Registry (the university's list of
+        // graduates) but is marked as having no account, so they can register
+        // again through Verify JAG ID.
+        private async Task ReopenRegistryEntriesAsync(IEnumerable<string> jagIds)
         {
-            if (ModelState.TryGetValue(nameof(Alumni.GraduationYear), out var entry)
-                && entry.Errors.Count > 0
-                && string.IsNullOrWhiteSpace(entry.AttemptedValue))
+            var ids = jagIds.ToList();
+            var entries = await _context.AlumniRegistries.Where(r => ids.Contains(r.JagId) && r.AccountCreated).ToListAsync();
+            foreach (var entry in entries)
             {
-                entry.Errors.Clear();
-                ModelState.AddModelError(nameof(Alumni.GraduationYear), Alumni.GraduationYearRequiredMessage);
+                entry.AccountCreated = false;
             }
         }
 

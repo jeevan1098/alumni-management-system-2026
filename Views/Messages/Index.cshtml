@@ -1,4 +1,4 @@
-﻿@* @model IEnumerable<Alumni_Management_System.Models.Message>
+@* @model IEnumerable<Alumni_Management_System.Models.Message>
 
 @{
     ViewData["Title"] = "Index";
@@ -129,9 +129,13 @@
                                     <a asp-action="Details" asp-route-id="@item.MessageId" class="btn btn-sm btn-outline-primary rounded-pill me-2">
                                         <i class="bi bi-eye-fill"></i>
                                     </a>
-                                    <a asp-action="Edit" asp-route-id="@item.MessageId" class="btn btn-sm btn-outline-warning rounded-pill me-2">
-                                        <i class="bi bi-pencil-fill"></i>
-                                    </a>
+                                    @* Admins edit any message; Staff only their own (MessagesController.CanEdit) *@
+                                    @if (User.IsInRole("Admin") || item.CreatedBy == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@item.MessageId" class="btn btn-sm btn-outline-warning rounded-pill me-2">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </a>
+                                    }
                                     @if (User.IsInRole("Admin"))
                                     {
                                         <a asp-action="Delete" asp-route-id="@item.MessageId" class="btn btn-sm btn-outline-danger rounded-pill">

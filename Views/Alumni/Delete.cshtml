@@ -1,4 +1,4 @@
-﻿@* @model Alumni_Management_System.Models.Alumni
+@* @model Alumni_Management_System.Models.Alumni
 
 @{
     ViewData["Title"] = "Delete";
@@ -214,7 +214,7 @@
                 <dd class="col-sm-8">@Model.JagId</dd>
 
                 <dt class="col-sm-4">Graduation Year</dt>
-                <dd class="col-sm-8">@Model.GraduationYear</dd>
+                <dd class="col-sm-8">@(Model.GraduationYear > 0 ? Model.GraduationYear.ToString() : "Not provided")</dd>
 
             </dl>
 

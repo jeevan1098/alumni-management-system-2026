@@ -137,18 +137,12 @@ namespace Alumni_Management_System.Controllers
         {
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
-            var allowedCollegeIds = await Services.AccessScopeService.GetAllowedCollegeIdsAsync(_context, currentUser, roles);
+            var scope = await Services.AccessScopeService.GetScopeAsync(_context, currentUser, roles);
 
-            IQueryable<Alumni> scopedAlumni = _context.Alumni;
-            if (allowedCollegeIds != null)
+            IQueryable<Alumni> scopedAlumni = Services.AccessScopeService.ApplyTo(_context.Alumni, scope);
+            if (scope != null)
             {
-                scopedAlumni = scopedAlumni.Where(a => a.CollegeId != null && allowedCollegeIds.Contains(a.CollegeId.Value));
-
-                var scopedCollegeNames = await _context.Colleges
-                    .Where(c => allowedCollegeIds.Contains(c.CollegeId))
-                    .Select(c => c.CollegeName)
-                    .ToListAsync();
-                ViewData["ScopeLabel"] = string.Join(", ", scopedCollegeNames);
+                ViewData["ScopeLabel"] = await Services.AccessScopeService.DescribeAsync(_context, scope);
             }
 
             // ===== COUNTS =====

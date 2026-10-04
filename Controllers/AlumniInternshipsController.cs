@@ -9,9 +9,13 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using Alumni_Management_System.Data;
 using Alumni_Management_System.Models;
+using Alumni_Management_System.Services;
 
 namespace Alumni_Management_System.Controllers
 {
+    // "!roles.Contains(AdminRole)" below = acting as an alumnus: only Alumni
+    // and Admin get in, so anyone without Admin manages just their own
+    // records. An Admin who is also an alumnus gets the (scoped) admin view.
     [Authorize(Roles = "Alumni,Admin")]
     public class AlumniInternshipsController : Controller
     {
@@ -33,7 +37,7 @@ namespace Alumni_Management_System.Controllers
             IQueryable<AlumniInternship> query = _context.AlumniInternships.Include(a => a.Alumni).Include(a => a.Employer);
 
             // Alumni can only see their own internships
-            if (roles.Contains(Constants.AlumniRole))
+            if (!roles.Contains(Constants.AdminRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni != null)
@@ -45,7 +49,12 @@ namespace Alumni_Management_System.Controllers
                     return View(new List<AlumniInternship>());
                 }
             }
-            // Admin can see all internships
+            else
+            {
+                // Admin sees internships of alumni inside their access scope
+                var visibleIds = (await Services.AccessScopeService.GetVisibleAlumniAsync(_context, currentUser, roles)).Select(a => a.AlumniId);
+                query = query.Where(ai => visibleIds.Contains(ai.AlumniId));
+            }
 
             return View(await query.ToListAsync());
         }
@@ -70,7 +79,7 @@ namespace Alumni_Management_System.Controllers
             // Check if Alumni user is trying to view another alumni's internship
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
-            if (roles.Contains(Constants.AlumniRole))
+            if (!roles.Contains(Constants.AdminRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null || alumniInternship.AlumniId != alumni.AlumniId)
@@ -78,6 +87,10 @@ namespace Alumni_Management_System.Controllers
                     TempData["ErrorMessage"] = "You can only view your own internship records.";
                     return RedirectToAction(nameof(Index));
                 }
+            }
+            else if (!await Services.AccessScopeService.AreAlumniVisibleAsync(_context, currentUser, roles, alumniInternship.AlumniId))
+            {
+                return OutsideScope();
             }
 
             return View(alumniInternship);
@@ -90,7 +103,7 @@ namespace Alumni_Management_System.Controllers
             var roles = await _userManager.GetRolesAsync(currentUser);
 
             // For Alumni users, auto-select their own AlumniId
-            if (roles.Contains(Constants.AlumniRole))
+            if (!roles.Contains(Constants.AdminRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null)
@@ -105,7 +118,7 @@ namespace Alumni_Management_System.Controllers
             else
             {
                 // Admin can select any alumni
-                ViewData["AlumniId"] = Services.AlumniSelectList.Build(_context.Alumni);
+                ViewData["AlumniId"] = Services.AlumniSelectList.Build(await Services.AccessScopeService.GetVisibleAlumniAsync(_context, currentUser, roles));
                 ViewData["UserRole"] = "Admin";
             }
 
@@ -127,11 +140,13 @@ namespace Alumni_Management_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("AlumniInternshipId,AlumniId,EmployerId,InternshipType,Title,StartDate,EndDate")] AlumniInternship alumniInternship, string OtherEmployerName)
         {
+            ModelState.UseClearBlankMessage(nameof(AlumniInternship.StartDate), AlumniInternship.StartDateRequiredMessage);
+
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
 
             // Validate: Alumni can only create internships for themselves
-            if (roles.Contains(Constants.AlumniRole))
+            if (!roles.Contains(Constants.AdminRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null || alumniInternship.AlumniId != alumni.AlumniId)
@@ -139,6 +154,10 @@ namespace Alumni_Management_System.Controllers
                     TempData["ErrorMessage"] = "You can only create internship records for yourself.";
                     return RedirectToAction(nameof(Index));
                 }
+            }
+            else if (!await Services.AccessScopeService.AreAlumniVisibleAsync(_context, currentUser, roles, alumniInternship.AlumniId))
+            {
+                return OutsideScope();
             }
 
             // Handle "Other" employer - create new employer if needed
@@ -187,7 +206,7 @@ namespace Alumni_Management_System.Controllers
             }
 
             // Repopulate dropdowns
-            if (roles.Contains(Constants.AlumniRole))
+            if (!roles.Contains(Constants.AdminRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 ViewData["CurrentAlumniId"] = alumni?.AlumniId;
@@ -196,7 +215,7 @@ namespace Alumni_Management_System.Controllers
             }
             else
             {
-                ViewData["AlumniId"] = Services.AlumniSelectList.Build(_context.Alumni, alumniInternship.AlumniId);
+                ViewData["AlumniId"] = Services.AlumniSelectList.Build(await Services.AccessScopeService.GetVisibleAlumniAsync(_context, currentUser, roles), alumniInternship.AlumniId);
                 ViewData["UserRole"] = "Admin";
             }
 
@@ -229,7 +248,7 @@ namespace Alumni_Management_System.Controllers
             // Check if Alumni user is trying to edit another alumni's internship
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
-            if (roles.Contains(Constants.AlumniRole))
+            if (!roles.Contains(Constants.AdminRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null || alumniInternship.AlumniId != alumni.AlumniId)
@@ -241,9 +260,13 @@ namespace Alumni_Management_System.Controllers
                 ViewData["AlumniId"] = Services.AlumniSelectList.Build(new[] { alumni }, alumniInternship.AlumniId);
                 ViewData["UserRole"] = Constants.AlumniRole;
             }
+            else if (!await Services.AccessScopeService.AreAlumniVisibleAsync(_context, currentUser, roles, alumniInternship.AlumniId))
+            {
+                return OutsideScope();
+            }
             else
             {
-                ViewData["AlumniId"] = Services.AlumniSelectList.Build(_context.Alumni, alumniInternship.AlumniId);
+                ViewData["AlumniId"] = Services.AlumniSelectList.Build(await Services.AccessScopeService.GetVisibleAlumniAsync(_context, currentUser, roles), alumniInternship.AlumniId);
                 ViewData["UserRole"] = "Admin";
             }
 
@@ -265,6 +288,8 @@ namespace Alumni_Management_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, [Bind("AlumniInternshipId,AlumniId,EmployerId,InternshipType,Title,StartDate,EndDate")] AlumniInternship alumniInternship, string OtherEmployerName)
         {
+            ModelState.UseClearBlankMessage(nameof(AlumniInternship.StartDate), AlumniInternship.StartDateRequiredMessage);
+
             if (id != alumniInternship.AlumniInternshipId)
             {
                 return NotFound();
@@ -273,15 +298,30 @@ namespace Alumni_Management_System.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
 
+            // The owner as stored - not just the AlumniId posted in the form,
+            // which could be changed to claim someone else's record.
+            var storedAlumniId = await _context.AlumniInternships
+                .Where(x => x.AlumniInternshipId == id)
+                .Select(x => (int?)x.AlumniId)
+                .FirstOrDefaultAsync();
+            if (storedAlumniId == null)
+            {
+                return NotFound();
+            }
+
             // Validate: Alumni can only edit their own internships
-            if (roles.Contains(Constants.AlumniRole))
+            if (!roles.Contains(Constants.AdminRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
-                if (alumni == null || alumniInternship.AlumniId != alumni.AlumniId)
+                if (alumni == null || alumniInternship.AlumniId != alumni.AlumniId || storedAlumniId != alumni.AlumniId)
                 {
                     TempData["ErrorMessage"] = "You can only edit your own internship records.";
                     return RedirectToAction(nameof(Index));
                 }
+            }
+            else if (!await Services.AccessScopeService.AreAlumniVisibleAsync(_context, currentUser, roles, storedAlumniId.Value, alumniInternship.AlumniId))
+            {
+                return OutsideScope();
             }
 
             // Handle "Other" employer - create new employer if needed
@@ -344,7 +384,7 @@ namespace Alumni_Management_System.Controllers
             }
 
             // Repopulate dropdowns
-            if (roles.Contains(Constants.AlumniRole))
+            if (!roles.Contains(Constants.AdminRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 ViewData["CurrentAlumniId"] = alumni?.AlumniId;
@@ -353,7 +393,7 @@ namespace Alumni_Management_System.Controllers
             }
             else
             {
-                ViewData["AlumniId"] = Services.AlumniSelectList.Build(_context.Alumni, alumniInternship.AlumniId);
+                ViewData["AlumniId"] = Services.AlumniSelectList.Build(await Services.AccessScopeService.GetVisibleAlumniAsync(_context, currentUser, roles), alumniInternship.AlumniId);
                 ViewData["UserRole"] = "Admin";
             }
 
@@ -389,7 +429,7 @@ namespace Alumni_Management_System.Controllers
             // Check if Alumni user is trying to delete another alumni's internship
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
-            if (roles.Contains(Constants.AlumniRole))
+            if (!roles.Contains(Constants.AdminRole))
             {
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni == null || alumniInternship.AlumniId != alumni.AlumniId)
@@ -397,6 +437,10 @@ namespace Alumni_Management_System.Controllers
                     TempData["ErrorMessage"] = "You can only delete your own internship records.";
                     return RedirectToAction(nameof(Index));
                 }
+            }
+            else if (!await Services.AccessScopeService.AreAlumniVisibleAsync(_context, currentUser, roles, alumniInternship.AlumniId))
+            {
+                return OutsideScope();
             }
 
             return View(alumniInternship);
@@ -413,7 +457,7 @@ namespace Alumni_Management_System.Controllers
                 // Check if Alumni user is trying to delete another alumni's internship
                 var currentUser = await _userManager.GetUserAsync(User);
                 var roles = await _userManager.GetRolesAsync(currentUser);
-                if (roles.Contains(Constants.AlumniRole))
+                if (!roles.Contains(Constants.AdminRole))
                 {
                     var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                     if (alumni == null || alumniInternship.AlumniId != alumni.AlumniId)
@@ -422,12 +466,22 @@ namespace Alumni_Management_System.Controllers
                         return RedirectToAction(nameof(Index));
                     }
                 }
+                else if (!await Services.AccessScopeService.AreAlumniVisibleAsync(_context, currentUser, roles, alumniInternship.AlumniId))
+                {
+                    return OutsideScope();
+                }
 
                 _context.AlumniInternships.Remove(alumniInternship);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Internship record deleted successfully!";
             }
 
+            return RedirectToAction(nameof(Index));
+        }
+
+        private IActionResult OutsideScope()
+        {
+            TempData["ErrorMessage"] = "That alumnus is outside your access scope.";
             return RedirectToAction(nameof(Index));
         }
 

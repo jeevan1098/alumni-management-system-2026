@@ -15,15 +15,15 @@ public partial class AlumniMessage
     public int AlumniMessageId { get; set; }
 
     [Column("alumni_id")]
-    [Display(Name = "Alumni ID")]
+    [Display(Name = "Alumni")]
     public int AlumniId { get; set; }
 
     [Column("message_id")]
-    [Display(Name = "Message ID")]
+    [Display(Name = "Message")]
     public int MessageId { get; set; }
 
     [Column("sent_at", TypeName = "datetime")]
-    [Display(Name = "Sent At?")]
+    [Display(Name = "Sent At")]
     public DateTime SentAt { get; set; }
 
     [ForeignKey("AlumniId")]

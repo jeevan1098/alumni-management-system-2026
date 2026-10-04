@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -70,6 +70,13 @@ namespace Alumni_Management_System.Controllers
         [Authorize(Roles = "Admin")] // Only Admin can create
         public async Task<IActionResult> Create([Bind("RegistryId,JagId,FirstName,LastName,GraduationYear,DegreeProgram,EmailOnRecord,AccountCreated")] AlumniRegistry alumniRegistry)
         {
+            // JAG ID is unique - say so on the field instead of letting the
+            // database's unique rule crash the page.
+            if (!string.IsNullOrWhiteSpace(alumniRegistry.JagId) && await _context.AlumniRegistries.AnyAsync(r => r.JagId == alumniRegistry.JagId))
+            {
+                ModelState.AddModelError(nameof(AlumniRegistry.JagId), "This JAG ID is already in the Alumni Registry.");
+            }
+
             if (ModelState.IsValid)
             {
                 _context.Add(alumniRegistry);
@@ -108,6 +115,12 @@ namespace Alumni_Management_System.Controllers
             if (id != alumniRegistry.RegistryId)
             {
                 return NotFound();
+            }
+
+            if (!string.IsNullOrWhiteSpace(alumniRegistry.JagId)
+                && await _context.AlumniRegistries.AnyAsync(r => r.JagId == alumniRegistry.JagId && r.RegistryId != alumniRegistry.RegistryId))
+            {
+                ModelState.AddModelError(nameof(AlumniRegistry.JagId), "Another Registry entry already uses this JAG ID.");
             }
 
             if (ModelState.IsValid)
@@ -150,6 +163,13 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
+            var inUse = await InUseReasonAsync(alumniRegistry);
+            if (inUse != null)
+            {
+                TempData["ErrorMessage"] = inUse;
+                return RedirectToAction(nameof(Index));
+            }
+
             return View(alumniRegistry);
         }
 
@@ -162,12 +182,28 @@ namespace Alumni_Management_System.Controllers
             var alumniRegistry = await _context.AlumniRegistries.FindAsync(id);
             if (alumniRegistry != null)
             {
+                var inUse = await InUseReasonAsync(alumniRegistry);
+                if (inUse != null)
+                {
+                    TempData["ErrorMessage"] = inUse;
+                    return RedirectToAction(nameof(Index));
+                }
+
                 _context.AlumniRegistries.Remove(alumniRegistry);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Alumni Registry entry deleted successfully!";
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        // A Registry entry is how an alumnus gets a login, so it can't go while
+        // their profile exists - deleting the alumnus handles both correctly.
+        private async Task<string> InUseReasonAsync(AlumniRegistry alumniRegistry)
+        {
+            var hasProfile = await _context.Alumni.AnyAsync(a => a.JagId == alumniRegistry.JagId);
+            return !hasProfile ? null
+                : $"{alumniRegistry.JagId} can't be removed from the Registry while an alumni profile exists for it. Delete the alumnus first (Alumni page), then this entry.";
         }
 
         private bool AlumniRegistryExists(int id)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -138,6 +138,13 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
+            var inUse = await InUseReasonAsync(employer);
+            if (inUse != null)
+            {
+                TempData["ErrorMessage"] = inUse;
+                return RedirectToAction(nameof(Index));
+            }
+
             return View(employer);
         }
 
@@ -150,11 +157,29 @@ namespace Alumni_Management_System.Controllers
             var employer = await _context.Employers.FindAsync(id);
             if (employer != null)
             {
+                var inUse = await InUseReasonAsync(employer);
+                if (inUse != null)
+                {
+                    TempData["ErrorMessage"] = inUse;
+                    return RedirectToAction(nameof(Index));
+                }
+
                 _context.Employers.Remove(employer);
             }
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
+        }
+
+        // Deleting an employer would silently delete every job and internship
+        // recorded with it (the database cascades), so refuse while any exist.
+        private async Task<string> InUseReasonAsync(Employer employer)
+        {
+            var inUse = Services.InUseMessage.Describe(
+                (await _context.AlumniEmployments.CountAsync(e => e.EmployerId == employer.EmployerId), "alumni job", "alumni jobs"),
+                (await _context.AlumniInternships.CountAsync(i => i.EmployerId == employer.EmployerId), "alumni internship", "alumni internships"));
+            return inUse == null ? null
+                : $"{employer.EmployerName} can't be deleted - it's used by {inUse}. Move those records to another employer first.";
         }
 
         private bool EmployerExists(int id)

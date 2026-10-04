@@ -1,4 +1,4 @@
-﻿@* @model IEnumerable<Alumni_Management_System.Models.AlumniRegistry>
+@* @model IEnumerable<Alumni_Management_System.Models.AlumniRegistry>
 
 @{
     ViewData["Title"] = "Alumni Registry";
@@ -110,6 +110,15 @@
             </div>
 
             <hr class="mb-4" />
+
+            @* e.g. a delete refused because the alumnus profile still exists *@
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
 
             <!-- Success / Error Messages -->
             @if (TempData["SuccessMessage"] != null)

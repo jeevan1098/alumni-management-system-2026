@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.EntityFrameworkCore;
 
 namespace Alumni_Management_System.Controllers
@@ -33,6 +34,23 @@ namespace Alumni_Management_System.Controllers
             _emailSender = emailSender;
             _logger = logger;
             _configuration = configuration;
+        }
+
+        // Registration and Forgot Password are for signed-out visitors only -
+        // a signed-in user is sent to their home page instead.
+        private static readonly string[] SignedOutOnlyActions =
+            { nameof(VerifyJagId), nameof(RegisterAlumni), nameof(ForgotPassword) };
+
+        public override void OnActionExecuting(ActionExecutingContext context)
+        {
+            if (User.Identity?.IsAuthenticated == true
+                && SignedOutOnlyActions.Contains(context.RouteData.Values["action"] as string, StringComparer.OrdinalIgnoreCase))
+            {
+                context.Result = RedirectToAction("Index", "Home");
+                return;
+            }
+
+            base.OnActionExecuting(context);
         }
 
         // GET: Account/VerifyJagId

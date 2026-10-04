@@ -25,4 +25,12 @@ public class CreateUserViewModel
     [Required]
     [Display(Name = "Role")]
     public string Role { get; set; } = Constants.StaffRole;
+
+    // Whole colleges and/or single departments the new account is limited to.
+    // Both empty = system-wide, which only an unrestricted admin may grant
+    // (see UsersController.Create).
+    [Display(Name = "Access Scope")]
+    public List<int> CollegeIds { get; set; } = new();
+
+    public List<int> DepartmentIds { get; set; } = new();
 }

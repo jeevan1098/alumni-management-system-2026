@@ -26,11 +26,34 @@ namespace Alumni_Management_System
             var roleManager = services.GetRequiredService<RoleManager<IdentityRole>>();
             await EnsureRolesAsync(roleManager);
 
+            var context = services.GetRequiredService<ApplicationDbContext>();
+            await PadLegacySampleJagIdsAsync(context);
+
             var userManager = services.GetRequiredService<UserManager<AppUser>>();
             await EnsureTestUsersAsync(userManager);
 
-            var context = services.GetRequiredService<ApplicationDbContext>();
             await EnsureSampleDataAsync(context, userManager);
+        }
+
+        // The sample accounts below used to have 7-digit JAG IDs; the format is
+        // now J + 8 digits (see JagIdFormat). On databases seeded before that,
+        // rename exactly these sample IDs (J0012345 -> J00012345) so they
+        // match - nothing else is touched, and it's a no-op once done.
+        private static readonly string[] LegacySampleJagIds =
+        {
+            "J0000000", "J0000001", "J0000002",
+            "J0012345", "J0012346", "J0012347", "J0012348", "J0012349", "J0012350", "J0012351",
+        };
+
+        public static async Task PadLegacySampleJagIdsAsync(ApplicationDbContext context)
+        {
+            foreach (var oldId in LegacySampleJagIds)
+            {
+                var newId = "J0" + oldId.Substring(1);
+                await context.Users.Where(u => u.JagId == oldId).ExecuteUpdateAsync(s => s.SetProperty(u => u.JagId, newId));
+                await context.Alumni.Where(a => a.JagId == oldId).ExecuteUpdateAsync(s => s.SetProperty(a => a.JagId, newId));
+                await context.AlumniRegistries.Where(r => r.JagId == oldId).ExecuteUpdateAsync(s => s.SetProperty(r => r.JagId, newId));
+            }
         }
         public static async Task EnsureRolesAsync(RoleManager<IdentityRole>
         roleManager)
@@ -56,7 +79,7 @@ namespace Alumni_Management_System
                     UserName = "admin",
                     Email = "admin@university.edu",
                     EmailConfirmed = true,
-                    JagId = "J0000001",
+                    JagId = "J00000001",
                     CreatedAt = DateTime.Now,
                     IsFirstLogin = false, // not a placeholder account - real username chosen up front
                     TwoFactorEnabled = false // opt-in - user can enable it later in Two-Factor Auth settings
@@ -73,7 +96,7 @@ namespace Alumni_Management_System
                     UserName = "staff",
                     Email = "staff@university.edu",
                     EmailConfirmed = true,
-                    JagId = "J0000002",
+                    JagId = "J00000002",
                     CreatedAt = DateTime.Now,
                     IsFirstLogin = false, // not a placeholder account - real username chosen up front
                     TwoFactorEnabled = false // opt-in - user can enable it later in Two-Factor Auth settings
@@ -92,7 +115,7 @@ namespace Alumni_Management_System
                     UserName = "Superadmin",
                     Email = "alumnimanagement@southalabama.edu",
                     EmailConfirmed = true,
-                    JagId = "J0000000",
+                    JagId = "J00000000",
                     CreatedAt = DateTime.Now,
                     IsFirstLogin = false,
                     MustChangePassword = true,
@@ -144,11 +167,11 @@ namespace Alumni_Management_System
             // Alumni Users
             var alumniUsers = new[]
             {
-                new { Username = "john_doe", Email = "john.doe@email.com", JagId = "J0012345", FirstName = "John", LastName = "Doe" },
-                new { Username = "jane_smith", Email = "jane.smith@email.com", JagId = "J0012346", FirstName = "Jane", LastName = "Smith" },
-                new { Username = "michael.j", Email = "michael.johnson@email.com", JagId = "J0012347", FirstName = "Michael", LastName = "Johnson" },
-                new { Username = "sarah.w", Email = "sarah.williams@email.com", JagId = "J0012348", FirstName = "Sarah", LastName = "Williams" },
-                new { Username = "david_brown", Email = "david.brown@email.com", JagId = "J0012349", FirstName = "David", LastName = "Brown" }
+                new { Username = "john_doe", Email = "john.doe@email.com", JagId = "J00012345", FirstName = "John", LastName = "Doe" },
+                new { Username = "jane_smith", Email = "jane.smith@email.com", JagId = "J00012346", FirstName = "Jane", LastName = "Smith" },
+                new { Username = "michael.j", Email = "michael.johnson@email.com", JagId = "J00012347", FirstName = "Michael", LastName = "Johnson" },
+                new { Username = "sarah.w", Email = "sarah.williams@email.com", JagId = "J00012348", FirstName = "Sarah", LastName = "Williams" },
+                new { Username = "david_brown", Email = "david.brown@email.com", JagId = "J00012349", FirstName = "David", LastName = "Brown" }
             };
 
             foreach (var alumniData in alumniUsers)
@@ -226,6 +249,32 @@ namespace Alumni_Management_System
                 await context.SaveChangesAsync();
             }
 
+            // Degrees earned at another school, so alumni can record them.
+            // Seeded per row (not behind the AnyAsync above) so existing
+            // databases get them too.
+            if (!await context.Colleges.AnyAsync(c => c.CollegeName == "External"))
+            {
+                await context.Colleges.AddAsync(new College { CollegeName = "External", IsInternal = false, IsActive = true });
+                await context.SaveChangesAsync();
+            }
+            var external = await context.Colleges.FirstAsync(c => c.CollegeName == "External");
+
+            if (!await context.Departments.AnyAsync(d => d.DepartmentName == "External" && d.CollegeId == external.CollegeId))
+            {
+                await context.Departments.AddAsync(new Department { CollegeId = external.CollegeId, DepartmentName = "External", IsActive = true });
+                await context.SaveChangesAsync();
+            }
+            var externalDept = await context.Departments.FirstAsync(d => d.DepartmentName == "External" && d.CollegeId == external.CollegeId);
+
+            foreach (var degreeType in new[] { "Masters", "Bachelors", "PhD", "Other Degree Type" })
+            {
+                if (!await context.DegreePrograms.AnyAsync(d => d.Institution == "Other Institution" && d.DegreeType == degreeType))
+                {
+                    await context.DegreePrograms.AddAsync(new DegreeProgram { Institution = "Other Institution", DegreeType = degreeType, MajorFieldOfStudy = "Other Institution", DepartmentId = externalDept.DepartmentId, IsActive = true });
+                }
+            }
+            await context.SaveChangesAsync();
+
             // Seed Employers
             if (!await context.Employers.AnyAsync())
             {
@@ -263,13 +312,13 @@ namespace Alumni_Management_System
             {
                 var registries = new[]
                 {
-                    new AlumniRegistry { JagId = "J0012345", FirstName = "John", LastName = "Doe", AccountCreated = true },
-                    new AlumniRegistry { JagId = "J0012346", FirstName = "Jane", LastName = "Smith", AccountCreated = true },
-                    new AlumniRegistry { JagId = "J0012347", FirstName = "Michael", LastName = "Johnson", AccountCreated = true },
-                    new AlumniRegistry { JagId = "J0012348", FirstName = "Sarah", LastName = "Williams", AccountCreated = true },
-                    new AlumniRegistry { JagId = "J0012349", FirstName = "David", LastName = "Brown", AccountCreated = true },
-                    new AlumniRegistry { JagId = "J0012350", FirstName = "Emily", LastName = "Davis", AccountCreated = false },
-                    new AlumniRegistry { JagId = "J0012351", FirstName = "Robert", LastName = "Miller", AccountCreated = false }
+                    new AlumniRegistry { JagId = "J00012345", FirstName = "John", LastName = "Doe", AccountCreated = true },
+                    new AlumniRegistry { JagId = "J00012346", FirstName = "Jane", LastName = "Smith", AccountCreated = true },
+                    new AlumniRegistry { JagId = "J00012347", FirstName = "Michael", LastName = "Johnson", AccountCreated = true },
+                    new AlumniRegistry { JagId = "J00012348", FirstName = "Sarah", LastName = "Williams", AccountCreated = true },
+                    new AlumniRegistry { JagId = "J00012349", FirstName = "David", LastName = "Brown", AccountCreated = true },
+                    new AlumniRegistry { JagId = "J00012350", FirstName = "Emily", LastName = "Davis", AccountCreated = false },
+                    new AlumniRegistry { JagId = "J00012351", FirstName = "Robert", LastName = "Miller", AccountCreated = false }
                 };
                 await context.AlumniRegistries.AddRangeAsync(registries);
                 await context.SaveChangesAsync();
@@ -282,11 +331,11 @@ namespace Alumni_Management_System
             // safe; per-JagId check so it also back-fills existing databases.
             var alumniProfiles = new List<(string JagId, string FirstName, string LastName)>
             {
-                ("J0012345", "John", "Doe"),
-                ("J0012346", "Jane", "Smith"),
-                ("J0012347", "Michael", "Johnson"),
-                ("J0012348", "Sarah", "Williams"),
-                ("J0012349", "David", "Brown")
+                ("J00012345", "John", "Doe"),
+                ("J00012346", "Jane", "Smith"),
+                ("J00012347", "Michael", "Johnson"),
+                ("J00012348", "Sarah", "Williams"),
+                ("J00012349", "David", "Brown")
             };
             alumniProfiles.AddRange(TestAccounts
                 .Where(t => t.Roles.Contains(Constants.AlumniRole))

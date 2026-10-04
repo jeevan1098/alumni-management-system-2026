@@ -1,4 +1,4 @@
-﻿@* @model Alumni_Management_System.Models.Message
+@* @model Alumni_Management_System.Models.Message
 
 @{
     ViewData["Title"] = "Details";
@@ -206,10 +206,13 @@
                     <i class="bi bi-arrow-left me-2"></i>Back to List
                 </a>
 
-                <a asp-action="Edit" asp-route-id="@Model?.MessageId"
-                   class="btn btn-primary rounded-pill px-4">
-                    <i class="bi bi-pencil-square me-2"></i>Edit
-                </a>
+                @if (User.IsInRole("Admin") || Model?.CreatedBy == User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)
+                {
+                    <a asp-action="Edit" asp-route-id="@Model?.MessageId"
+                       class="btn btn-primary rounded-pill px-4">
+                        <i class="bi bi-pencil-square me-2"></i>Edit
+                    </a>
+                }
             </div>
 
         </div>

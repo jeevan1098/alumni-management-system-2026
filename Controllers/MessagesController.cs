@@ -1,4 +1,4 @@
-﻿using Alumni_Management_System.Data;
+using Alumni_Management_System.Data;
 using Alumni_Management_System.Models;
 using Alumni_Management_System.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
@@ -98,6 +98,10 @@ namespace Alumni_Management_System.Controllers
             {
                 return NotFound();
             }
+            if (!CanEdit(message))
+            {
+                return NotYourMessage();
+            }
             // No dropdown needed - CreatedBy cannot be edited
             return View(message);
         }
@@ -117,6 +121,10 @@ namespace Alumni_Management_System.Controllers
             if (originalMessage == null)
             {
                 return NotFound();
+            }
+            if (!CanEdit(originalMessage))
+            {
+                return NotYourMessage();
             }
 
             message.CreatedBy = originalMessage.CreatedBy;
@@ -163,6 +171,13 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
+            var inUse = await InUseReasonAsync(message);
+            if (inUse != null)
+            {
+                TempData["ErrorMessage"] = inUse;
+                return RedirectToAction(nameof(Index));
+            }
+
             return View(message);
         }
 
@@ -175,12 +190,37 @@ namespace Alumni_Management_System.Controllers
             var message = await _context.Messages.FindAsync(id);
             if (message != null)
             {
+                var inUse = await InUseReasonAsync(message);
+                if (inUse != null)
+                {
+                    TempData["ErrorMessage"] = inUse;
+                    return RedirectToAction(nameof(Index));
+                }
+
                 _context.Messages.Remove(message);
                 await _context.SaveChangesAsync();
                 TempData["SuccessMessage"] = "Message deleted successfully!";
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        // Admins can edit any message; Staff only the ones they wrote.
+        private bool CanEdit(Message message) =>
+            User.IsInRole(Constants.AdminRole) || message.CreatedBy == _userManager.GetUserId(User);
+
+        private IActionResult NotYourMessage()
+        {
+            TempData["ErrorMessage"] = "You can only edit messages you created.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // A sent message is the record of what alumni received, so it stays.
+        private async Task<string> InUseReasonAsync(Message message)
+        {
+            var sentTo = await _context.AlumniMessages.CountAsync(am => am.MessageId == message.MessageId);
+            return sentTo == 0 ? null
+                : $"\"{message.Title}\" can't be deleted - it was sent to {sentTo} {(sentTo == 1 ? "alumnus" : "alumni")} and is kept as a record of what they received.";
         }
 
         private bool MessageExists(int id)
@@ -197,7 +237,8 @@ namespace Alumni_Management_System.Controllers
                 .Select(x => x.AlumniId)
                 .ToListAsync();
 
-            var data = await _context.Alumni
+            // Only alumni inside the sender's scope (see AccessScopeService.ApplyTo).
+            var data = await (await GetScopedAlumniAsync())
                 .Where(a => a.SolicitationCode == true)
                 .Include(a => a.AlumniDegrees)
                     .ThenInclude(d => d.Degree)
@@ -237,13 +278,23 @@ namespace Alumni_Management_System.Controllers
 
 
         [HttpPost]
-        [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> SaveSelectedAlumniMessage(int MessageId, List<AlumniMailingViewmodel> model)
         {
             // ✅ Include both selected + already mapped
-            var selectedAlumni = model
+            var selectedIds = model
                 .Where(x => x.IsSelected || x.IsAlreadyMapped)
+                .Select(x => x.AlumniId)
+                .Distinct()
                 .ToList();
+
+            // Recipients and their emails come from the database, not the
+            // posted form - only alumni inside the sender's scope who allow
+            // contact, so neither the scope nor the opt-out can be bypassed.
+            var selectedAlumni = await (await GetScopedAlumniAsync())
+                .Where(a => selectedIds.Contains(a.AlumniId) && a.SolicitationCode)
+                .Select(a => new { a.AlumniId, a.PermanentEmail })
+                .ToListAsync();
 
             List<string> emailsToSend = new List<string>();
 
@@ -292,6 +343,14 @@ namespace Alumni_Management_System.Controllers
 
             return RedirectToAction("Index");
         }
+        private async Task<IQueryable<Alumni>> GetScopedAlumniAsync()
+        {
+            var currentUser = await _userManager.GetUserAsync(User);
+            var roles = await _userManager.GetRolesAsync(currentUser);
+            var scope = await Services.AccessScopeService.GetScopeAsync(_context, currentUser, roles);
+            return Services.AccessScopeService.ApplyTo(_context.Alumni, scope);
+        }
+
         private async Task SendEmailAsync(List<string> emails, string subject, string body)
         {
             var htmlBody = $@"

@@ -2,6 +2,9 @@
 
 @{
     ViewData["Title"] = "Create User";
+    // Only the colleges/departments the signed-in admin may grant.
+    var scopeOptions = (List<Alumni_Management_System.Models.ViewModels.ScopeCollegeOption>)ViewData["ScopeOptions"];
+    var actorIsLimited = (bool)ViewData["ActorIsLimited"];
 }
 
 <div class="container mt-5 mb-5">
@@ -60,6 +63,35 @@
                     </select>
                     <span asp-validation-for="Role" class="text-danger"></span>
                     <small class="text-muted">Two-factor authentication is mandatory and will be enabled automatically.</small>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-semibold">
+                        @if (actorIsLimited)
+                        {
+                            <span class="text-danger">*</span>
+                        }
+                        Access Scope
+                    </label>
+                    @await Html.PartialAsync("_ScopePicker", new Alumni_Management_System.Models.ViewModels.ScopePickerModel
+                    {
+                        Options = scopeOptions,
+                        SelectedCollegeIds = Model.CollegeIds ?? new List<int>(),
+                        SelectedDepartmentIds = Model.DepartmentIds ?? new List<int>(),
+                        IdPrefix = "create"
+                    })
+                    <span asp-validation-for="CollegeIds" class="text-danger"></span>
+                    <small class="text-muted d-block">
+                        @if (actorIsLimited)
+                        {
+                            <text>Tick at least one. Your own access is limited, so the new user can only get what's in your scope.</text>
+                        }
+                        else
+                        {
+                            <text>Tick a whole college, or just some of its departments, to limit this user. Leave everything unticked for system-wide access.</text>
+                        }
+                        Alumni with an External degree are visible to everyone.
+                    </small>
                 </div>
 
                 <div class="d-flex justify-content-between mt-4">

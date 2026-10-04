@@ -1,4 +1,4 @@
-﻿@model Alumni_Management_System.Models.Alumni
+@model Alumni_Management_System.Models.Alumni
 @using Microsoft.AspNetCore.Identity
 @using Alumni_Management_System.Models
 @inject UserManager<AppUser> UserManager
@@ -165,7 +165,7 @@
                             </label>
                             @if (isAdmin)
                             {
-                                <input asp-for="GraduationYear" class="form-control" type="number" min="1950" max="2100" placeholder="e.g. 2024" />
+                                <input asp-for="GraduationYear" class="form-control" type="number" min="@GraduationYearAttribute.Earliest" max="@GraduationYearAttribute.Latest" placeholder="e.g. 2024" />
                             }
                             else
                             {
@@ -176,9 +176,22 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label asp-for="CollegeId" class="form-label"></label>
-                            <select asp-for="CollegeId" class="form-select" asp-items="ViewBag.CollegeId">
-                                <option value="">Select College...</option>
-                            </select>
+                            @if (isAdmin)
+                            {
+                                <select asp-for="CollegeId" class="form-select" asp-items="ViewBag.CollegeId">
+                                    <option value="">Select College...</option>
+                                </select>
+                            }
+                            else
+                            {
+                                @* Set from the most recent degree and decides which scoped
+                                   staff can see this profile, so alumni can't change it
+                                   (the server ignores a posted value too). *@
+                                <select asp-for="CollegeId" class="form-select" asp-items="ViewBag.CollegeId" disabled>
+                                    <option value="">Not set yet</option>
+                                </select>
+                                <small class="form-text text-info"><i class="bi bi-lock"></i> Set from your most recent degree</small>
+                            }
                             <span asp-validation-for="CollegeId" class="text-danger"></span>
                         </div>
                     </div>

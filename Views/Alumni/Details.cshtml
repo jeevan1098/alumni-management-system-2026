@@ -1,7 +1,11 @@
-﻿@model Alumni_Management_System.Models.Alumni
+@model Alumni_Management_System.Models.Alumni
 
 @{
     ViewData["Title"] = "Alumni Profile";
+    // Set by AlumniController.Details: Edit only for the owner or an admin
+    // (already limited to their scope); settings/status hidden from other alumni.
+    var canEdit = ViewData["CanEdit"] as bool? == true;
+    var showSettings = ViewData["ShowSettings"] as bool? == true;
 }
 
 <div class="container mt-5">
@@ -30,7 +34,14 @@
                     }
 
                     <p class="mb-1">
-                        🎓 Class of <strong>@Model.GraduationYear</strong>
+                        @if (Model.GraduationYear > 0)
+                        {
+                            <text>🎓 Class of <strong>@Model.GraduationYear</strong></text>
+                        }
+                        else
+                        {
+                            <text>🎓 Graduation year: <span class="text-muted">Not provided</span></text>
+                        }
                     </p>
 
                     <p class="mb-0 text-info">
@@ -92,71 +103,86 @@
                         <p class="mb-1">🏠 Address: @Model.Address</p>
                     }
 
-                    @if (!string.IsNullOrEmpty(Model.SocialMediaAccount))
+                    @if (Model.HasSafeSocialMediaLink)
                     {
                         <p class="mb-1">
                             🌐 Social Media:
-                            <a href="@Model.SocialMediaAccount" target="_blank">
+                            <a href="@Model.SocialMediaAccount" target="_blank" rel="noopener noreferrer">
                                 View Profile
                             </a>
                         </p>
                     }
+                    else if (!string.IsNullOrEmpty(Model.SocialMediaAccount))
+                    {
+                        @* Not an http(s) address - shown as text, never as a link *@
+                        <p class="mb-1">🌐 Social Media: @Model.SocialMediaAccount</p>
+                    }
                 </div>
             </div>
 
-            <hr />
+            @if (showSettings)
+            {
+                <hr />
 
-            <!-- Settings & Status Section -->
-            <div class="mt-4">
-                <h5 class="fw-bold mb-3">Profile Settings & Status</h5>
+                <!-- Settings & Status Section -->
+                <div class="mt-4">
+                    <h5 class="fw-bold mb-3">Profile Settings & Status</h5>
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <p class="mb-0">
-                            📩 @Html.DisplayNameFor(m => m.SolicitationCode):
-                            <span class="badge @(Model.SolicitationCode ? "bg-success" : "bg-secondary")">
-                                @(Model.SolicitationCode ? "Yes" : "No")
-                            </span>
-                        </p>
-                        <p class="form-text mt-0 mb-2">@Alumni_Management_System.Models.Alumni.SolicitationHelp</p>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-0">
+                                📩 @Html.DisplayNameFor(m => m.SolicitationCode):
+                                <span class="badge @(Model.SolicitationCode ? "bg-success" : "bg-secondary")">
+                                    @(Model.SolicitationCode ? "Yes" : "No")
+                                </span>
+                            </p>
+                            <p class="form-text mt-0 mb-2">@Alumni_Management_System.Models.Alumni.SolicitationHelp</p>
 
-                        <p class="mb-0">
-                            🔒 @Html.DisplayNameFor(m => m.Privacy):
-                            <span class="badge @(Model.Privacy ? "bg-warning text-dark" : "bg-secondary")">
-                                @(Model.Privacy ? "Yes - contact details hidden" : "No - contact details visible")
-                            </span>
-                        </p>
-                        <p class="form-text mt-0 mb-2">@Alumni_Management_System.Models.Alumni.PrivacyHelp</p>
-                    </div>
+                            <p class="mb-0">
+                                🔒 @Html.DisplayNameFor(m => m.Privacy):
+                                <span class="badge @(Model.Privacy ? "bg-warning text-dark" : "bg-secondary")">
+                                    @(Model.Privacy ? "Yes - contact details hidden" : "No - contact details visible")
+                                </span>
+                            </p>
+                            <p class="form-text mt-0 mb-2">@Alumni_Management_System.Models.Alumni.PrivacyHelp</p>
+                        </div>
 
-                    <div class="col-md-6">
-                        <p class="mb-1">
-                            @if (Model.IsActive)
-                            {
-                                <span class="badge bg-success">Active</span>
-                            }
-                            else
-                            {
-                                <span class="badge bg-danger">Inactive</span>
-                            }
-                        </p>
+                        <div class="col-md-6">
+                            <p class="mb-1">
+                                @if (Model.IsActive)
+                                {
+                                    <span class="badge bg-success">Active</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-danger">Inactive</span>
+                                }
+                            </p>
 
-                        <p class="mb-1">
-                            🕒 Last Updated:
-                            @Model.LastUpdated.ToString("MMMM dd, yyyy hh:mm tt")
-                        </p>
+                            <p class="mb-1">
+                                🕒 Last Updated:
+                                @Model.LastUpdated.ToString("MMMM dd, yyyy hh:mm tt")
+                            </p>
+                        </div>
                     </div>
                 </div>
-            </div>
+            }
 
         </div>
 
         <!-- Footer -->
         <div class="card-footer bg-light d-flex justify-content-between rounded-bottom-4">
-            <a asp-action="Edit" asp-route-id="@Model?.AlumniId"
-               class="btn btn-primary rounded-pill px-4">
-                Edit Profile
-            </a>
+            @if (canEdit)
+            {
+                <a asp-action="Edit" asp-route-id="@Model?.AlumniId"
+                   class="btn btn-primary rounded-pill px-4">
+                    Edit Profile
+                </a>
+            }
+            else
+            {
+                <span></span>
+            }
 
             <a asp-action="Index"
                class="btn btn-outline-secondary rounded-pill px-4">

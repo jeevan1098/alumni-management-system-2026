@@ -56,6 +56,14 @@ namespace Alumni_Management_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("DepartmentId,CollegeId,DepartmentName,IsActive")] Department department)
         {
+            // Department names must be unique within their college.
+            if (!string.IsNullOrWhiteSpace(department.DepartmentName)
+                && await _context.Departments.AnyAsync(d => d.CollegeId == department.CollegeId
+                    && d.DepartmentName.Trim() == department.DepartmentName.Trim() && d.DepartmentId != department.DepartmentId))
+            {
+                ModelState.AddModelError(nameof(Department.DepartmentName), "This college already has a department with this name.");
+            }
+
             if (ModelState.IsValid)
             {
                 _context.Add(department);
@@ -91,6 +99,14 @@ namespace Alumni_Management_System.Controllers
             if (id != department.DepartmentId)
             {
                 return NotFound();
+            }
+
+            // Department names must be unique within their college.
+            if (!string.IsNullOrWhiteSpace(department.DepartmentName)
+                && await _context.Departments.AnyAsync(d => d.CollegeId == department.CollegeId
+                    && d.DepartmentName.Trim() == department.DepartmentName.Trim() && d.DepartmentId != department.DepartmentId))
+            {
+                ModelState.AddModelError(nameof(Department.DepartmentName), "This college already has a department with this name.");
             }
 
             if (ModelState.IsValid)
@@ -133,6 +149,13 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
+            var inUse = await InUseReasonAsync(department);
+            if (inUse != null)
+            {
+                TempData["ErrorMessage"] = inUse;
+                return RedirectToAction(nameof(Index));
+            }
+
             return View(department);
         }
 
@@ -144,11 +167,30 @@ namespace Alumni_Management_System.Controllers
             var department = await _context.Departments.FindAsync(id);
             if (department != null)
             {
+                var inUse = await InUseReasonAsync(department);
+                if (inUse != null)
+                {
+                    TempData["ErrorMessage"] = inUse;
+                    return RedirectToAction(nameof(Index));
+                }
+
                 _context.Departments.Remove(department);
             }
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
+        }
+
+        // Why this department can't be deleted yet, or null if nothing points
+        // to it. The database refuses the delete while any of these exist.
+        private async Task<string> InUseReasonAsync(Department department)
+        {
+            var inUse = Services.InUseMessage.Describe(
+                (await _context.DegreePrograms.CountAsync(d => d.DepartmentId == department.DepartmentId), "degree program", "degree programs"),
+                (await _context.StudentOrganizations.CountAsync(o => o.DepartmentId == department.DepartmentId), "student organization", "student organizations"),
+                (await _context.UserAccessScopes.CountAsync(s => s.DepartmentId == department.DepartmentId), "user access scope", "user access scopes"));
+            return inUse == null ? null
+                : $"{department.DepartmentName} can't be deleted - it still has {inUse}. Move or remove those first, or mark the department inactive.";
         }
 
         private bool DepartmentExists(int id)

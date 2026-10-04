@@ -51,6 +51,7 @@ namespace Alumni_Management_System.Controllers
         }
 
         // GET: StudentOrganizations/Create
+        [Authorize(Roles = "Admin")] // Staff have read-only access
         public async Task<IActionResult> Create()
         {
             ViewData["CollegeId"] = new SelectList(await _context.Colleges.Where(c => c.IsActive).ToListAsync(), "CollegeId", "CollegeName");
@@ -63,6 +64,7 @@ namespace Alumni_Management_System.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")] // Staff have read-only access
         public async Task<IActionResult> Create([Bind("OrganizationId,OrganizationName,CollegeId,DepartmentId,IsActive")] StudentOrganization studentOrganization)
         {
             if (ModelState.IsValid)
@@ -77,6 +79,7 @@ namespace Alumni_Management_System.Controllers
         }
 
         // GET: StudentOrganizations/Edit/5
+        [Authorize(Roles = "Admin")] // Staff have read-only access
         public async Task<IActionResult> Edit(int? id)
         {
             if (id == null)
@@ -99,6 +102,7 @@ namespace Alumni_Management_System.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")] // Staff have read-only access
         public async Task<IActionResult> Edit(int id, [Bind("OrganizationId,OrganizationName,CollegeId,DepartmentId,IsActive")] StudentOrganization studentOrganization)
         {
             if (id != studentOrganization.OrganizationId)
@@ -132,6 +136,7 @@ namespace Alumni_Management_System.Controllers
         }
 
         // GET: StudentOrganizations/Delete/5
+        [Authorize(Roles = "Admin")] // Staff have read-only access
         public async Task<IActionResult> Delete(int? id)
         {
             if (id == null)
@@ -148,22 +153,47 @@ namespace Alumni_Management_System.Controllers
                 return NotFound();
             }
 
+            var inUse = await InUseReasonAsync(studentOrganization);
+            if (inUse != null)
+            {
+                TempData["ErrorMessage"] = inUse;
+                return RedirectToAction(nameof(Index));
+            }
+
             return View(studentOrganization);
         }
 
         // POST: StudentOrganizations/Delete/5
         [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
+        [Authorize(Roles = "Admin")] // Staff have read-only access
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var studentOrganization = await _context.StudentOrganizations.FindAsync(id);
             if (studentOrganization != null)
             {
+                var inUse = await InUseReasonAsync(studentOrganization);
+                if (inUse != null)
+                {
+                    TempData["ErrorMessage"] = inUse;
+                    return RedirectToAction(nameof(Index));
+                }
+
                 _context.StudentOrganizations.Remove(studentOrganization);
             }
 
             await _context.SaveChangesAsync();
             return RedirectToAction(nameof(Index));
+        }
+
+        // Deleting an organization would silently delete every alumnus's
+        // membership (the database cascades), so refuse while any exist.
+        private async Task<string> InUseReasonAsync(StudentOrganization studentOrganization)
+        {
+            var inUse = Services.InUseMessage.Describe(
+                (await _context.AlumniOrganizations.CountAsync(ao => ao.OrganizationId == studentOrganization.OrganizationId), "alumnus is a member", "alumni are members"));
+            return inUse == null ? null
+                : $"{studentOrganization.OrganizationName} can't be deleted - {inUse}. Mark the organization inactive instead so their records are kept.";
         }
 
         private bool StudentOrganizationExists(int id)
