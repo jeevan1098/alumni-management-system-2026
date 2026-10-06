@@ -281,64 +281,78 @@ namespace Alumni_Management_System.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> SaveSelectedAlumniMessage(int MessageId, List<AlumniMailingViewmodel> model)
         {
-            // ✅ Include both selected + already mapped
+            var message = await _context.Messages.FindAsync(MessageId);
+            if (message == null)
+            {
+                return NotFound();
+            }
+
+            // Only newly ticked alumni - the greyed-out rows already received it.
             var selectedIds = model
-                .Where(x => x.IsSelected || x.IsAlreadyMapped)
+                .Where(x => x.IsSelected && !x.IsAlreadyMapped)
                 .Select(x => x.AlumniId)
                 .Distinct()
                 .ToList();
 
+            var alreadySentIds = await _context.AlumniMessages
+                .Where(x => x.MessageId == MessageId)
+                .Select(x => x.AlumniId)
+                .ToListAsync();
+
             // Recipients and their emails come from the database, not the
             // posted form - only alumni inside the sender's scope who allow
             // contact, so neither the scope nor the opt-out can be bypassed.
-            var selectedAlumni = await (await GetScopedAlumniAsync())
-                .Where(a => selectedIds.Contains(a.AlumniId) && a.SolicitationCode)
+            var recipients = await (await GetScopedAlumniAsync())
+                .Where(a => selectedIds.Contains(a.AlumniId) && a.SolicitationCode
+                            && !alreadySentIds.Contains(a.AlumniId)
+                            && a.PermanentEmail != null && a.PermanentEmail != "")
                 .Select(a => new { a.AlumniId, a.PermanentEmail })
                 .ToListAsync();
 
-            List<string> emailsToSend = new List<string>();
-
-            foreach (var item in selectedAlumni)
-            {
-                // ✅ Prevent duplicate mapping
-                var exists = await _context.AlumniMessages
-                    .AnyAsync(x => x.MessageId == MessageId && x.AlumniId == item.AlumniId);
-
-                if (!exists)
-                {
-                    _context.AlumniMessages.Add(new AlumniMessage
-                    {
-                        MessageId = MessageId,
-                        AlumniId = item.AlumniId,
-                        SentAt = DateTime.Now
-                    });
-                }
-
-                // ✅ Always send email (even if already mapped)
-                if (!string.IsNullOrEmpty(item.PermanentEmail))
-                {
-                    emailsToSend.Add(item.PermanentEmail);
-                }
-            }
-
-            // ✅ Save DB first
-            await _context.SaveChangesAsync();
-
-            // ✅ Get message content
-            var message = await _context.Messages.FindAsync(MessageId);
-
-            // ✅ Send emails
-            if (message != null && emailsToSend.Any())
-            {
-                await SendEmailAsync(
-                    emailsToSend.Distinct().ToList(), // avoid duplicates
-                    message.Title,
-                    message.MessageBody
-                );
-            }
-            else
+            if (!recipients.Any())
             {
                 TempData["ErrorMessage"] = "No alumni were selected (or none have an email on file) - nothing was sent.";
+                return RedirectToAction("Index");
+            }
+
+            var htmlBody = BuildEmailBody(message.MessageBody);
+            int sent = 0;
+            var failures = new List<string>();
+
+            foreach (var item in recipients)
+            {
+                try
+                {
+                    await _emailSender.SendEmailAsync(item.PermanentEmail, message.Title, htmlBody);
+                }
+                catch (Exception ex)
+                {
+                    failures.Add(ex.Message);
+                    continue;
+                }
+
+                // Recorded only once the email actually went out, so a failed
+                // send leaves the alumnus selectable for another try.
+                _context.AlumniMessages.Add(new AlumniMessage
+                {
+                    MessageId = MessageId,
+                    AlumniId = item.AlumniId,
+                    SentAt = DateTime.Now
+                });
+                sent++;
+            }
+
+            await _context.SaveChangesAsync();
+
+            if (sent > 0)
+            {
+                TempData["SuccessMessage"] = $"{sent} {(sent == 1 ? "email" : "emails")} sent successfully.";
+            }
+            if (failures.Any())
+            {
+                // Usually one cause for all of them (e.g. email not configured), so list each reason once.
+                var reasons = string.Join(" ", failures.Distinct());
+                TempData["ErrorMessage"] = $"{failures.Count} {(failures.Count == 1 ? "email" : "emails")} failed to send: {reasons}";
             }
 
             return RedirectToAction("Index");
@@ -351,37 +365,11 @@ namespace Alumni_Management_System.Controllers
             return Services.AccessScopeService.ApplyTo(_context.Alumni, scope);
         }
 
-        private async Task SendEmailAsync(List<string> emails, string subject, string body)
-        {
-            var htmlBody = $@"
+        private static string BuildEmailBody(string body) => $@"
                     <p>Hello,</p>
                     <p>{body}</p>
                     <br/>
                     <p>Thanks,<br/>Alumni Management System,<br/>University of South Alabama</p>";
-
-            int successCount = 0;
-            int failCount = 0;
-
-            foreach (var email in emails)
-            {
-                try
-                {
-                    await _emailSender.SendEmailAsync(email, subject, htmlBody);
-                    successCount++;
-                }
-                catch
-                {
-                    failCount++;
-                }
-            }
-
-            TempData["SuccessMessage"] = $"{successCount} emails sent successfully.";
-
-            if (failCount > 0)
-            {
-                TempData["ErrorMessage"] = $"{failCount} emails failed to send.";
-            }
-        }
 
     }
 }

@@ -434,7 +434,7 @@ namespace Alumni_Management_System.Controllers
                         Postcode = r.Postcode,
                         Country = r.Country,
                         Phone = r.Phone,
-                        IsActive = false,
+                        IsActive = true, // living - see Alumni.IsActiveHelp
                         Privacy = true,
                         // On by default so admins can message imported alumni right away;
                         // only new records get this - existing alumni keep their choice.

@@ -210,7 +210,8 @@ namespace Alumni_Management_System.Controllers
         {
             // No need for IdentityUserId dropdown since we're using JagId now
             ViewData["CollegeId"] = new SelectList(await _context.Colleges.Where(c => c.IsActive).ToListAsync(), "CollegeId", "CollegeName");
-            return View();
+            // Is Active means the alumnus is living, so new profiles start ticked.
+            return View(new Alumni { IsActive = true });
         }
 
         // POST: Alumni/Create
@@ -233,7 +234,6 @@ namespace Alumni_Management_System.Controllers
             if (ModelState.IsValid)
             {
                 alumni.LastUpdated = DateTime.Now;
-                alumni.IsActive = false;
                 _context.Add(alumni);
 
                 // Every Alumni record needs a matching Registry entry, or

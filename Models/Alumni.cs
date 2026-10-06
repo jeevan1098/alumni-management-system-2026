@@ -160,6 +160,11 @@ public partial class Alumni
         "When checked, the alumni office may send messages to this alumnus (newsletters, events, announcements and fundraising). " +
         "This only controls messages - it doesn't change who can see the profile or contact details.";
 
+    public const string IsActiveHelp =
+        "Checked means the alumnus is living. Every alumnus is active by default - " +
+        "uncheck this only after confirming that the alumnus has passed away. " +
+        "Only administrators can see or change this.";
+
     // Set by HideContactDetails() so views can show "Private" instead of a blank.
     [NotMapped]
     public bool ContactHidden { get; private set; }

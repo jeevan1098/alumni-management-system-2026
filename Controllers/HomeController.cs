@@ -203,7 +203,8 @@ namespace Alumni_Management_System.Controllers
 
             if (alumni != null)
             {
-                int total = 18, done = 0;
+                // Same 17 fields as the Edit page's completion bar.
+                int total = 17, done = 0;
 
                 if (!string.IsNullOrEmpty(alumni.FirstName)) done++;
                 if (!string.IsNullOrEmpty(alumni.LastName)) done++;
@@ -214,6 +215,7 @@ namespace Alumni_Management_System.Controllers
                 if (!string.IsNullOrEmpty(alumni.Address)) done++;
                 if (!string.IsNullOrEmpty(alumni.City)) done++;
                 if (!string.IsNullOrEmpty(alumni.State)) done++;
+                if (!string.IsNullOrEmpty(alumni.Postcode)) done++;
                 if (!string.IsNullOrEmpty(alumni.Country)) done++;
                 if (alumni.GraduationYear > 0) done++;
                 if (!string.IsNullOrEmpty(alumni.StudentEmail)) done++;
@@ -221,7 +223,6 @@ namespace Alumni_Management_System.Controllers
                 if (!string.IsNullOrEmpty(alumni.SocialMediaAccount)) done++;
                 if (!string.IsNullOrEmpty(alumni.Prefix)) done++;
                 if (alumni.Privacy) done++;
-                if (alumni.IsActive) done++;
 
                 ViewData["ProfileCompletion"] = (int)((double)done / total * 100);
             }

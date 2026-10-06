@@ -11,7 +11,7 @@
     var isAdmin = userRole == "Admin";
 
     // Calculate profile completion
-    int totalFields = 18;
+    int totalFields = 17;
     int completedFields = 0;
 
     if (!string.IsNullOrEmpty(Model.FirstName)) completedFields++;
@@ -31,7 +31,6 @@
     if (!string.IsNullOrEmpty(Model.SocialMediaAccount)) completedFields++;
     if (!string.IsNullOrEmpty(Model.Prefix)) completedFields++;
     if (Model.Privacy) completedFields++;
-    if (Model.IsActive) completedFields++;
 
     int completionPercentage = (int)((double)completedFields / totalFields * 100);
 }
@@ -322,6 +321,7 @@
                             <input asp-for="IsActive" class="form-check-input me-2 border-primary" type="checkbox" />
                             <label asp-for="IsActive" class="form-check-label fw-semibold"></label>
                         </div>
+                        <div class="form-text mb-2"><i class="bi bi-info-circle me-1"></i>@Alumni_Management_System.Models.Alumni.IsActiveHelp</div>
                         <span asp-validation-for="IsActive" class="text-danger"></span>
                     </div>
                 }
