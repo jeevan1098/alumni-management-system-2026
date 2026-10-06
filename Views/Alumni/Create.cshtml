@@ -448,7 +448,8 @@
                     <div class="col-md-4 mb-3">
                         <label class="form-label fw-semibold">&nbsp;</label>
                         <div class="form-check mt-2">
-                            <input asp-for="IsActive" class="form-check-input me-2 border-primary" type="checkbox" />
+                            @* Is Active means living, so a new profile starts ticked; a redisplayed form keeps the admin's choice. *@
+                            <input asp-for="IsActive" class="form-check-input me-2 border-primary" type="checkbox" checked="@(Model?.IsActive ?? true)" />
                             <label asp-for="IsActive" class="form-check-label fw-semibold"></label>
                         </div>
                         <div class="form-text"><i class="bi bi-info-circle me-1"></i>@Alumni_Management_System.Models.Alumni.IsActiveHelp</div>
