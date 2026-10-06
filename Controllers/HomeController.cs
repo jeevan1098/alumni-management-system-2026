@@ -211,7 +211,7 @@ namespace Alumni_Management_System.Controllers
                 if (!string.IsNullOrEmpty(alumni.PermanentEmail)) done++;
                 if (!string.IsNullOrEmpty(alumni.Phone)) done++;
                 if (!string.IsNullOrEmpty(alumni.Gender)) done++;
-                if (alumni.DateOfBirth != null) done++;
+                if (alumni.AgeAtGraduation != null) done++;
                 if (!string.IsNullOrEmpty(alumni.Address)) done++;
                 if (!string.IsNullOrEmpty(alumni.City)) done++;
                 if (!string.IsNullOrEmpty(alumni.State)) done++;

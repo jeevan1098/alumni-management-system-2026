@@ -24,7 +24,7 @@ public partial class AlumniOrganization
 
     [Column("officer_roles")]
     [StringLength(150)]
-    [Display(Name = "Officer Roles")]
+    [Display(Name = "Roles")]
     public string OfficerRoles { get; set; }
 
     [ForeignKey("AlumniId")]

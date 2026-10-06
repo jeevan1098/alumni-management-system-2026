@@ -63,9 +63,16 @@
             <label asp-for="ConfirmPassword" class="form-label"></label>
             <input asp-for="ConfirmPassword" class="form-control" type="password" />
             <span asp-validation-for="ConfirmPassword" class="text-danger"></span>
+            <div id="pwMatch" class="form-text d-none"></div>
         </div>
         <div class="col-12 form-text mt-n2 mb-3">
-            Minimum 8 characters, with uppercase, lowercase, a number and a special character.
+            <ul id="pwRules" class="list-unstyled mb-0">
+                <li data-rule="length"><i class="bi bi-circle me-1"></i>At least 8 characters</li>
+                <li data-rule="upper"><i class="bi bi-circle me-1"></i>An uppercase letter</li>
+                <li data-rule="lower"><i class="bi bi-circle me-1"></i>A lowercase letter</li>
+                <li data-rule="digit"><i class="bi bi-circle me-1"></i>A number</li>
+                <li data-rule="special"><i class="bi bi-circle me-1"></i>A special character</li>
+            </ul>
         </div>
     </div>
 
@@ -91,4 +98,42 @@
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        // Live feedback while typing, so a weak or mismatched password is
+        // obvious before the form is submitted.
+        (function () {
+            const pw = document.getElementById('Password');
+            const confirm = document.getElementById('ConfirmPassword');
+            const match = document.getElementById('pwMatch');
+            const rules = {
+                length: v => v.length >= 8,
+                upper: v => /[A-Z]/.test(v),
+                lower: v => /[a-z]/.test(v),
+                digit: v => /\d/.test(v),
+                special: v => /[^a-zA-Z0-9]/.test(v)
+            };
+
+            function update() {
+                const v = pw.value;
+                document.querySelectorAll('#pwRules li').forEach(li => {
+                    const icon = li.querySelector('i');
+                    if (!v) { icon.className = 'bi bi-circle me-1'; return; }
+                    icon.className = 'bi me-1 ' + (rules[li.dataset.rule](v)
+                        ? 'bi-check-circle-fill text-success' : 'bi-x-circle-fill text-danger');
+                });
+
+                if (!confirm.value) { match.classList.add('d-none'); return; }
+                const ok = confirm.value === v;
+                match.classList.remove('d-none');
+                match.className = 'form-text ' + (ok ? 'text-success' : 'text-danger');
+                match.innerHTML = ok
+                    ? '<i class="bi bi-check-circle-fill me-1"></i>Passwords match'
+                    : '<i class="bi bi-x-circle-fill me-1"></i>Passwords do not match';
+            }
+
+            pw.addEventListener('input', update);
+            confirm.addEventListener('input', update);
+            update();
+        })();
+    </script>
 }

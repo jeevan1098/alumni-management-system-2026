@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
@@ -64,9 +64,10 @@ public partial class Alumni
     [StringLength(20)]
     public string Gender { get; set; }
 
-    [Column("date_of_birth")]
-    [Display(Name = "Date of Birth")]
-    public DateOnly? DateOfBirth { get; set; }
+    [Column("age_at_graduation")]
+    [Range(15, 100, ErrorMessage = "Age at graduation must be between 15 and 100.")]
+    [Display(Name = "Age at Graduation")]
+    public int? AgeAtGraduation { get; set; }
 
     [Column("college_id")]
     [Display(Name = "College")]
@@ -179,7 +180,7 @@ public partial class Alumni
         Phone = null;
         Address = null;
         Postcode = null;
-        DateOfBirth = null;
+        AgeAtGraduation = null;
         SocialMediaAccount = null;
         ContactHidden = true;
     }

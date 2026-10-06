@@ -233,6 +233,7 @@ namespace Alumni_Management_System.Controllers
             ("Degree", "BSCSC", false, "Degree code (defaults to the Major when blank)"),
             ("Grad", "202610", false, "Graduation term (202610) or year (2026)"),
             ("Inst GPA", "3.45", false, "Institutional GPA for the degree"),
+            ("Age at Grad", "22", false, "Age at graduation (15-100) - a later import overwrites the saved value"),
             ("Street Line 1", "123 Main Street", false, "Street address"),
             ("Street Line 2", "Apt 4", false, "Apartment / suite (joined to Street Line 1)"),
             ("City", "Mobile", false, "City"),
@@ -281,9 +282,12 @@ namespace Alumni_Management_System.Controllers
         }
 
         // One parsed row from either the CSV or Excel file.
+        // Header names accepted for the age column - the client's export name isn't confirmed yet.
+        private static readonly string[] AgeHeaders = { "Age at Grad", "Age at Graduation", "Grad Age", "Age" };
+
         private sealed class ImportRow
         {
-            public string JagId, FirstName, LastName, GradRaw, Email, Address, City, State, Postcode, Country, Phone;
+            public string JagId, FirstName, LastName, GradRaw, AgeRaw, Email, Address, City, State, Postcode, Country, Phone;
         }
 
         // POST: AlumniRegistries/BulkImport
@@ -415,6 +419,21 @@ namespace Alumni_Management_System.Controllers
                     int.TryParse(yearPart, out gradYear);
                 }
 
+                // Age at graduation - a bad value is reported but doesn't sink
+                // the rest of the row.
+                int? ageAtGrad = null;
+                if (!string.IsNullOrWhiteSpace(r.AgeRaw))
+                {
+                    if (decimal.TryParse(r.AgeRaw, out var age) && age >= 15 && age <= 100)
+                    {
+                        ageAtGrad = (int)age;
+                    }
+                    else
+                    {
+                        errors.Add($"{rowLabel}: Age at graduation '{r.AgeRaw}' isn't a number from 15 to 100 - left unchanged for {r.JagId}, other fields still imported");
+                    }
+                }
+
                 // Bulk import populates the actual Alumni table too (not just
                 // the Registry stub) so the JagId -> RegisterAlumni self-service
                 // flow (which requires an existing Alumni row) works, and so
@@ -428,6 +447,7 @@ namespace Alumni_Management_System.Controllers
                         LastName = r.LastName,
                         PermanentEmail = string.IsNullOrWhiteSpace(email) ? $"{r.JagId.ToLower()}@pending.import" : email,
                         GraduationYear = gradYear,
+                        AgeAtGraduation = ageAtGrad,
                         Address = r.Address,
                         City = r.City,
                         State = r.State,
@@ -460,6 +480,11 @@ namespace Alumni_Management_System.Controllers
                     {
                         changes.Add(a.GraduationYear > 0 ? $"Graduation year {a.GraduationYear} → {gradYear}" : $"Graduation year set to {gradYear}");
                         a.GraduationYear = gradYear;
+                    }
+                    if (ageAtGrad.HasValue && ageAtGrad != a.AgeAtGraduation)
+                    {
+                        changes.Add(a.AgeAtGraduation.HasValue ? $"Age at graduation {a.AgeAtGraduation} → {ageAtGrad}" : $"Age at graduation set to {ageAtGrad}");
+                        a.AgeAtGraduation = ageAtGrad;
                     }
                 }
                 alumniCache[r.JagId] = alumni;
@@ -556,6 +581,7 @@ namespace Alumni_Management_System.Controllers
                                     FirstName = GetCsvField(values, "First Name") ?? values[1].Trim(),
                                     LastName = GetCsvField(values, "Last Name") ?? values[2].Trim(),
                                     GradRaw = GetCsvField(values, "Grad", "Graduation Year") ?? (values.Length > 3 ? values[3].Trim() : null),
+                                    AgeRaw = GetCsvField(values, AgeHeaders),
                                     Email = GetCsvField(values, "UNIV Email", "Email On Record", "OTH Email") ?? (values.Length > 5 ? values[5].Trim() : null),
                                     Address = CombineAddressLines(
                                         GetCsvField(values, "Address", "Street Address", "Address Line 1", "Street Line 1", "Mailing Address"),
@@ -727,6 +753,7 @@ namespace Alumni_Management_System.Controllers
                                         FirstName = firstName,
                                         LastName = lastName,
                                         GradRaw = GetCell(row, "Grad", "Graduation Year"),
+                                        AgeRaw = GetCell(row, AgeHeaders),
                                         Email = GetCell(row, "UNIV Email", "Email On Record", "OTH Email"),
                                         Address = CombineAddressLines(
                                             GetCell(row, "Address", "Street Address", "Address Line 1", "Street Line 1", "Mailing Address"),

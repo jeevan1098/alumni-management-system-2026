@@ -1,4 +1,4 @@
-﻿@* @model Alumni_Management_System.Models.AlumniOrganization
+@* @model Alumni_Management_System.Models.AlumniOrganization
 
 @{
     ViewData["Title"] = "Create";
@@ -97,12 +97,12 @@
 
                     <div class="mb-3">
                         <label asp-for="OfficerRoles" class="form-label fw-semibold">
-                            <span class="text-danger">*</span> Officer Role
+                            <span class="text-danger">*</span> Role
                         </label>
                         <div class="input-group shadow-sm">
                             <span class="input-group-text bg-light"><i class="bi bi-person-badge"></i></span>
                             <select asp-for="OfficerRoles" class="form-select rounded-end-3">
-                                <option value="">-- Select Highest Officer Role --</option>
+                                <option value="">-- Select Highest Role --</option>
                                 <option value="President">President</option>
                                 <option value="Vice President">Vice President</option>
                                 <option value="Secretary">Secretary</option>
@@ -111,7 +111,7 @@
                                 <option value="Member">Member</option>
                             </select>
                         </div>
-                        <small class="form-text text-info">Select the highest-ranking officer role held.</small>
+                        <small class="form-text text-info">Select the highest-ranking role held.</small>
                         <span asp-validation-for="OfficerRoles" class="text-danger"></span>
                     </div>
 

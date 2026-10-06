@@ -1,4 +1,4 @@
-﻿@* @model Alumni_Management_System.Models.AlumniOrganization
+@* @model Alumni_Management_System.Models.AlumniOrganization
 
 @{
     ViewData["Title"] = "Edit";
@@ -31,12 +31,12 @@
             </div>
             <div class="mb-3">
                 <label asp-for="OfficerRoles" class="form-label fw-semibold">
-                    <span class="text-danger">*</span> Officer Role
+                    <span class="text-danger">*</span> Role
                 </label>
                 <div class="input-group shadow-sm">
                     <span class="input-group-text bg-light"><i class="bi bi-person-badge"></i></span>
                     <select asp-for="OfficerRoles" class="form-select rounded-end-3">
-                        <option value="">-- Select Highest Officer Role --</option>
+                        <option value="">-- Select Highest Role --</option>
                         <option value="President">President</option>
                         <option value="Vice President">Vice President</option>
                         <option value="Secretary">Secretary</option>
@@ -45,7 +45,7 @@
                         <option value="Member">Member</option>
                     </select>
                 </div>
-                <small class="form-text text-info">Select the highest-ranking officer role held.</small>
+                <small class="form-text text-info">Select the highest-ranking role held.</small>
                 <span asp-validation-for="OfficerRoles" class="text-danger"></span>
             </div>
 
@@ -139,15 +139,15 @@
 
                 <hr class="my-4" />
 
-                <!-- Officer Role Section -->
+                <!-- Role Section -->
                 <h5 class="fw-bold text-warning mb-3">
                     <i class="bi bi-award-fill me-2 text-warning"></i>
-                    Officer Role
+                    Role
                 </h5>
 
                 <div class="mb-4">
                     <label asp-for="OfficerRoles" class="form-label fw-semibold">
-                        <span class="text-danger">*</span> Highest Officer Role
+                        <span class="text-danger">*</span> Highest Role
                     </label>
 
                     <div class="input-group shadow-sm">
@@ -156,7 +156,7 @@
                         </span>
                         <select asp-for="OfficerRoles"
                                 class="form-select rounded-end-3">
-                            <option value="">-- Select Highest Officer Role --</option>
+                            <option value="">-- Select Highest Role --</option>
                             <option value="President">President</option>
                             <option value="Vice President">Vice President</option>
                             <option value="Secretary">Secretary</option>
@@ -167,7 +167,7 @@
                     </div>
 
                     <small class="text-info">
-                        Select the highest-ranking officer role held.
+                        Select the highest-ranking role held.
                     </small>
                     <span asp-validation-for="OfficerRoles" class="text-danger small"></span>
                 </div>

@@ -2,6 +2,7 @@
 @using Microsoft.AspNetCore.Identity
 @using Alumni_Management_System.Models
 @inject UserManager<AppUser> UserManager
+@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
 
 @{
     ViewData["Title"] = "Edit Profile";
@@ -19,7 +20,7 @@
     if (!string.IsNullOrEmpty(Model.PermanentEmail)) completedFields++;
     if (!string.IsNullOrEmpty(Model.Phone)) completedFields++;
     if (!string.IsNullOrEmpty(Model.Gender)) completedFields++;
-    if (Model.DateOfBirth.HasValue) completedFields++;
+    if (Model.AgeAtGraduation.HasValue) completedFields++;
     if (!string.IsNullOrEmpty(Model.Address)) completedFields++;
     if (!string.IsNullOrEmpty(Model.City)) completedFields++;
     if (!string.IsNullOrEmpty(Model.State)) completedFields++;
@@ -87,7 +88,7 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label asp-for="JagId" class="form-label"></label>
-                            <input asp-for="JagId" class="form-control" placeholder="@JagIdFormat.Example" readonly />
+                            <input asp-for="JagId" class="form-control locked-field" placeholder="@JagIdFormat.Example" readonly />
                             <span asp-validation-for="JagId" class="text-danger"></span>
                             <small class="form-text text-info"><i class="bi bi-lock"></i> JAG ID cannot be changed</small>
                         </div>
@@ -107,7 +108,7 @@
                     <div class="row">
                         <div class="col-md-4 mb-3">
                             <label asp-for="FirstName" class="form-label"></label>
-                            <input asp-for="FirstName" class="form-control" readonly />
+                            <input asp-for="FirstName" class="form-control locked-field" readonly />
                             <span asp-validation-for="FirstName" class="text-danger"></span>
                             <small class="form-text text-info"><i class="bi bi-lock"></i> From Registry</small>
                         </div>
@@ -118,7 +119,7 @@
                         </div>
                         <div class="col-md-4 mb-3">
                             <label asp-for="LastName" class="form-label"></label>
-                            <input asp-for="LastName" class="form-control" readonly />
+                            <input asp-for="LastName" class="form-control locked-field" readonly />
                             <span asp-validation-for="LastName" class="text-danger"></span>
                             <small class="form-text text-info"><i class="bi bi-lock"></i> From Registry</small>
                         </div>
@@ -148,9 +149,9 @@
                             <span asp-validation-for="Gender" class="text-danger"></span>
                         </div>
                         <div class="col-md-6 mb-3">
-                            <label asp-for="DateOfBirth" class="form-label"></label>
-                            <input asp-for="DateOfBirth" class="form-control" type="date" />
-                            <span asp-validation-for="DateOfBirth" class="text-danger"></span>
+                            <label asp-for="AgeAtGraduation" class="form-label"></label>
+                            <input asp-for="AgeAtGraduation" class="form-control" type="number" min="15" max="100" placeholder="e.g. 22" />
+                            <span asp-validation-for="AgeAtGraduation" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="row">
@@ -168,7 +169,7 @@
                             }
                             else
                             {
-                                <input asp-for="GraduationYear" class="form-control" type="number" readonly />
+                                <input asp-for="GraduationYear" class="form-control locked-field" type="number" readonly />
                                 <small class="form-text text-info"><i class="bi bi-lock"></i> From Registry</small>
                             }
                             <span asp-validation-for="GraduationYear" class="text-danger"></span>
@@ -186,7 +187,7 @@
                                 @* Set from the most recent degree and decides which scoped
                                    staff can see this profile, so alumni can't change it
                                    (the server ignores a posted value too). *@
-                                <select asp-for="CollegeId" class="form-select" asp-items="ViewBag.CollegeId" disabled>
+                                <select asp-for="CollegeId" class="form-select locked-field" asp-items="ViewBag.CollegeId" disabled>
                                     <option value="">Not set yet</option>
                                 </select>
                                 <small class="form-text text-info"><i class="bi bi-lock"></i> Set from your most recent degree</small>
@@ -349,6 +350,15 @@
                 </div>
             </div>
 
+            @if (!isAdmin)
+            {
+                <div class="alert alert-secondary small mb-4" role="note">
+                    <i class="bi bi-lock-fill me-1"></i>
+                    Greyed-out fields can't be edited here. If you want to change them, contact the administrator at
+                    <a href="mailto:@Configuration["AdminContactEmail"]">@Configuration["AdminContactEmail"]</a>.
+                </div>
+            }
+
             <!-- Form Actions -->
             <div class="d-grid gap-2 d-md-flex justify-content-md-between mb-4">
                 <a asp-action="Index" class="btn btn-secondary">
@@ -361,6 +371,22 @@
         </form>
     </div>
 </div>
+
+<style>
+    /* Fields alumni can't change: greyed out so they read as locked. */
+    .locked-field,
+    .locked-field:focus {
+        background-color: #e9ecef;
+        color: #6c757d;
+        cursor: not-allowed;
+        box-shadow: none;
+    }
+    body.dark .locked-field,
+    body.dark .locked-field:focus {
+        background-color: #2b2b2b;
+        color: #9a9a9a;
+    }
+</style>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
