@@ -86,7 +86,12 @@ else
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// On by default; a server without an HTTPS binding yet sets
+// "UseHttpsRedirection": false in its config, or every request is sent to an https:// URL that doesn't answer.
+if (app.Configuration.GetValue("UseHttpsRedirection", true))
+{
+    app.UseHttpsRedirection();
+}
 app.UseRouting();
 
 // Built-in Identity pages this app replaces or doesn't allow. Deleting your own

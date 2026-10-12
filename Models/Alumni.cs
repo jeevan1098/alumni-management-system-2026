@@ -153,8 +153,8 @@ public partial class Alumni
     // Explanations shown next to these two settings on every page that
     // displays or edits them, so the wording stays the same everywhere.
     public const string PrivacyHelp =
-        "When checked, other alumni can still see the name, graduation year, college, city/state and degrees in the alumni directory, " +
-        "but NOT the contact details - email addresses, phone number, street address, date of birth and social media account. " +
+        "When checked, other alumni can still see the name, graduation year, college and degrees in the alumni directory, " +
+        "but NOT the contact details - email addresses, phone number, the full address (street, city, state, postcode and country), age at graduation and social media account. " +
         "Administrators and staff can always see everything.";
 
     public const string SolicitationHelp =
@@ -179,7 +179,10 @@ public partial class Alumni
         StudentEmail = null;
         Phone = null;
         Address = null;
+        City = null;
+        State = null;
         Postcode = null;
+        Country = null;
         AgeAtGraduation = null;
         SocialMediaAccount = null;
         ContactHidden = true;

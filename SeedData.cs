@@ -30,9 +30,40 @@ namespace Alumni_Management_System
             await PadLegacySampleJagIdsAsync(context);
 
             var userManager = services.GetRequiredService<UserManager<AppUser>>();
-            await EnsureTestUsersAsync(userManager);
+            await EnsureSuperadminAsync(userManager);
 
-            await EnsureSampleDataAsync(context, userManager);
+            // The test/sample logins all have known passwords (Admin@123,
+            // Password1...), so they're only created where SeedTestData is on -
+            // appsettings.Development.json, never on a deployed server.
+            var config = services.GetRequiredService<IConfiguration>();
+            if (config.GetValue<bool>("SeedTestData"))
+            {
+                await EnsureTestUsersAsync(userManager);
+                await EnsureSampleDataAsync(context, userManager);
+            }
+        }
+
+        // Superadmin - the overall system admin, tied to the main alumnimanagement@ mailbox.
+        // No known password is seeded: sign in the first time via "Forgot password / username",
+        // which emails a temporary password to this mailbox and then forces a change.
+        public static async Task EnsureSuperadminAsync(UserManager<AppUser> userManager)
+        {
+            if (!await userManager.Users.AnyAsync(x => x.UserName == "Superadmin"))
+            {
+                var superadmin = new AppUser
+                {
+                    UserName = "Superadmin",
+                    Email = "alumnimanagement@southalabama.edu",
+                    EmailConfirmed = true,
+                    JagId = "J00000000",
+                    CreatedAt = DateTime.Now,
+                    IsFirstLogin = false,
+                    MustChangePassword = true,
+                    TwoFactorEnabled = false
+                };
+                await userManager.CreateAsync(superadmin, Services.PasswordGenerator.GenerateTempPassword());
+                await userManager.AddToRoleAsync(superadmin, Constants.AdminRole);
+            }
         }
 
         // The sample accounts below used to have 7-digit JAG IDs; the format is
@@ -103,26 +134,6 @@ namespace Alumni_Management_System
                 };
                 await userManager.CreateAsync(staff, "Staff@123");
                 await userManager.AddToRoleAsync(staff, Constants.StaffRole);
-            }
-
-            // Superadmin - the overall system admin, tied to the main alumnimanagement@ mailbox.
-            // No known password is seeded: sign in the first time via "Forgot password / username",
-            // which emails a temporary password to this mailbox and then forces a change.
-            if (!await userManager.Users.AnyAsync(x => x.UserName == "Superadmin"))
-            {
-                var superadmin = new AppUser
-                {
-                    UserName = "Superadmin",
-                    Email = "alumnimanagement@southalabama.edu",
-                    EmailConfirmed = true,
-                    JagId = "J00000000",
-                    CreatedAt = DateTime.Now,
-                    IsFirstLogin = false,
-                    MustChangePassword = true,
-                    TwoFactorEnabled = false
-                };
-                await userManager.CreateAsync(superadmin, Services.PasswordGenerator.GenerateTempPassword());
-                await userManager.AddToRoleAsync(superadmin, Constants.AdminRole);
             }
 
             // Test accounts - one per role combination (see TestAccounts).

@@ -318,16 +318,6 @@
                     </div>
                 </div>
 
-                <!-- Current Internship -->
-                <div class="form-check mt-3 mb-4">
-                    <input type="checkbox"
-                           class="form-check-input"
-                           id="isCurrentInternshipCheckbox">
-                    <label class="form-check-label fw-semibold"
-                           for="isCurrentInternshipCheckbox">
-                        Current Internship
-                    </label>
-                </div>
 
                 <!-- Buttons -->
                 <div class="d-flex justify-content-between mt-5">
@@ -355,23 +345,11 @@
     <script>
         const employerDropdown = document.getElementById("employerDropdown");
         const otherDiv = document.getElementById("otherEmployerDiv");
-        const currentInternshipCheckbox = document.getElementById("isCurrentInternshipCheckbox");
-        const endDateField = document.getElementById("endDateField");
 
         employerDropdown.addEventListener("change", function () {
             otherDiv.style.display = this.value == "0" ? "block" : "none";
         });
 
-        currentInternshipCheckbox.addEventListener("change", function () {
-            endDateField.disabled = this.checked;
-            if (this.checked) endDateField.value = "";
-        });
 
-        window.addEventListener("DOMContentLoaded", function () {
-            if (!endDateField.value) {
-                currentInternshipCheckbox.checked = true;
-                endDateField.disabled = true;
-            }
-        });
     </script>
 }

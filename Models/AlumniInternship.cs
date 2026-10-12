@@ -42,8 +42,13 @@ public partial class AlumniInternship
 
     [Column("end_date")]
     [Display(Name = "End Date")]
-    // Optional - blank means the internship is still going, same as jobs.
+    // Required - an alumnus's internship is always finished, so unlike jobs
+    // there's no "current internship". Nullable only because older rows
+    // saved before this rule may still have no end date.
+    [Required(ErrorMessage = EndDateRequiredMessage)]
     public DateOnly? EndDate { get; set; }
+
+    public const string EndDateRequiredMessage = "Please enter the date this internship ended.";
 
     [ForeignKey("AlumniId")]
     [InverseProperty("AlumniInternships")]
