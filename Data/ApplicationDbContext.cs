@@ -266,6 +266,8 @@ namespace Alumni_Management_System.Data
                 entity.HasKey(e => e.AlumniInternshipId).HasName("PK__Alumni_I__FFE040B307B79B52");
                 entity.HasOne(d => d.Alumni).WithMany(p => p.AlumniInternships).HasConstraintName("fk_ai_alumni");
                 entity.HasOne(d => d.Employer).WithMany(p => p.AlumniInternships).HasConstraintName("fk_ai_employer");
+                // [Required] on EndDate is a form rule only; older rows can still have no end date.
+                entity.Property(e => e.EndDate).IsRequired(false);
             });
 
             modelBuilder.Entity<AlumniMessage>(entity =>
