@@ -301,7 +301,9 @@
                     <div class="row">
                         <div class="col-md-6 mb-3">
                             <label asp-for="Country" class="form-label"></label>
-                            <input asp-for="Country" class="form-control" />
+                            <select asp-for="Country" class="form-select" asp-items="Alumni_Management_System.Services.CountryList.Build(Model.Country)">
+                                <option value="">-- Select a Country --</option>
+                            </select>
                             <span asp-validation-for="Country" class="text-danger"></span>
                         </div>
                     </div>

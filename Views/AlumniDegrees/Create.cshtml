@@ -150,6 +150,10 @@
                                 <option value="">-- Select a Degree Program --</option>
                             </select>
                         </div>
+                        @if (isAlumni)
+                        {
+                            <small class="form-text text-muted d-block">Degrees from other institutions only. Your South Alabama degrees are added by the alumni office.</small>
+                        }
                         <span asp-validation-for="DegreeId" class="text-danger"></span>
                     </div>
                 </div>

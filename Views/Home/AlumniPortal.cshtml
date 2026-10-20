@@ -105,7 +105,23 @@
 
     <div class="row g-4">
 
-        <div class="col-md-4">
+        <div class="col-md-6 col-lg-3">
+            <a asp-controller="Alumni" asp-action="Index"
+               class="quick-card">
+                <i class="bi bi-people"></i>
+                <span>Find Alumni</span>
+            </a>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
+            <a asp-controller="AlumniMessages" asp-action="Index"
+               class="quick-card">
+                <i class="bi bi-chat-dots"></i>
+                <span>Messages</span>
+            </a>
+        </div>
+
+        <div class="col-md-6 col-lg-3">
             <a asp-controller="Alumni" asp-action="MyProfile"
                class="quick-card">
                 <i class="bi bi-person"></i>
@@ -113,19 +129,11 @@
             </a>
         </div>
 
-        <div class="col-md-4">
+        <div class="col-md-6 col-lg-3">
             <a asp-controller="AlumniDegrees" asp-action="Index"
                class="quick-card">
                 <i class="bi bi-award"></i>
                 <span>Degrees</span>
-            </a>
-        </div>
-
-        <div class="col-md-4">
-            <a asp-controller="AlumniMessages" asp-action="Index"
-               class="quick-card">
-                <i class="bi bi-chat-dots"></i>
-                <span>Messages</span>
             </a>
         </div>
 

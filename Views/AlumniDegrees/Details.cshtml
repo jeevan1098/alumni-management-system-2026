@@ -188,9 +188,18 @@
                 <a asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
                     <i class="bi bi-arrow-left me-2"></i>Back to List
                 </a>
-                <a asp-action="Edit" asp-route-id="@Model?.AlumniDegreeId" class="btn btn-primary rounded-pill px-4">
-                    <i class="bi bi-pencil-square me-2"></i>Edit
-                </a>
+                @if (ViewData["LockSouthAlabamaDegrees"] as bool? == true && Model.Degree.Department.College.IsInternal)
+                {
+                    <small class="text-muted align-self-center">
+                        <i class="bi bi-lock-fill me-1"></i>South Alabama degrees can only be changed by the alumni office.
+                    </small>
+                }
+                else
+                {
+                    <a asp-action="Edit" asp-route-id="@Model?.AlumniDegreeId" class="btn btn-primary rounded-pill px-4">
+                        <i class="bi bi-pencil-square me-2"></i>Edit
+                    </a>
+                }
             </div>
 
         </div>

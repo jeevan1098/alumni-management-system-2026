@@ -399,7 +399,9 @@
                             <span class="input-group-text bg-light">
                                 <i class="bi bi-globe"></i>
                             </span>
-                            <input asp-for="Country" class="form-control rounded-end-3" placeholder="Country" />
+                            <select asp-for="Country" class="form-select rounded-end-3" asp-items="Alumni_Management_System.Services.CountryList.Build(Model?.Country)">
+                                <option value="">-- Select a Country --</option>
+                            </select>
                         </div>
                         <span asp-validation-for="Country" class="text-danger"></span>
                     </div>

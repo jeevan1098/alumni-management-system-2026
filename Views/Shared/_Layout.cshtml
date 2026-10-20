@@ -35,7 +35,22 @@
 
             body.dark {
                 background: #121212;
-                color: #e4e4e4;
+                color: #c9cdd2;
+                /* Cards, tables, inputs and menus use --bs-body-bg, so this
+                   turns them light gray instead of bright white - pure white
+                   on the dark page was too harsh. */
+                --bs-body-bg: #d3d7dc;
+                --bs-secondary-bg: #c6cbd1;
+                --bs-tertiary-bg: #ccd1d6;
+            }
+
+            body.dark .bg-white,
+            body.dark .bg-light,
+            body.dark .quick-card,
+            body.dark .table-card,
+            body.dark .report-card,
+            body.dark .filter-card {
+                background: var(--bs-body-bg) !important;
             }
 
         .hero {
@@ -886,11 +901,24 @@
                     <span class="sidebar-text">Dashboard</span>
                 </a>
 
-                <div class="sidebar-section-title">MY DETAILS</div>
+                @* Directory and Messages first - testers couldn't find them under MY DETAILS. *@
+                <div class="sidebar-section-title">CONNECT</div>
 
                 <a asp-controller="Alumni" asp-action="Index">
+                    <i class="bi bi-people"></i>
+                    <span class="sidebar-text">Find Alumni</span>
+                </a>
+
+                <a asp-controller="AlumniMessages" asp-action="Index">
+                    <i class="bi bi-chat-dots"></i>
+                    <span class="sidebar-text">Messages</span>
+                </a>
+
+                <div class="sidebar-section-title">MY DETAILS</div>
+
+                <a asp-controller="Alumni" asp-action="MyProfile">
                     <i class="bi bi-person"></i>
-                    <span class="sidebar-text">Alumni Directory</span>
+                    <span class="sidebar-text">My Profile</span>
                 </a>
 
                 <a asp-controller="AlumniDegrees" asp-action="Index">
@@ -911,11 +939,6 @@
                 <a asp-controller="AlumniOrganizations" asp-action="Index">
                     <i class="bi bi-diagram-3"></i>
                     <span class="sidebar-text">Organizations</span>
-                </a>
-
-                <a asp-controller="AlumniMessages" asp-action="Index">
-                    <i class="bi bi-chat-dots"></i>
-                    <span class="sidebar-text">Messages</span>
                 </a>
 
                 <div class="sidebar-section-title">SYSTEM</div>

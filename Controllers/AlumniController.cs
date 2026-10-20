@@ -60,13 +60,15 @@ namespace Alumni_Management_System.Controllers
             }
 
             // Search functionality. Alumni can't search by the email of someone
-            // who keeps their contact details private - that would reveal it.
+            // who keeps their contact details private - that would reveal it -
+            // or by JAG ID, which the directory hides from them so nobody can
+            // collect JAG IDs to register fake accounts.
             if (!string.IsNullOrEmpty(searchString))
             {
                 alumniQuery = alumniQuery.Where(a =>
                     a.FirstName.Contains(searchString) ||
                     a.LastName.Contains(searchString) ||
-                    a.JagId.Contains(searchString) ||
+                    (!alumniOnly && a.JagId.Contains(searchString)) ||
                     ((!alumniOnly || !a.Privacy) && a.PermanentEmail.Contains(searchString)));
             }
 

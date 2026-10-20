@@ -34,11 +34,12 @@ namespace Alumni_Management_System.Controllers
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
 
-            IQueryable<AlumniDegree> query = _context.AlumniDegrees.Include(a => a.Alumni).Include(a => a.Degree);
+            IQueryable<AlumniDegree> query = _context.AlumniDegrees.Include(a => a.Alumni).Include(a => a.Degree.Department.College);
 
             // Alumni can only see their own degrees
             if (!roles.Contains(Constants.AdminRole))
             {
+                ViewData["LockSouthAlabamaDegrees"] = true;
                 var alumni = await _context.Alumni.FirstOrDefaultAsync(a => a.JagId == currentUser.JagId);
                 if (alumni != null)
                 {
@@ -69,7 +70,7 @@ namespace Alumni_Management_System.Controllers
 
             var alumniDegree = await _context.AlumniDegrees
                 .Include(a => a.Alumni)
-                .Include(a => a.Degree)
+                .Include(a => a.Degree.Department.College)
                 .FirstOrDefaultAsync(m => m.AlumniDegreeId == id);
             if (alumniDegree == null)
             {
@@ -87,6 +88,7 @@ namespace Alumni_Management_System.Controllers
                     TempData["ErrorMessage"] = "You can only view your own degrees.";
                     return RedirectToAction(nameof(Index));
                 }
+                ViewData["LockSouthAlabamaDegrees"] = true;
             }
             else if (!await Services.AccessScopeService.AreAlumniVisibleAsync(_context, currentUser, roles, alumniDegree.AlumniId))
             {
@@ -122,7 +124,7 @@ namespace Alumni_Management_System.Controllers
                 ViewData["UserRole"] = "Admin";
             }
 
-            ViewData["DegreeId"] = GetDegreeSelectList();
+            ViewData["DegreeId"] = GetDegreeSelectList(externalOnly: !roles.Contains(Constants.AdminRole));
 
             return View();
         }
@@ -145,6 +147,10 @@ namespace Alumni_Management_System.Controllers
                 {
                     TempData["ErrorMessage"] = "You can only create degrees for yourself.";
                     return RedirectToAction(nameof(Index));
+                }
+                if (await IsSouthAlabamaDegreeAsync(alumniDegree.DegreeId))
+                {
+                    ModelState.AddModelError("DegreeId", SouthAlabamaDegreeLockedMessage);
                 }
             }
             else if (!await Services.AccessScopeService.AreAlumniVisibleAsync(_context, currentUser, roles, alumniDegree.AlumniId))
@@ -211,7 +217,7 @@ namespace Alumni_Management_System.Controllers
                 ViewData["AlumniId"] = await GetAlumniSelectListAsync(currentUser, roles, alumniDegree.AlumniId);
                 ViewData["UserRole"] = "Admin";
             }
-            ViewData["DegreeId"] = GetDegreeSelectList(alumniDegree.DegreeId);
+            ViewData["DegreeId"] = GetDegreeSelectList(alumniDegree.DegreeId, externalOnly: !roles.Contains(Constants.AdminRole));
             return View(alumniDegree);
         }
 
@@ -240,6 +246,11 @@ namespace Alumni_Management_System.Controllers
                     TempData["ErrorMessage"] = "You can only edit your own degrees.";
                     return RedirectToAction(nameof(Index));
                 }
+                if (await IsSouthAlabamaDegreeAsync(alumniDegree.DegreeId))
+                {
+                    TempData["ErrorMessage"] = SouthAlabamaDegreeLockedMessage;
+                    return RedirectToAction(nameof(Index));
+                }
                 ViewData["CurrentAlumniId"] = alumni.AlumniId;
                 ViewData["AlumniId"] = Services.AlumniSelectList.Build(new[] { alumni }, alumniDegree.AlumniId);
                 ViewData["UserRole"] = Constants.AlumniRole;
@@ -254,7 +265,7 @@ namespace Alumni_Management_System.Controllers
                 ViewData["UserRole"] = "Admin";
             }
 
-            ViewData["DegreeId"] = GetDegreeSelectList(alumniDegree.DegreeId);
+            ViewData["DegreeId"] = GetDegreeSelectList(alumniDegree.DegreeId, externalOnly: !roles.Contains(Constants.AdminRole));
             return View(alumniDegree);
         }
 
@@ -272,14 +283,15 @@ namespace Alumni_Management_System.Controllers
 
             // The owner as stored - not just the AlumniId posted in the form,
             // which could be changed to claim someone else's degree.
-            var previousAlumniId = await _context.AlumniDegrees
+            var previous = await _context.AlumniDegrees
                 .Where(ad => ad.AlumniDegreeId == id)
-                .Select(ad => ad.AlumniId)
+                .Select(ad => new { ad.AlumniId, ad.DegreeId })
                 .FirstOrDefaultAsync();
-            if (previousAlumniId == 0)
+            if (previous == null)
             {
                 return NotFound();
             }
+            var previousAlumniId = previous.AlumniId;
 
             var currentUser = await _userManager.GetUserAsync(User);
             var roles = await _userManager.GetRolesAsync(currentUser);
@@ -292,6 +304,15 @@ namespace Alumni_Management_System.Controllers
                 {
                     TempData["ErrorMessage"] = "You can only edit your own degrees.";
                     return RedirectToAction(nameof(Index));
+                }
+                if (await IsSouthAlabamaDegreeAsync(previous.DegreeId))
+                {
+                    TempData["ErrorMessage"] = SouthAlabamaDegreeLockedMessage;
+                    return RedirectToAction(nameof(Index));
+                }
+                if (await IsSouthAlabamaDegreeAsync(alumniDegree.DegreeId))
+                {
+                    ModelState.AddModelError("DegreeId", SouthAlabamaDegreeLockedMessage);
                 }
             }
             else if (!await Services.AccessScopeService.AreAlumniVisibleAsync(_context, currentUser, roles, previousAlumniId, alumniDegree.AlumniId))
@@ -379,7 +400,7 @@ namespace Alumni_Management_System.Controllers
                 ViewData["AlumniId"] = await GetAlumniSelectListAsync(currentUser, roles, alumniDegree.AlumniId);
                 ViewData["UserRole"] = "Admin";
             }
-            ViewData["DegreeId"] = GetDegreeSelectList(alumniDegree.DegreeId);
+            ViewData["DegreeId"] = GetDegreeSelectList(alumniDegree.DegreeId, externalOnly: !roles.Contains(Constants.AdminRole));
             return View(alumniDegree);
         }
 
@@ -411,6 +432,11 @@ namespace Alumni_Management_System.Controllers
                     TempData["ErrorMessage"] = "You can only delete your own degrees.";
                     return RedirectToAction(nameof(Index));
                 }
+                if (await IsSouthAlabamaDegreeAsync(alumniDegree.DegreeId))
+                {
+                    TempData["ErrorMessage"] = SouthAlabamaDegreeLockedMessage;
+                    return RedirectToAction(nameof(Index));
+                }
             }
             else if (!await Services.AccessScopeService.AreAlumniVisibleAsync(_context, currentUser, roles, alumniDegree.AlumniId))
             {
@@ -439,6 +465,11 @@ namespace Alumni_Management_System.Controllers
                         TempData["ErrorMessage"] = "You can only delete your own degrees.";
                         return RedirectToAction(nameof(Index));
                     }
+                    if (await IsSouthAlabamaDegreeAsync(alumniDegree.DegreeId))
+                    {
+                        TempData["ErrorMessage"] = SouthAlabamaDegreeLockedMessage;
+                        return RedirectToAction(nameof(Index));
+                    }
                 }
                 else if (!await Services.AccessScopeService.AreAlumniVisibleAsync(_context, currentUser, roles, alumniDegree.AlumniId))
                 {
@@ -454,6 +485,15 @@ namespace Alumni_Management_System.Controllers
 
             return RedirectToAction(nameof(Index));
         }
+
+        // Alumni manage only degrees from other institutions. South Alabama
+        // degrees (a program in an internal college) come from the registry, so
+        // only an Admin adds, changes or deletes them.
+        public const string SouthAlabamaDegreeLockedMessage =
+            "South Alabama degrees can only be added or changed by the alumni office. Please contact them if one is wrong or missing.";
+
+        private Task<bool> IsSouthAlabamaDegreeAsync(int degreeId) =>
+            _context.DegreePrograms.AnyAsync(d => d.DegreeId == degreeId && d.Department.College.IsInternal);
 
         private bool AlumniDegreeExists(int id)
         {
@@ -480,9 +520,15 @@ namespace Alumni_Management_System.Controllers
                 selectedId);
         }
 
-        private SelectList GetDegreeSelectList(int? selectedId = null)
+        // externalOnly: the alumnus's picker, which offers only programs from other institutions.
+        private SelectList GetDegreeSelectList(int? selectedId = null, bool externalOnly = false)
         {
-            return new SelectList(_context.DegreePrograms.Include(d => d.Department).Select(d => new
+            IQueryable<DegreeProgram> programs = _context.DegreePrograms;
+            if (externalOnly)
+            {
+                programs = programs.Where(d => !d.Department.College.IsInternal);
+            }
+            return new SelectList(programs.Select(d => new
             {
                 d.DegreeId,
                 DisplayText = d.DegreeType + ", " +

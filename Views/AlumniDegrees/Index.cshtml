@@ -92,6 +92,8 @@
 
 @{
     ViewData["Title"] = "Alumni Degrees";
+    // Alumni can't change South Alabama degrees - only the alumni office can.
+    bool lockSouthAlabama = ViewData["LockSouthAlabamaDegrees"] as bool? == true;
 }
 
 <div class="container mt-5 mb-5">
@@ -111,9 +113,17 @@
 
             <hr class="mb-4" />
 
-            <div class="d-flex justify-content-end mb-3">
-                <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm">
-                    <i class="bi bi-plus-circle-fill me-2"></i>Add Degree
+            <div class="d-flex justify-content-between align-items-center gap-3 mb-3">
+                <div>
+                    @if (lockSouthAlabama)
+                    {
+                        <small class="text-muted">
+                            <i class="bi bi-lock-fill me-1"></i>South Alabama degrees are kept by the alumni office. You can add and edit degrees from other institutions.
+                        </small>
+                    }
+                </div>
+                <a asp-action="Create" class="btn btn-primary rounded-pill px-4 shadow-sm text-nowrap">
+                    <i class="bi bi-plus-circle-fill me-2"></i>@(lockSouthAlabama ? "Add Other Degree" : "Add Degree")
                 </a>
             </div>
 
@@ -159,16 +169,25 @@
                                        class="btn btn-sm btn-outline-primary rounded-pill">
                                         <i class="bi bi-eye-fill"></i>
                                     </a>
-                                    <a asp-action="Edit"
-                                       asp-route-id="@item.AlumniDegreeId"
-                                       class="btn btn-sm btn-outline-warning rounded-pill">
-                                        <i class="bi bi-pencil-fill"></i>
-                                    </a>
-                                    <a asp-action="Delete"
-                                       asp-route-id="@item.AlumniDegreeId"
-                                       class="btn btn-sm btn-outline-danger rounded-pill">
-                                        <i class="bi bi-trash-fill"></i>
-                                    </a>
+                                    @if (lockSouthAlabama && item.Degree.Department.College.IsInternal)
+                                    {
+                                        <span class="badge bg-secondary-subtle text-secondary rounded-pill" title="South Alabama degrees can only be changed by the alumni office.">
+                                            <i class="bi bi-lock-fill me-1"></i>South Alabama
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <a asp-action="Edit"
+                                           asp-route-id="@item.AlumniDegreeId"
+                                           class="btn btn-sm btn-outline-warning rounded-pill">
+                                            <i class="bi bi-pencil-fill"></i>
+                                        </a>
+                                        <a asp-action="Delete"
+                                           asp-route-id="@item.AlumniDegreeId"
+                                           class="btn btn-sm btn-outline-danger rounded-pill">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </a>
+                                    }
                                 </td>
                             </tr>
                         }

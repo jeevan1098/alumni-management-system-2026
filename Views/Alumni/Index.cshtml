@@ -738,7 +738,7 @@ else
                 <input type="text" name="searchString"
                        value="@ViewData["CurrentFilter"]"
                        class="form-control"
-                       placeholder="Search by name, JAG ID or email..." />
+                       placeholder="@(isAlumni ? "Search by name or email..." : "Search by name, JAG ID or email...")" />
             </div>
         </div>
         <div class="col-md-2">
@@ -775,7 +775,11 @@ else
                                 <input type="checkbox" class="form-check-input" id="selectAllAlumni" title="Select all shown" aria-label="Select all shown alumni" />
                             </th>
                         }
-                        <th>Jag ID</th>
+                        @* Hidden from alumni so JAG IDs can't be collected to register fake accounts. *@
+                        @if (!isAlumni)
+                        {
+                            <th>Jag ID</th>
+                        }
                         <th>Name</th>
                         <th>Email</th>
                         <th>Phone</th>
@@ -811,7 +815,10 @@ else
                                     <input type="checkbox" class="form-check-input alumni-select" name="ids" value="@item.AlumniId" form="bulkDeleteForm" aria-label="Select @item.FirstName @item.LastName" />
                                 </td>
                             }
-                            <td>@item.JagId</td>
+                            @if (!isAlumni)
+                            {
+                                <td>@item.JagId</td>
+                            }
                             <td>
                                 @item.FirstName @item.LastName
                                 @if (!string.IsNullOrEmpty(item.PreferredFirstName))
