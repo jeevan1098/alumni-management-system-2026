@@ -11,8 +11,10 @@
     var userRole = ViewData["UserRole"]?.ToString();
     var isAdmin = userRole == "Admin";
 
-    // Calculate profile completion
-    int totalFields = 17;
+    // Calculate profile completion - same 14 fields as HomeController.AlumniPortal.
+    // Optional fields (middle name, suffix, prefix, preferred name) and
+    // checkboxes like Privacy don't count.
+    int totalFields = 14;
     int completedFields = 0;
 
     if (!string.IsNullOrEmpty(Model.FirstName)) completedFields++;
@@ -27,11 +29,8 @@
     if (!string.IsNullOrEmpty(Model.Postcode)) completedFields++;
     if (!string.IsNullOrEmpty(Model.Country)) completedFields++;
     if (Model.GraduationYear > 0) completedFields++;
-    if (!string.IsNullOrEmpty(Model.PreferredFirstName)) completedFields++;
     if (!string.IsNullOrEmpty(Model.StudentEmail)) completedFields++;
     if (!string.IsNullOrEmpty(Model.SocialMediaAccount)) completedFields++;
-    if (!string.IsNullOrEmpty(Model.Prefix)) completedFields++;
-    if (Model.Privacy) completedFields++;
 
     int completionPercentage = (int)((double)completedFields / totalFields * 100);
 }

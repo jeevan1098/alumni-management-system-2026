@@ -729,8 +729,9 @@ else
          to everyone else. -->
     @if (!hasTableTools)
     {
+    var currentSort = ViewData["CurrentSort"] as string;
     <form asp-action="Index" method="get" class="mb-4 row g-3">
-        <div class="col-md-10">
+        <div class="col-md-7">
             <div class="input-group input-group-lg">
                 <span class="input-group-text bg-white">
                     <i class="bi bi-search text-primary"></i>
@@ -739,6 +740,19 @@ else
                        value="@ViewData["CurrentFilter"]"
                        class="form-control"
                        placeholder="@(isAlumni ? "Search by name or email..." : "Search by name, JAG ID or email...")" />
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="input-group input-group-lg">
+                <span class="input-group-text bg-white">
+                    <i class="bi bi-sort-down text-primary"></i>
+                </span>
+                <select name="sortOrder" class="form-select" aria-label="Sort alumni" onchange="this.form.submit()">
+                    <option value="" selected="@(string.IsNullOrEmpty(currentSort))">Name (A–Z)</option>
+                    <option value="name_desc" selected="@(currentSort == "name_desc")">Name (Z–A)</option>
+                    <option value="year_desc" selected="@(currentSort == "year_desc")">Grad Year (newest)</option>
+                    <option value="year_asc" selected="@(currentSort == "year_asc")">Grad Year (oldest)</option>
+                </select>
             </div>
         </div>
         <div class="col-md-2">
