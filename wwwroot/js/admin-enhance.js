@@ -4,7 +4,8 @@
 //  2. Every <select> becomes a searchable dropdown (Tom Select).
 //
 // Opt out per element with data-no-enhance (tables) or data-no-search
-// (selects). Rows are hidden with a class rather than the `hidden`
+// (selects). data-sort-only on a table skips the search toolbar and keeps
+// just the sortable headers (the alumni directory, which has its own search). Rows are hidden with a class rather than the `hidden`
 // attribute so pages that run their own row filtering (e.g. Users) keep
 // working alongside this one.
 (function () {
@@ -58,55 +59,58 @@
         if (hasSpanningRows || rows.length < 2) return;
 
         table.dataset.enhanced = 'true';
+        if (!table.hasAttribute('data-sort-only')) addToolbar();
 
         // --- Toolbar: search + column picker + count ---
-        var toolbar = document.createElement('div');
-        toolbar.className = 'ae-toolbar d-flex flex-wrap align-items-center gap-2 mb-2';
-        toolbar.innerHTML =
-            '<div class="input-group input-group-sm ae-search">' +
-            '  <span class="input-group-text"><i class="bi bi-search"></i></span>' +
-            '  <input type="search" class="form-control" placeholder="Search this table..." aria-label="Search this table">' +
-            '</div>' +
-            '<select class="form-select form-select-sm ae-column" aria-label="Search in column" data-no-search>' +
-            '  <option value="-1">All columns</option>' +
-            '</select>' +
-            '<small class="text-muted ae-count ms-auto"></small>';
+        function addToolbar() {
+            var toolbar = document.createElement('div');
+            toolbar.className = 'ae-toolbar d-flex flex-wrap align-items-center gap-2 mb-2';
+            toolbar.innerHTML =
+                '<div class="input-group input-group-sm ae-search">' +
+                '  <span class="input-group-text"><i class="bi bi-search"></i></span>' +
+                '  <input type="search" class="form-control" placeholder="Search this table..." aria-label="Search this table">' +
+                '</div>' +
+                '<select class="form-select form-select-sm ae-column" aria-label="Search in column" data-no-search>' +
+                '  <option value="-1">All columns</option>' +
+                '</select>' +
+                '<small class="text-muted ae-count ms-auto"></small>';
 
-        var input = toolbar.querySelector('input');
-        var columnSelect = toolbar.querySelector('select');
-        var count = toolbar.querySelector('.ae-count');
+            var input = toolbar.querySelector('input');
+            var columnSelect = toolbar.querySelector('select');
+            var count = toolbar.querySelector('.ae-count');
 
-        Array.prototype.forEach.call(headerRow.cells, function (th, i) {
-            if (isActionsHeader(th)) return;
-            var opt = document.createElement('option');
-            opt.value = String(i);
-            opt.textContent = th.textContent.trim();
-            columnSelect.appendChild(opt);
-        });
-
-        // Put the toolbar above the table's scroll wrapper, if it has one.
-        var anchor = table.parentElement && table.parentElement.classList.contains('table-responsive')
-            ? table.parentElement : table;
-        anchor.parentNode.insertBefore(toolbar, anchor);
-
-        function applyFilter() {
-            var term = input.value.trim().toLowerCase();
-            var col = parseInt(columnSelect.value, 10);
-            var shown = 0;
-            rows.forEach(function (row) {
-                var text = col >= 0 ? cellText(row, col) : row.textContent.replace(/\s+/g, ' ');
-                var match = term === '' || text.toLowerCase().indexOf(term) !== -1;
-                row.classList.toggle('ae-filtered', !match);
-                if (match) shown++;
+            Array.prototype.forEach.call(headerRow.cells, function (th, i) {
+                if (isActionsHeader(th)) return;
+                var opt = document.createElement('option');
+                opt.value = String(i);
+                opt.textContent = th.textContent.trim();
+                columnSelect.appendChild(opt);
             });
-            count.textContent = term === ''
-                ? rows.length + ' record' + (rows.length === 1 ? '' : 's')
-                : 'Showing ' + shown + ' of ' + rows.length;
-        }
 
-        input.addEventListener('input', applyFilter);
-        columnSelect.addEventListener('change', applyFilter);
-        applyFilter();
+            // Put the toolbar above the table's scroll wrapper, if it has one.
+            var anchor = table.parentElement && table.parentElement.classList.contains('table-responsive')
+                ? table.parentElement : table;
+            anchor.parentNode.insertBefore(toolbar, anchor);
+
+            function applyFilter() {
+                var term = input.value.trim().toLowerCase();
+                var col = parseInt(columnSelect.value, 10);
+                var shown = 0;
+                rows.forEach(function (row) {
+                    var text = col >= 0 ? cellText(row, col) : row.textContent.replace(/\s+/g, ' ');
+                    var match = term === '' || text.toLowerCase().indexOf(term) !== -1;
+                    row.classList.toggle('ae-filtered', !match);
+                    if (match) shown++;
+                });
+                count.textContent = term === ''
+                    ? rows.length + ' record' + (rows.length === 1 ? '' : 's')
+                    : 'Showing ' + shown + ' of ' + rows.length;
+            }
+
+            input.addEventListener('input', applyFilter);
+            columnSelect.addEventListener('change', applyFilter);
+            applyFilter();
+        }
 
         // --- Click-to-sort headers ---
         Array.prototype.forEach.call(headerRow.cells, function (th, index) {

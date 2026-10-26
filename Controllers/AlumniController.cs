@@ -27,7 +27,7 @@ namespace Alumni_Management_System.Controllers
         }
 
         // GET: Alumni
-        public async Task<IActionResult> Index(string searchString, string sortOrder)
+        public async Task<IActionResult> Index(string searchString)
         {
             var currentUser = await _userManager.GetUserAsync(User);
             if (currentUser == null)
@@ -72,19 +72,7 @@ namespace Alumni_Management_System.Controllers
                     ((!alumniOnly || !a.Privacy) && a.PermanentEmail.Contains(searchString)));
             }
 
-            // Sort dropdown on the alumni directory. Blank graduation years
-            // (0) always go last. Admin/Staff also get column sorting from
-            // admin-enhance.js on top of this.
-            alumniQuery = sortOrder switch
-            {
-                "name_desc" => alumniQuery.OrderByDescending(a => a.FirstName).ThenByDescending(a => a.LastName),
-                "year_desc" => alumniQuery.OrderByDescending(a => a.GraduationYear).ThenBy(a => a.FirstName).ThenBy(a => a.LastName),
-                "year_asc" => alumniQuery.OrderBy(a => a.GraduationYear == 0).ThenBy(a => a.GraduationYear).ThenBy(a => a.FirstName).ThenBy(a => a.LastName),
-                _ => alumniQuery.OrderBy(a => a.FirstName).ThenBy(a => a.LastName),
-            };
-
             ViewData["CurrentFilter"] = searchString;
-            ViewData["CurrentSort"] = sortOrder;
             // Same priority as the filtering above - Admin > Staff > Alumni -
             // so the page renders the admin/staff layout for a dual-role
             // account instead of picking whichever role happened to load first.
