@@ -196,7 +196,7 @@
                 {
                     <tr>
                         <td>@item.JagId</td>
-                        <td>
+                        <td data-sort-value="@item.LastName @item.FirstName">
                             @if (!string.IsNullOrEmpty(item.Prefix))
                             {
                                 <text>@item.Prefix </text>
@@ -256,7 +256,7 @@ else
                 {
                     <tr>
                         <td>@item.JagId</td>
-                        <td>
+                        <td data-sort-value="@item.LastName @item.FirstName">
                             @if (!string.IsNullOrEmpty(item.Prefix))
                             {
                                 <text>@item.Prefix </text>
@@ -500,7 +500,7 @@ else
                     {
                         <tr>
                             <td>@item.JagId</td>
-                            <td>
+                            <td data-sort-value="@item.LastName @item.FirstName">
                                 @if (!string.IsNullOrEmpty(item.Prefix))
                                 {
                                     <text>@item.Prefix </text>
@@ -809,6 +809,7 @@ else
 
                     @foreach (var item in Model)
                     {
+                        var hiddenTitle = item.HasAccount ? "This alumnus keeps their contact details private" : "Hidden until this alumnus joins";
                         <tr>
                             @if (isAdmin)
                             {
@@ -820,7 +821,7 @@ else
                             {
                                 <td>@item.JagId</td>
                             }
-                            <td>
+                            <td data-sort-value="@item.LastName @item.FirstName">
                                 @item.FirstName @item.LastName
                                 @if (!string.IsNullOrEmpty(item.PreferredFirstName))
                                 {
@@ -829,11 +830,16 @@ else
                                         (@item.PreferredFirstName)
                                     </small>
                                 }
+                                @if (!item.HasAccount)
+                                {
+                                    <br />
+                                    <span class="badge bg-secondary" title="No login has been created for this alumnus yet">Not joined yet</span>
+                                }
                             </td>
                             @if (item.ContactHidden)
                             {
-                                <td><span class="text-muted" title="This alumnus keeps their contact details private"><i class="bi bi-lock-fill me-1"></i>Private</span></td>
-                                <td><span class="text-muted" title="This alumnus keeps their contact details private"><i class="bi bi-lock-fill me-1"></i>Private</span></td>
+                                <td><span class="text-muted" title="@hiddenTitle"><i class="bi bi-lock-fill me-1"></i>Private</span></td>
+                                <td><span class="text-muted" title="@hiddenTitle"><i class="bi bi-lock-fill me-1"></i>Private</span></td>
                             }
                             else
                             {
@@ -843,8 +849,8 @@ else
                             <td>@(item.GraduationYear > 0 ? item.GraduationYear.ToString() : "Not provided")</td>
                             @if (item.ContactHidden)
                             {
-                                <td><span class="text-muted" title="This alumnus keeps their contact details private"><i class="bi bi-lock-fill me-1"></i>Private</span></td>
-                                <td><span class="text-muted" title="This alumnus keeps their contact details private"><i class="bi bi-lock-fill me-1"></i>Private</span></td>
+                                <td><span class="text-muted" title="@hiddenTitle"><i class="bi bi-lock-fill me-1"></i>Private</span></td>
+                                <td><span class="text-muted" title="@hiddenTitle"><i class="bi bi-lock-fill me-1"></i>Private</span></td>
                             }
                             else
                             {
@@ -893,12 +899,24 @@ else
                             else if (isAlumni)
                             {
                                 <td>
-                                    <a asp-action="Details"
-                                       asp-route-id="@item.AlumniId"
-                                       class="btn btn-sm btn-outline-primary rounded-circle"
-                                       title="View">
-                                        <i class="bi bi-eye-fill text-primary"></i>
-                                    </a>
+                                    @if (item.HasAccount || item.AlumniId == currentAlumniId)
+                                    {
+                                        <a asp-action="Details"
+                                           asp-route-id="@item.AlumniId"
+                                           class="btn btn-sm btn-outline-primary rounded-circle"
+                                           title="View">
+                                            <i class="bi bi-eye-fill text-primary"></i>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        @* The span carries the tooltip - a disabled button doesn't show one. *@
+                                        <span class="d-inline-block" tabindex="0" title="This alumnus hasn't joined yet">
+                                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle" disabled aria-label="Profile not available - not joined yet">
+                                                <i class="bi bi-eye-slash-fill"></i>
+                                            </button>
+                                        </span>
+                                    }
                                 </td>
                             }
                             else
@@ -939,6 +957,7 @@ else
         <div id="cardView" class="row" style="display:none;">
             @foreach (var item in Model)
             {
+                var hiddenTitle = item.HasAccount ? "This alumnus keeps their contact details private" : "Hidden until this alumnus joins";
                 <div class="col-md-6 col-lg-4 mb-4">
                     <div class="card shadow-sm h-100 border-0">
                         <div class="card-body">
@@ -956,12 +975,16 @@ else
                                     <small class="text-info">
                                         @(item.GraduationYear > 0 ? item.GraduationYear.ToString() : "")
                                     </small>
+                                    @if (!item.HasAccount)
+                                    {
+                                        <span class="badge bg-secondary ms-1" title="No login has been created for this alumnus yet">Not joined yet</span>
+                                    }
                                 </div>
                             </div>
 
                             @if (item.ContactHidden)
                             {
-                                <p class="mb-1"><span class="text-muted" title="This alumnus keeps their contact details private"><i class="bi bi-lock-fill me-1"></i>Private</span> contact details</p>
+                                <p class="mb-1"><span class="text-muted" title="@hiddenTitle"><i class="bi bi-lock-fill me-1"></i>Private</span> contact details</p>
                             }
                             else
                             {
@@ -983,12 +1006,22 @@ else
                         </div>
 
                         <div class="card-footer bg-transparent border-0">
-                            <a asp-action="Details"
-                               asp-route-id="@item.AlumniId"
-                               class="btn btn-primary w-100">
-                                <i class="bi bi-eye-fill text-white me-1"></i>
-                                View Profile
-                            </a>
+                            @if (item.HasAccount || item.AlumniId == currentAlumniId)
+                            {
+                                <a asp-action="Details"
+                                   asp-route-id="@item.AlumniId"
+                                   class="btn btn-primary w-100">
+                                    <i class="bi bi-eye-fill text-white me-1"></i>
+                                    View Profile
+                                </a>
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-outline-secondary w-100" disabled>
+                                    <i class="bi bi-eye-slash-fill me-1"></i>
+                                    Not joined yet
+                                </button>
+                            }
                         </div>
                     </div>
                 </div>

@@ -157,7 +157,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var item in Model.OrderBy(a => a.LastName))
+                        @foreach (var item in Model.OrderBy(a => a.LastName).ThenBy(a => a.FirstName))
                         {
                             <tr class="text-center">
                                 <td class="fw-semibold">@item.JagId</td>

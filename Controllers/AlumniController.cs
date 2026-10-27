@@ -59,17 +59,20 @@ namespace Alumni_Management_System.Controllers
                 }
             }
 
+            // JAG IDs that have a login - everyone else shows as "Not joined yet".
+            var accountJagIds = _context.Users.Where(u => u.JagId != null).Select(u => u.JagId);
+
             // Search functionality. Alumni can't search by the email of someone
-            // who keeps their contact details private - that would reveal it -
-            // or by JAG ID, which the directory hides from them so nobody can
-            // collect JAG IDs to register fake accounts.
+            // whose contact details they can't see (private, or not joined yet)
+            // - that would reveal it - or by JAG ID, which the directory hides
+            // from them so nobody can collect JAG IDs to register fake accounts.
             if (!string.IsNullOrEmpty(searchString))
             {
                 alumniQuery = alumniQuery.Where(a =>
                     a.FirstName.Contains(searchString) ||
                     a.LastName.Contains(searchString) ||
                     (!alumniOnly && a.JagId.Contains(searchString)) ||
-                    ((!alumniOnly || !a.Privacy) && a.PermanentEmail.Contains(searchString)));
+                    ((!alumniOnly || (!a.Privacy && accountJagIds.Contains(a.JagId))) && a.PermanentEmail.Contains(searchString)));
             }
 
             ViewData["CurrentFilter"] = searchString;
@@ -85,9 +88,17 @@ namespace Alumni_Management_System.Controllers
             ViewData["CurrentAlumniId"] = currentAlumni?.AlumniId;
 
             var alumniList = await alumniQuery.ToListAsync();
+            var joined = (await accountJagIds.ToListAsync()).ToHashSet(StringComparer.OrdinalIgnoreCase);
+            foreach (var a in alumniList)
+            {
+                a.HasAccount = joined.Contains(a.JagId);
+            }
+
+            // Someone who hasn't joined never got to choose their privacy
+            // setting, so other alumni don't see their imported contact details.
             if (alumniOnly)
             {
-                foreach (var a in alumniList.Where(a => a.Privacy && a.AlumniId != currentAlumni?.AlumniId))
+                foreach (var a in alumniList.Where(a => (a.Privacy || !a.HasAccount) && a.AlumniId != currentAlumni?.AlumniId))
                 {
                     a.HideContactDetails();
                 }
@@ -189,6 +200,15 @@ namespace Alumni_Management_System.Controllers
             if (currentUser != null && !await IsInViewerScopeAsync(currentUser, currentRoles, alumni.AlumniId))
             {
                 return OutsideScope();
+            }
+
+            // Alumni can't open the profile of someone who hasn't joined yet -
+            // the directory disables the button, this stops a typed URL.
+            if (currentUser != null && IsAlumniOnly(currentRoles) && currentUser.JagId != alumni.JagId
+                && !await _context.Users.AnyAsync(u => u.JagId == alumni.JagId))
+            {
+                TempData["ErrorMessage"] = $"{alumni.FirstName} {alumni.LastName} hasn't joined yet, so their profile isn't available.";
+                return RedirectToAction(nameof(Index));
             }
 
             // Edit button: the owner, or an Admin (already limited to their

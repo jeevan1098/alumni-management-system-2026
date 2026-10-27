@@ -145,7 +145,7 @@
                         {
                             <tr>
                                 <td class="fw-semibold text-center">@item.Alumni.JagId</td>
-                                <td class="text-center">@item.Alumni.FirstName @item.Alumni.LastName</td>
+                                <td class="text-center" data-sort-value="@item.Alumni.LastName @item.Alumni.FirstName">@item.Alumni.FirstName @item.Alumni.LastName</td>
                                 <td class="text-center">@item.Degree.DegreeType</td>
                                 <td class="text-center">@item.Gpa</td>
                                 <td class="text-center">@item.DateConferred.ToString("MMM yyyy")</td>

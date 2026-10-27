@@ -18,6 +18,17 @@
         return cell ? cell.textContent.replace(/\s+/g, ' ').trim() : '';
     }
 
+    // A cell can sort on something other than what it shows - name cells
+    // display "First Last" but carry data-sort-value="Last First" so
+    // clicking the Name header orders by last name.
+    function sortText(row, index) {
+        var cell = row.cells[index];
+        if (cell && cell.hasAttribute('data-sort-value')) {
+            return cell.getAttribute('data-sort-value').replace(/\s+/g, ' ').trim();
+        }
+        return cellText(row, index);
+    }
+
     // Turns a cell's text into something comparable: numbers (incl. GPA,
     // currency, counts), then dates, then plain text.
     function sortKey(text) {
@@ -133,7 +144,7 @@
                 th.dataset.sortDir = dir;
                 icon.className = 'bi ae-sort-icon ae-sort-active ' + (dir === 'asc' ? 'bi-sort-up' : 'bi-sort-down');
 
-                var keyed = rows.map(function (row, i) { return { row: row, key: sortKey(cellText(row, index)), i: i }; });
+                var keyed = rows.map(function (row, i) { return { row: row, key: sortKey(sortText(row, index)), i: i }; });
                 keyed.sort(function (a, b) {
                     var result = compare(a.key, b.key);
                     if (result === 0) return a.i - b.i;

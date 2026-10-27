@@ -113,7 +113,7 @@
                         @foreach (var item in Model.OrderByDescending(e => e.StartDate))
                         {
                             <tr class="text-center">
-                                <td>@item.Alumni.FirstName @item.Alumni.LastName</td>
+                                <td data-sort-value="@item.Alumni.LastName @item.Alumni.FirstName">@item.Alumni.FirstName @item.Alumni.LastName</td>
                                 <td>@item.JobTitle</td>
                                 <td>@item.Employer.EmployerName</td>
                                 <td>@item.StartDate.ToString("MMM yyyy")</td>

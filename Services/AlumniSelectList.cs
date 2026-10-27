@@ -12,9 +12,10 @@ public static class AlumniSelectList
 {
     public static SelectList Build(IEnumerable<Alumni> alumni, object selectedValue = null)
     {
+        // Ordered by last name, then first name, to match the tables.
         var items = alumni
+            .OrderBy(a => a.LastName).ThenBy(a => a.FirstName)
             .Select(a => new { a.AlumniId, DisplayText = $"{a.FirstName} {a.LastName} ({a.JagId})" })
-            .OrderBy(a => a.DisplayText)
             .ToList();
         return new SelectList(items, "AlumniId", "DisplayText", selectedValue);
     }

@@ -91,7 +91,7 @@
                         {
                             <tr class="text-center">
                                 <td>@item.OfficerRoles</td>
-                                <td>@item.Alumni.FirstName @item.Alumni.LastName</td>
+                                <td data-sort-value="@item.Alumni.LastName @item.Alumni.FirstName">@item.Alumni.FirstName @item.Alumni.LastName</td>
                                 <td>@item.Organization.OrganizationName</td>
                                 <td>
                                     <a asp-action="Details" asp-route-id="@item.AlumniOrganizationId" class="btn btn-sm btn-outline-primary rounded-pill">

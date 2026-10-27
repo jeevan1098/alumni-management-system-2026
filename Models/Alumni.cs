@@ -170,6 +170,13 @@ public partial class Alumni
     [NotMapped]
     public bool ContactHidden { get; private set; }
 
+    // False when nobody has a login (username/password) for this JAG ID yet -
+    // e.g. bulk-imported or admin-created alumni who haven't registered. Set by
+    // AlumniController.Index for the "Not joined yet" badge; defaults to true
+    // so pages that never set it behave as before.
+    [NotMapped]
+    public bool HasAccount { get; set; } = true;
+
     // Clears the contact fields on this in-memory copy for a viewer who isn't
     // allowed to see them. Only call on entities that won't be saved
     // (e.g. loaded with AsNoTracking) - it would otherwise wipe real data.

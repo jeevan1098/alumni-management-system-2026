@@ -116,7 +116,7 @@
                                 <td>@item.Title</td>
                                 <td>@item.StartDate.ToString("MMM yyyy")</td>
                                 <td>@(item.EndDate?.ToString("MMM yyyy") ?? "Not provided")</td>
-                                <td>@item.Alumni.FirstName @item.Alumni.LastName</td>
+                                <td data-sort-value="@item.Alumni.LastName @item.Alumni.FirstName">@item.Alumni.FirstName @item.Alumni.LastName</td>
                                 <td>@item.Employer.EmployerName</td>
                                 <td>
                                     <a asp-action="Details" asp-route-id="@item.AlumniInternshipId" class="btn btn-sm btn-outline-primary rounded-pill me-2">
