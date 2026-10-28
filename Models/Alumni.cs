@@ -164,7 +164,7 @@ public partial class Alumni
     public const string IsActiveHelp =
         "Checked means the alumnus is living. Every alumnus is active by default - " +
         "uncheck this only after confirming that the alumnus has passed away. " +
-        "Only administrators can see or change this.";
+        "Only Administrators can see or change this.";
 
     // Set by HideContactDetails() so views can show "Private" instead of a blank.
     [NotMapped]

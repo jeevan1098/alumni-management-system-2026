@@ -167,8 +167,10 @@ namespace Alumni_Management_System.Controllers
             ViewBag.ChartLabels = alumniChart.Select(g => g.Year).ToList();
             ViewBag.AlumniData = alumniChart.Select(g => g.Count).ToList();
 
+            // External isn't one of our colleges, so it's left out of the chart
+            // (and its percentages) entirely.
             var alumniByCollege = await scopedAlumni
-                .Where(a => a.CollegeId != null)
+                .Where(a => a.CollegeId != null && a.College.IsInternal)
                 .GroupBy(a => a.College.CollegeName)
                 .Select(g => new { College = g.Key, Count = g.Count() })
                 .OrderByDescending(g => g.Count)

@@ -36,7 +36,7 @@ namespace Alumni_Management_System.Controllers
             var roles = actor == null ? null : await _userManager.GetRolesAsync(actor);
             if (actor == null || await Services.AccessScopeService.GetScopeAsync(_context, actor, roles) != null)
             {
-                TempData["ErrorMessage"] = "Only an administrator with system-wide access can open the Access Scopes page. Use Manage Scope here instead.";
+                TempData["ErrorMessage"] = "Only an Administrator with system-wide access can open the Access Scopes page. Use Manage Scope here instead.";
                 context.Result = RedirectToAction("Index", "Users");
                 return;
             }

@@ -53,6 +53,26 @@
                 background: var(--bs-body-bg) !important;
             }
 
+            /* Blue text in dark mode. Bootstrap's bright blue/cyan is hard to
+               read: on the dark page lighten it, and on the light-gray
+               surfaces above (cards, tables, forms...) use dark blue. */
+            body.dark .text-primary { color: #6ea8fe !important; }
+            body.dark .text-info { color: #6edff6 !important; }
+
+            body.dark :is(.card, .bg-white, .bg-light, .table, .modal-content, .dropdown-menu, .list-group-item,
+                          .accordion-item, .quick-card, .table-card, .report-card, .filter-card)
+                      :is(.text-primary, .text-info) {
+                color: #0b3d91 !important;
+            }
+
+            /* ...except on dark or blue strips inside those surfaces. */
+            body.dark :is(.card, .bg-white, .bg-light, .table, .modal-content, .dropdown-menu, .list-group-item,
+                          .accordion-item, .quick-card, .table-card, .report-card, .filter-card)
+                      :is(.bg-primary, .bg-info, .bg-dark, .table-dark, .btn-primary, .btn-info, .card-soft)
+                      :is(.text-primary, .text-info) {
+                color: #cfe2ff !important;
+            }
+
         .hero {
             background: linear-gradient(135deg,#1f3c88,#3f7cac);
             color: white;

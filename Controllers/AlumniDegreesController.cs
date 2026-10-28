@@ -173,7 +173,7 @@ namespace Alumni_Management_System.Controllers
                 }
                 else if (alumniDegree.YearsToCompleteDegree > 10)
                 {
-                    ModelState.AddModelError("YearsToCompleteDegree", "Years to complete degree cannot exceed 10 years. Please contact administrator.");
+                    ModelState.AddModelError("YearsToCompleteDegree", "Years to complete degree cannot exceed 10 years. Please contact an Administrator.");
                 }
             }
 
@@ -335,7 +335,7 @@ namespace Alumni_Management_System.Controllers
                 }
                 else if (alumniDegree.YearsToCompleteDegree > 10)
                 {
-                    ModelState.AddModelError("YearsToCompleteDegree", "Years to complete degree cannot exceed 10 years. Please contact administrator.");
+                    ModelState.AddModelError("YearsToCompleteDegree", "Years to complete degree cannot exceed 10 years. Please contact an Administrator.");
                 }
             }
 

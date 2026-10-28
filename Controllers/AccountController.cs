@@ -79,14 +79,14 @@ namespace Alumni_Management_System.Controllers
             // someone else's registry entry.
             if (registryEntry == null || !string.Equals(registryEntry.LastName?.Trim(), model.LastName?.Trim(), StringComparison.OrdinalIgnoreCase))
             {
-                ModelState.AddModelError("", "We couldn't find a matching Alumni Registry entry for that JAG ID and last name. Please contact the administrator for assistance.");
+                ModelState.AddModelError("", "We couldn't find a matching Alumni Registry entry for that JAG ID and last name. Please contact the Administrator for assistance.");
                 return View(model);
             }
 
             // Check if account already exists for this JAG ID
             if (registryEntry.AccountCreated)
             {
-                ModelState.AddModelError("JagId", "Account already exists associated with this JAG ID. Please contact administrator for help.");
+                ModelState.AddModelError("JagId", "Account already exists associated with this JAG ID. Please contact an Administrator for help.");
                 return View(model);
             }
 
@@ -147,7 +147,7 @@ namespace Alumni_Management_System.Controllers
 
             if (existingAlumni == null)
             {
-                ModelState.AddModelError("", "Your record was not found in the imported Alumni list. Please contact admin support.");
+                ModelState.AddModelError("", "Your record was not found in the imported Alumni list. Please contact Admin support.");
                 return View(model);
             }
 
@@ -175,7 +175,7 @@ namespace Alumni_Management_System.Controllers
             // the Alumni role to their existing account instead.
             if (await _userManager.Users.AnyAsync(u => u.JagId == model.JagId))
             {
-                ModelState.AddModelError("", "An account already exists for this JAG ID. Please sign in instead, or contact an administrator if you can't access it.");
+                ModelState.AddModelError("", "An account already exists for this JAG ID. Please sign in instead, or contact an Administrator if you can't access it.");
                 return View(model);
             }
 
@@ -382,7 +382,7 @@ namespace Alumni_Management_System.Controllers
                         $"<p><strong>Username:</strong> {match.UserName}<br/>" +
                         $"<strong>Temporary password:</strong> {tempPassword}</p>" +
                         "<p>Log in with these - you'll be asked to set your own password right after.</p>" +
-                        "<p>Didn't request this? Contact your administrator.</p>");
+                        "<p>Didn't request this? Contact your Administrator.</p>");
                 }
                 catch (Exception ex)
                 {
@@ -398,7 +398,7 @@ namespace Alumni_Management_System.Controllers
 
             if (emailFailed)
             {
-                ModelState.AddModelError(string.Empty, "We couldn't send the email right now, so your password has NOT been changed - your current password still works. Please try again later or contact the administrator.");
+                ModelState.AddModelError(string.Empty, "We couldn't send the email right now, so your password has NOT been changed - your current password still works. Please try again later or contact the Administrator.");
                 return View(model);
             }
 
