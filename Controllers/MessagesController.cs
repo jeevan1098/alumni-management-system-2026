@@ -24,12 +24,14 @@ namespace Alumni_Management_System.Controllers
         private readonly ApplicationDbContext _context;
         private readonly UserManager<AppUser> _userManager;
         private readonly IEmailSender _emailSender;
+        private readonly Services.SiteContentRenderer _siteContent;
 
-        public MessagesController(ApplicationDbContext context, UserManager<AppUser> userManager, IEmailSender emailSender)
+        public MessagesController(ApplicationDbContext context, UserManager<AppUser> userManager, IEmailSender emailSender, Services.SiteContentRenderer siteContent)
         {
             _context = context;
             _userManager = userManager;
             _emailSender = emailSender;
+            _siteContent = siteContent;
         }
 
         // GET: Messages
@@ -315,7 +317,12 @@ namespace Alumni_Management_System.Controllers
                 return RedirectToAction("Index");
             }
 
-            var htmlBody = BuildEmailBody(message.MessageBody);
+            // Greeting/signature come from Site Content; the message text is
+            // HTML-encoded with its line breaks kept.
+            var htmlBody = _siteContent.RenderEmail(Services.SiteContentDefinitions.BulkMessageEmail, new Dictionary<string, string>
+            {
+                ["Body"] = message.MessageBody
+            }).HtmlBody;
             int sent = 0;
             var failures = new List<string>();
 
@@ -364,12 +371,6 @@ namespace Alumni_Management_System.Controllers
             var scope = await Services.AccessScopeService.GetScopeAsync(_context, currentUser, roles);
             return Services.AccessScopeService.ApplyTo(_context.Alumni, scope);
         }
-
-        private static string BuildEmailBody(string body) => $@"
-                    <p>Hello,</p>
-                    <p>{body}</p>
-                    <br/>
-                    <p>Thanks,<br/>Alumni Management System,<br/>University of South Alabama</p>";
 
     }
 }

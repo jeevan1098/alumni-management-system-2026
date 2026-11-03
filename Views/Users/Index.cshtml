@@ -219,6 +219,36 @@
             {
                 <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
             }
+            @if (TempData["ResetTempPassword"] is string resetTempPassword)
+            {
+                var resetEmailSent = TempData["ResetEmailSent"] as bool? == true;
+                var resetEmail = TempData["ResetEmail"] as string;
+                <div class="alert @(resetEmailSent ? "alert-success" : "alert-warning")">
+                    <div class="fw-semibold mb-2">
+                        @if (resetEmailSent)
+                        {
+                            <span>Password reset. The new login details were also emailed to @resetEmail.</span>
+                        }
+                        else if (string.IsNullOrWhiteSpace(resetEmail))
+                        {
+                            <span>Password reset. This account has no email on file - give these login details to the user yourself.</span>
+                        }
+                        else
+                        {
+                            <span>Password reset, but the email to @resetEmail could not be sent (check Email Settings). Give these login details to the user yourself.</span>
+                        }
+                    </div>
+                    <div>Username: <code id="resetUserName">@TempData["ResetUserName"]</code></div>
+                    <div>
+                        Temporary password: <code id="resetTempPassword">@resetTempPassword</code>
+                        <button type="button" class="btn btn-sm btn-outline-secondary ms-2 py-0"
+                                onclick="navigator.clipboard.writeText(document.getElementById('resetTempPassword').textContent); this.textContent = 'Copied';">
+                            Copy
+                        </button>
+                    </div>
+                    <small class="text-muted">They'll be asked to choose a new password the first time they sign in. This is shown only once.</small>
+                </div>
+            }
 
             @if (actorIsLimited)
             {
@@ -375,7 +405,7 @@
         }
 
         function resetPassword(userId, userName) {
-            if (!confirm('Reset ' + userName + '\'s password? A new temporary password will be emailed to them.')) return;
+            if (!confirm('Reset ' + userName + '\'s password? A new temporary password will be shown here and emailed to them.')) return;
             document.getElementById('resetPasswordUserId').value = userId;
             document.getElementById('resetPasswordForm').submit();
         }

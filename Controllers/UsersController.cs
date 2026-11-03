@@ -25,15 +25,17 @@ namespace Alumni_Management_System.Controllers
         private readonly UserManager<AppUser> _userManager;
         private readonly RoleManager<IdentityRole> _roleManager;
         private readonly IEmailSender _emailSender;
+        private readonly Services.SiteContentRenderer _siteContent;
         private readonly ILogger<UsersController> _logger;
 
-        public UsersController(ApplicationDbContext context, UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager, IEmailSender emailSender, ILogger<UsersController> logger)
+        public UsersController(ApplicationDbContext context, UserManager<AppUser> userManager, RoleManager<IdentityRole> roleManager, IEmailSender emailSender, Services.SiteContentRenderer siteContent, ILogger<UsersController> logger)
         {
             _logger = logger;
             _context = context;
             _userManager = userManager;
             _roleManager = roleManager;
             _emailSender = emailSender;
+            _siteContent = siteContent;
         }
 
         // GET: Users
@@ -387,13 +389,13 @@ namespace Alumni_Management_System.Controllers
 
             try
             {
-                await _emailSender.SendEmailAsync(
-                    user.Email,
-                    "Your Alumni Management System account",
-                    $"<p>A {model.Role} account has been created for you.</p>" +
-                    $"<p><strong>Temporary username:</strong> {placeholderUsername}<br/>" +
-                    $"<strong>Temporary password:</strong> {model.Password}</p>" +
-                    "<p>Log in with these at the site, then you'll be asked to choose your own username and password.</p>");
+                var email = _siteContent.RenderEmail(Services.SiteContentDefinitions.AccountCreatedEmail, new Dictionary<string, string>
+                {
+                    ["Role"] = model.Role,
+                    ["UserName"] = placeholderUsername,
+                    ["TempPassword"] = model.Password
+                });
+                await _emailSender.SendEmailAsync(user.Email, email.Subject, email.HtmlBody);
             }
             catch (Exception ex)
             {
@@ -494,8 +496,9 @@ namespace Alumni_Management_System.Controllers
         // POST: Users/ResetPassword - triggered by an admin after a
         // forgot-password request (see AccountController.ForgotPassword).
         // Generates a fresh temp password, forces the user to change it on
-        // next sign-in, and emails it to them directly (the admin never sees
-        // it, same as the temp password on account creation).
+        // next sign-in, emails it to them, and also shows the username and
+        // temp password to the admin once, so they can pass it on
+        // themselves if the email doesn't arrive.
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> ResetPassword(string userId)
@@ -511,12 +514,6 @@ namespace Alumni_Management_System.Controllers
                 return OutsideScope();
             }
 
-            // Remembered so the reset can be undone if the email below doesn't
-            // go out - otherwise the old password stops working and the new
-            // one never reaches the user, locking them out.
-            var previousPasswordHash = user.PasswordHash;
-            var previousMustChangePassword = user.MustChangePassword;
-
             var tempPassword = Services.PasswordGenerator.GenerateTempPassword();
             var token = await _userManager.GeneratePasswordResetTokenAsync(user);
             var result = await _userManager.ResetPasswordAsync(user, token, tempPassword);
@@ -530,26 +527,35 @@ namespace Alumni_Management_System.Controllers
             user.MustChangePassword = true;
             await _userManager.UpdateAsync(user);
 
-            try
+            // Shown once on the Manage Users page (see Views/Users/Index).
+            TempData["ResetUserName"] = user.UserName;
+            TempData["ResetTempPassword"] = tempPassword;
+            TempData["ResetEmail"] = user.Email;
+
+            if (string.IsNullOrWhiteSpace(user.Email))
             {
-                await _emailSender.SendEmailAsync(
-                    user.Email,
-                    "Your password has been reset - Alumni Management System",
-                    $"<p>Your administrator reset your password.</p>" +
-                    $"<p><strong>Temporary password:</strong> {tempPassword}</p>" +
-                    $"<p>Log in with your existing username (<strong>{user.UserName}</strong>) and this temporary password - you'll be asked to set your own right after.</p>");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Sending the temporary password email to '{UserName}' failed; restoring their previous password.", user.UserName);
-                user.PasswordHash = previousPasswordHash;
-                user.MustChangePassword = previousMustChangePassword;
-                await _userManager.UpdateAsync(user);
-                TempData["ErrorMessage"] = $"The email to {user.Email} could not be sent, so the password for {user.UserName} was NOT changed. Check the email settings and try again.";
+                TempData["ResetEmailSent"] = false;
                 return RedirectToAction(nameof(Index));
             }
 
-            TempData["SuccessMessage"] = $"Password reset for {user.UserName}. A temporary password was emailed to {user.Email}.";
+            try
+            {
+                var email = _siteContent.RenderEmail(Services.SiteContentDefinitions.AdminPasswordResetEmail, new Dictionary<string, string>
+                {
+                    ["UserName"] = user.UserName,
+                    ["TempPassword"] = tempPassword
+                });
+                await _emailSender.SendEmailAsync(user.Email, email.Subject, email.HtmlBody);
+                TempData["ResetEmailSent"] = true;
+            }
+            catch (Exception ex)
+            {
+                // The password stays reset - the admin has it on screen and
+                // can give it to the user directly.
+                _logger.LogError(ex, "Sending the temporary password email to '{UserName}' failed.", user.UserName);
+                TempData["ResetEmailSent"] = false;
+            }
+
             return RedirectToAction(nameof(Index));
         }
 

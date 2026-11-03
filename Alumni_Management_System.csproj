@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <PackageReference Include="EPPlus" Version="7.5.2" />
+    <PackageReference Include="Markdig" Version="1.5.1" />
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="9.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="9.0.11" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.UI" Version="9.0.11" />
@@ -18,6 +19,13 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="9.0.12" />
+  </ItemGroup>
+
+  <!-- Admin-edited Site Content lives on the server (SiteContentStore); never
+       publish a local copy over it. -->
+  <ItemGroup>
+    <Content Remove="App_Data\**" />
+    <None Remove="App_Data\**" />
   </ItemGroup>
 
 </Project>

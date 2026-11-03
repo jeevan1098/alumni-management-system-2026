@@ -4,6 +4,7 @@ using System;
 using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using Alumni_Management_System.Models;
+using Alumni_Management_System.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
@@ -20,17 +21,20 @@ namespace Alumni_Management_System.Areas.Identity.Pages.Account
         private readonly SignInManager<AppUser> _signInManager;
         private readonly UserManager<AppUser> _userManager;
         private readonly IEmailSender _emailSender;
+        private readonly SiteContentRenderer _siteContent;
         private readonly ILogger<LoginWith2faModel> _logger;
 
         public LoginWith2faModel(
             SignInManager<AppUser> signInManager,
             UserManager<AppUser> userManager,
             IEmailSender emailSender,
+            SiteContentRenderer siteContent,
             ILogger<LoginWith2faModel> logger)
         {
             _signInManager = signInManager;
             _userManager = userManager;
             _emailSender = emailSender;
+            _siteContent = siteContent;
             _logger = logger;
         }
 
@@ -129,10 +133,11 @@ namespace Alumni_Management_System.Areas.Identity.Pages.Account
         private async Task SendCodeAsync(AppUser user)
         {
             var code = await _userManager.GenerateTwoFactorTokenAsync(user, "Email");
-            await _emailSender.SendEmailAsync(
-                user.Email,
-                "Your Alumni Management System verification code",
-                $"<p>Your verification code is: <strong>{code}</strong></p><p>This code expires shortly - if it's expired, request a new one from the login page.</p>");
+            var email = _siteContent.RenderEmail(SiteContentDefinitions.TwoFactorCodeEmail, new Dictionary<string, string>
+            {
+                ["Code"] = code
+            });
+            await _emailSender.SendEmailAsync(user.Email, email.Subject, email.HtmlBody);
         }
     }
 }

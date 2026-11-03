@@ -1,0 +1,71 @@
+@model List<(Alumni_Management_System.Services.SiteContentDefinition Definition, Alumni_Management_System.Services.SiteContentEntry Saved)>
+
+@{
+    ViewData["Title"] = "Site Content";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                    <i class="bi bi-pencil-square text-primary fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0">Site Content</h3>
+                    <small class="text-info">Edit page text and email templates without changing the code</small>
+                </div>
+            </div>
+
+            <hr class="mb-4" />
+
+            <partial name="_StatusMessages" />
+
+            @foreach (var group in Model.GroupBy(m => m.Definition.Group))
+            {
+                <h5 class="fw-bold mt-4 mb-3">@group.Key</h5>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle">
+                        <thead class="table-dark">
+                            <tr>
+                                <th>Content</th>
+                                <th>Last changed</th>
+                                <th class="text-center">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var item in group)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="fw-semibold">@item.Definition.Title</div>
+                                        <small class="text-muted">@item.Definition.Description</small>
+                                    </td>
+                                    <td>
+                                        @if (item.Saved.IsCustomized)
+                                        {
+                                            <span>@item.Saved.UpdatedAt?.ToString("MMM d, yyyy h:mm tt")</span>
+                                            <br />
+                                            <small class="text-muted">by @item.Saved.UpdatedBy</small>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Default text</span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        <a asp-action="Edit" asp-route-id="@item.Definition.Key" class="btn btn-sm btn-warning rounded-pill px-3">
+                                            <i class="bi bi-pencil-square me-1"></i>Edit
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
