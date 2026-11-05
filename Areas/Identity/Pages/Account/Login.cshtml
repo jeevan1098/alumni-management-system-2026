@@ -17,7 +17,12 @@
     </div>
     <div class="mb-4">
         <label asp-for="Input.Password" class="form-label"><i class="bi bi-lock-fill me-2"></i>Password</label>
-        <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Enter your password" type="password" />
+        <div class="input-group">
+            <input asp-for="Input.Password" class="form-control" autocomplete="current-password" aria-required="true" placeholder="Enter your password" type="password" />
+            <button type="button" class="btn btn-outline-secondary" id="toggle-password" aria-label="Show password" title="Show password">
+                <i class="bi bi-eye"></i>
+            </button>
+        </div>
         <span asp-validation-for="Input.Password" class="text-danger"></span>
     </div>
     <div class="form-check mb-4">
@@ -34,4 +39,19 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var btn = document.getElementById('toggle-password');
+            var input = document.getElementById('Input_Password');
+            if (!btn || !input) return;
+            btn.addEventListener('click', function () {
+                var show = input.type === 'password';
+                input.type = show ? 'text' : 'password';
+                var label = show ? 'Hide password' : 'Show password';
+                btn.setAttribute('aria-label', label);
+                btn.title = label;
+                btn.querySelector('i').className = show ? 'bi bi-eye-slash' : 'bi bi-eye';
+            });
+        })();
+    </script>
 }
