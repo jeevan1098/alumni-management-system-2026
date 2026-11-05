@@ -17,6 +17,7 @@ namespace Alumni_Management_System.Controllers
         private readonly UserManager<AppUser> _userManager;
         private readonly SignInManager<AppUser> _signInManager;
         private readonly IEmailSender _emailSender;
+        private readonly Services.SiteContentRenderer _siteContent;
         private readonly ILogger<AccountController> _logger;
         private readonly IConfiguration _configuration;
 
@@ -25,6 +26,7 @@ namespace Alumni_Management_System.Controllers
             UserManager<AppUser> userManager,
             SignInManager<AppUser> signInManager,
             IEmailSender emailSender,
+            Services.SiteContentRenderer siteContent,
             ILogger<AccountController> logger,
             IConfiguration configuration)
         {
@@ -32,6 +34,7 @@ namespace Alumni_Management_System.Controllers
             _userManager = userManager;
             _signInManager = signInManager;
             _emailSender = emailSender;
+            _siteContent = siteContent;
             _logger = logger;
             _configuration = configuration;
         }
@@ -166,6 +169,12 @@ namespace Alumni_Management_System.Controllers
             if (await _userManager.Users.AnyAsync(u => u.NormalizedEmail == normalizedEmail))
             {
                 ModelState.AddModelError("Email", "This email is already used by another account.");
+                return View(model);
+            }
+            var trimmedEmail = model.Email.Trim();
+            if (await _context.Alumni.AnyAsync(a => a.PermanentEmail == trimmedEmail && a.JagId != model.JagId))
+            {
+                ModelState.AddModelError("Email", "This email is already used by another alumni profile.");
                 return View(model);
             }
 
@@ -375,14 +384,12 @@ namespace Alumni_Management_System.Controllers
 
                 try
                 {
-                    await _emailSender.SendEmailAsync(
-                        match.Email,
-                        "Your temporary password - Alumni Management System",
-                        $"<p>You requested a password reset.</p>" +
-                        $"<p><strong>Username:</strong> {match.UserName}<br/>" +
-                        $"<strong>Temporary password:</strong> {tempPassword}</p>" +
-                        "<p>Log in with these - you'll be asked to set your own password right after.</p>" +
-                        "<p>Didn't request this? Contact your Administrator.</p>");
+                    var email = _siteContent.RenderEmail(Services.SiteContentDefinitions.SelfPasswordResetEmail, new Dictionary<string, string>
+                    {
+                        ["UserName"] = match.UserName,
+                        ["TempPassword"] = tempPassword
+                    });
+                    await _emailSender.SendEmailAsync(match.Email, email.Subject, email.HtmlBody);
                 }
                 catch (Exception ex)
                 {

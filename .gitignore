@@ -361,3 +361,5 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+# Admin-edited Site Content (SiteContentStore) - server data, not source
+App_Data/

@@ -2,37 +2,39 @@ using System.Net;
 using System.Net.Mail;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Identity.UI.Services;
-using Microsoft.Extensions.Options;
 
 namespace Alumni_Management_System.Services;
 
 public class SmtpEmailSender : IEmailSender
 {
-    private readonly SmtpOptions _options;
+    private readonly EmailSettingsStore _settings;
 
-    public SmtpEmailSender(IOptions<SmtpOptions> options)
+    public SmtpEmailSender(EmailSettingsStore settings)
     {
-        _options = options.Value;
+        _settings = settings;
     }
 
     public async Task SendEmailAsync(string email, string subject, string htmlMessage)
     {
-        if (string.IsNullOrWhiteSpace(_options.Host) || string.IsNullOrWhiteSpace(_options.Password))
+        // Read per send, so a change saved in Email Settings applies to the
+        // very next email.
+        var options = _settings.GetEffective();
+        if (string.IsNullOrWhiteSpace(options.Host) || string.IsNullOrWhiteSpace(options.Password))
         {
-            throw new InvalidOperationException("Email is not configured: set Smtp:Host in appsettings.json and Smtp:Password in user-secrets or an environment variable.");
+            throw new InvalidOperationException("Email is not configured: an Admin needs to set the SMTP server and password in Email Settings.");
         }
 
-        var fromAddress = new MailAddress(_options.FromAddress, _options.FromName);
+        var fromAddress = new MailAddress(options.FromAddress, options.FromName);
         var toAddress = new MailAddress(email);
 
         using var smtp = new SmtpClient
         {
-            Host = _options.Host,
-            Port = _options.Port,
-            EnableSsl = _options.EnableSsl,
+            Host = options.Host,
+            Port = options.Port,
+            EnableSsl = options.EnableSsl,
             DeliveryMethod = SmtpDeliveryMethod.Network,
             UseDefaultCredentials = false,
-            Credentials = new NetworkCredential(_options.Username, _options.Password)
+            Credentials = new NetworkCredential(options.Username, options.Password)
         };
 
         using var message = new MailMessage(fromAddress, toAddress)

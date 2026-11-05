@@ -1,75 +1,57 @@
-﻿@inject Microsoft.Extensions.Configuration.IConfiguration Configuration
+﻿@using Alumni_Management_System.Services
+@inject SiteContentStore SiteContentStore
+@inject SiteContentRenderer SiteContent
 @{
     ViewData["Title"] = "Help & Support";
+    var help = SiteContent.RenderHelp(SiteContentStore.Get(SiteContentDefinitions.HelpPage).Body);
 }
 
 <div class="container mt-4">
 
-    <h2 class="mb-4">
-        <i class="bi bi-question-circle-fill"></i>
-        Help & Support Center
-    </h2>
-
-    <div class="alert alert-info">
-        Welcome to the Alumni Management System Help Center.
-        Here you can learn how to use the platform.
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <h2 class="mb-0">
+            <i class="bi bi-question-circle-fill"></i>
+            Help & Support Center
+        </h2>
+        @if (User.IsInRole("Admin"))
+        {
+            <a asp-controller="SiteContent" asp-action="Edit" asp-route-id="@SiteContentDefinitions.HelpPage"
+               asp-route-returnUrl="@Context.Request.Path" class="btn btn-sm btn-outline-secondary rounded-pill">
+                <i class="bi bi-pencil-square me-1"></i>Edit this page
+            </a>
+        }
     </div>
 
-    <!-- FAQ -->
+    <partial name="_StatusMessages" />
+
+    @if (!string.IsNullOrWhiteSpace(help.Intro.Value))
+    {
+        <div class="alert alert-info site-content">
+            @help.Intro
+        </div>
+    }
+
+    <!-- FAQ: one item per "## " heading in the Help content -->
     <div class="accordion" id="helpAccordion">
-
-        <div class="accordion-item">
-            <h2 class="accordion-header">
-                <button class="accordion-button"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#q1">
-                    How do I update my profile?
-                </button>
-            </h2>
-            <div id="q1" class="accordion-collapse collapse show">
-                <div class="accordion-body">
-                    Go to Profile from the top menu and update your details.
+        @for (var i = 0; i < help.Sections.Count; i++)
+        {
+            var item = help.Sections[i];
+            <div class="accordion-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button @(i == 0 ? "" : "collapsed")"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#q@(i + 1)">
+                        @item.Question
+                    </button>
+                </h2>
+                <div id="q@(i + 1)" class="accordion-collapse collapse @(i == 0 ? "show" : "")">
+                    <div class="accordion-body site-content">
+                        @item.Answer
+                    </div>
                 </div>
             </div>
-        </div>
-
-        <div class="accordion-item">
-            <h2 class="accordion-header">
-                <button class="accordion-button collapsed"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#q2">
-                    How do Admins manage alumni?
-                </button>
-            </h2>
-            <div id="q2" class="accordion-collapse collapse">
-                <div class="accordion-body">
-                    Admin users can manage alumni records using the sidebar navigation.
-                </div>
-            </div>
-        </div>
-
-        <div class="accordion-item">
-            <h2 class="accordion-header">
-                <button class="accordion-button collapsed"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#q3">
-                    Who do I contact for support?
-                </button>
-            </h2>
-            <div id="q3" class="accordion-collapse collapse">
-                <div class="accordion-body">
-                    System Administrator:
-                    <a href="mailto:@Configuration["AdminContactEmail"]">@Configuration["AdminContactEmail"]</a> <br />
-                    School of Computing (SOC) Administrator:
-                    <a href="mailto:@Configuration["SocAdminContactEmail"]">@Configuration["SocAdminContactEmail"]</a> <br />
-                    Phone: +1 (251) 000-0000
-                </div>
-            </div>
-        </div>
-
+        }
     </div>
 
 </div>

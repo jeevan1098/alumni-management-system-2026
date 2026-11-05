@@ -252,6 +252,12 @@ namespace Alumni_Management_System.Controllers
                 ModelState.AddModelError(nameof(Alumni.JagId), "An alumni profile with this JAG ID already exists.");
             }
 
+            var emailConflict = await FindEmailConflictAsync(alumni.PermanentEmail, alumni.JagId, null);
+            if (emailConflict != null)
+            {
+                ModelState.AddModelError(nameof(Alumni.PermanentEmail), emailConflict);
+            }
+
             if (ModelState.IsValid)
             {
                 alumni.LastUpdated = DateTime.Now;
@@ -400,6 +406,31 @@ namespace Alumni_Management_System.Controllers
                 }
             }
 
+            // Password resets go to the login account's email, not this
+            // profile's - so a changed Permanent Email is carried over to the
+            // linked account (same JAG ID), or the reset would still go to
+            // the old address.
+            var linkedAccount = await _userManager.Users.FirstOrDefaultAsync(u => u.JagId == storedJagId);
+            var syncAccountEmail = linkedAccount != null
+                && !string.IsNullOrWhiteSpace(alumni.PermanentEmail)
+                && !string.Equals(linkedAccount.Email, alumni.PermanentEmail, StringComparison.OrdinalIgnoreCase);
+
+            // Only checked when the email actually changes, so a record that
+            // already shares an email (from before this rule) can still be
+            // saved for its other fields.
+            var storedEmail = await _context.Alumni.AsNoTracking()
+                .Where(a => a.AlumniId == id)
+                .Select(a => a.PermanentEmail)
+                .FirstAsync();
+            if (syncAccountEmail || !string.Equals(storedEmail, alumni.PermanentEmail, StringComparison.OrdinalIgnoreCase))
+            {
+                var emailConflict = await FindEmailConflictAsync(alumni.PermanentEmail, storedJagId, id);
+                if (emailConflict != null)
+                {
+                    ModelState.AddModelError(nameof(Alumni.PermanentEmail), emailConflict);
+                }
+            }
+
             if (ModelState.IsValid)
             {
                 try
@@ -420,6 +451,20 @@ namespace Alumni_Management_System.Controllers
                     }
 
                     await _context.SaveChangesAsync();
+
+                    if (syncAccountEmail)
+                    {
+                        var previousEmail = linkedAccount.Email;
+                        linkedAccount.Email = alumni.PermanentEmail;
+                        linkedAccount.EmailConfirmed = true;
+                        var emailResult = await _userManager.UpdateAsync(linkedAccount);
+                        if (!emailResult.Succeeded)
+                        {
+                            linkedAccount.Email = previousEmail;
+                            TempData["SuccessMessage"] = null;
+                            TempData["ErrorMessage"] = "Profile saved, but the login email could not be updated: " + string.Join(" ", emailResult.Errors.Select(e => e.Description)) + " Password reset emails will still go to " + previousEmail + ".";
+                        }
+                    }
                 }
                 catch (DbUpdateConcurrencyException)
                 {
@@ -663,6 +708,31 @@ namespace Alumni_Management_System.Controllers
         private bool AlumniExists(int id)
         {
             return _context.Alumni.Any(e => e.AlumniId == id);
+        }
+
+        // One email per person: no other alumni profile, and no login
+        // account other than this person's own (same JAG ID), may use it.
+        // Returns the message to show, or null when the email is free.
+        private async Task<string> FindEmailConflictAsync(string email, string jagId, int? alumniId)
+        {
+            if (string.IsNullOrWhiteSpace(email))
+            {
+                return null;
+            }
+
+            var trimmed = email.Trim();
+            if (await _context.Alumni.AnyAsync(a => a.PermanentEmail == trimmed && a.AlumniId != alumniId))
+            {
+                return "This email is already used by another alumni profile.";
+            }
+
+            var normalizedEmail = _userManager.NormalizeEmail(trimmed);
+            if (await _userManager.Users.AnyAsync(u => u.NormalizedEmail == normalizedEmail && u.JagId != jagId))
+            {
+                return "This email is already used by another account.";
+            }
+
+            return null;
         }
     }
 }

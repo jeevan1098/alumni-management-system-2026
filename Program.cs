@@ -15,8 +15,15 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();
 
+// appsettings.json "Smtp" is the fallback; an Admin can override it from
+// Email Settings (saved under App_Data/settings).
 builder.Services.Configure<SmtpOptions>(builder.Configuration.GetSection("Smtp"));
+builder.Services.AddSingleton<EmailSettingsStore>();
 builder.Services.AddTransient<IEmailSender, SmtpEmailSender>();
+
+// Admin-editable page text and email templates, stored under App_Data/content.
+builder.Services.AddSingleton<SiteContentStore>();
+builder.Services.AddSingleton<SiteContentRenderer>();
 
 //builder.Services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
 //    .AddEntityFrameworkStores<ApplicationDbContext>();

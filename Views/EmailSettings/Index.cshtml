@@ -1,0 +1,120 @@
+@model Alumni_Management_System.Models.ViewModels.EmailSettingsViewModel
+
+@{
+    ViewData["Title"] = "Email Settings";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="card shadow-lg border-0 rounded-4">
+        <div class="card-body p-5">
+
+            <!-- Header -->
+            <div class="d-flex align-items-center mb-4">
+                <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+                    <i class="bi bi-envelope-at text-primary fs-3"></i>
+                </div>
+                <div>
+                    <h3 class="fw-bold mb-0">Email Settings</h3>
+                    <small class="text-info">The mail server and mailbox used to send every email from the site</small>
+                </div>
+            </div>
+
+            <hr class="mb-4" />
+
+            <partial name="_StatusMessages" />
+
+            <p class="small text-muted">
+                @if (Model.IsCustomized)
+                {
+                    <span>Last changed @Model.UpdatedAt?.ToString("MMM d, yyyy h:mm tt") by @Model.UpdatedBy.</span>
+                }
+                else
+                {
+                    <span>Currently using the default settings from appsettings.json.</span>
+                }
+            </p>
+
+            <form asp-action="Index" method="post" novalidate>
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div asp-validation-summary="All" class="alert alert-danger"></div>
+                }
+
+                <div class="row g-3">
+                    <div class="col-md-8">
+                        <label asp-for="Host" class="form-label fw-semibold"></label>
+                        <input asp-for="Host" class="form-control" placeholder="smtp.gmail.com" />
+                        <span asp-validation-for="Host" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <label asp-for="Port" class="form-label fw-semibold"></label>
+                        <input asp-for="Port" class="form-control" type="number" min="1" max="65535" />
+                        <span asp-validation-for="Port" class="text-danger"></span>
+                    </div>
+                    <div class="col-12">
+                        <div class="form-check">
+                            <input asp-for="EnableSsl" class="form-check-input" />
+                            <label asp-for="EnableSsl" class="form-check-label"></label>
+                        </div>
+                        <div class="form-text">Leave on for Gmail and Office 365 (port 587).</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="FromAddress" class="form-label fw-semibold"></label>
+                        <input asp-for="FromAddress" class="form-control" type="email" />
+                        <span asp-validation-for="FromAddress" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="FromName" class="form-label fw-semibold"></label>
+                        <input asp-for="FromName" class="form-control" placeholder="Alumni Management System" />
+                        <span asp-validation-for="FromName" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="Username" class="form-label fw-semibold"></label>
+                        <input asp-for="Username" class="form-control" autocomplete="off" />
+                        <span asp-validation-for="Username" class="text-danger"></span>
+                        <div class="form-text">Usually the same as the From email address.</div>
+                    </div>
+                    <div class="col-md-6">
+                        <label asp-for="NewPassword" class="form-label fw-semibold"></label>
+                        <input asp-for="NewPassword" class="form-control" autocomplete="new-password"
+                               placeholder="@(Model.HasPassword ? "•••••••• (saved - leave blank to keep)" : "Not set")" />
+                        <span asp-validation-for="NewPassword" class="text-danger"></span>
+                        <div class="form-text">For Gmail, use an App Password, not the normal account password. It's stored encrypted and never shown again.</div>
+                    </div>
+                </div>
+
+                <div class="d-flex flex-wrap gap-2 mt-4">
+                    <button type="submit" name="submit" value="save" class="btn btn-primary rounded-pill px-4">
+                        <i class="bi bi-save me-1"></i>Save
+                    </button>
+                </div>
+
+                <hr class="my-4" />
+
+                <h5 class="fw-bold mb-3">Test</h5>
+                <div class="row g-2 align-items-end">
+                    <div class="col-md-8">
+                        <label asp-for="TestEmailTo" class="form-label fw-semibold"></label>
+                        <input asp-for="TestEmailTo" class="form-control" type="email" placeholder="you@example.com" />
+                        <span asp-validation-for="TestEmailTo" class="text-danger"></span>
+                    </div>
+                    <div class="col-md-4">
+                        <button type="submit" name="submit" value="test" class="btn btn-outline-primary rounded-pill px-4 w-100">
+                            <i class="bi bi-send me-1"></i>Save &amp; send test
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            @if (Model.IsCustomized)
+            {
+                <form asp-action="Reset" method="post" class="mt-4"
+                      onsubmit="return confirm('Go back to the settings in appsettings.json? The saved settings and password here will be removed.');">
+                    <button type="submit" class="btn btn-sm btn-outline-danger rounded-pill px-3">
+                        <i class="bi bi-arrow-counterclockwise me-1"></i>Reset to defaults
+                    </button>
+                </form>
+            }
+        </div>
+    </div>
+</div>

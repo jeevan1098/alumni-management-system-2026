@@ -4,6 +4,8 @@ namespace Alumni_Management_System.Services;
 // Username/EnableSsl are fine to keep in appsettings.json; Password must come
 // from user-secrets locally (dotnet user-secrets) or an environment variable /
 // secret store in production - never committed to source control.
+// These are only the defaults: settings saved by an Admin in Email Settings
+// win (see EmailSettingsStore).
 public class SmtpOptions
 {
     public string Host { get; set; }
